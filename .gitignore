@@ -1,0 +1,52 @@
+# Knowledge OS .gitignore
+# Blocklist: ignore user content and generated files
+
+# ===== User Content (personal) =====
+solutions/*
+!solutions/examples/
+Textbooks/
+extra/
+
+# Plan directory (personal state files, keep examples)
+plan/*
+!plan/*.example
+PROGRESS.md
+
+# ===== Reader User Data =====
+reader/config.yaml
+reader/content_registry.yaml
+reader/extracted/
+reader/sessions/
+reader/drafts/
+reader/docs/
+
+# ===== Reviewer State =====
+reviewer/history.jsonl
+
+# ===== Schedule Configs (personal) =====
+schedules-llm/
+
+# ===== Discussion/Chat/Dev Notes =====
+*.txt
+*-Chat.md
+*_chat*.md
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+*.egg-info/
+dist/
+build/
+
+# ===== IDE/Editor =====
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ===== Claude Code =====
+.claude/

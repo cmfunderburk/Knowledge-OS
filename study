@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""
+PHD Study TUI - Unified entry point.
+
+Usage:
+    ./study              # Launch TUI dashboard
+    ./study --today      # Print CLI dashboard (like ./today)
+    ./study --progress   # Generate PROGRESS.md report
+    ./study --help       # Show help
+"""
+import sys
+import os
+
+# Ensure we can import from local packages
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+
+def print_help():
+    print("""
+PHD Study - Unified Study Tool
+
+Usage:
+    ./study              Launch the TUI dashboard
+    ./study --today      Print today's study plan (CLI)
+    ./study --progress   Generate PROGRESS.md report
+    ./study --help       Show this help message
+
+The TUI provides an interactive dashboard with:
+  - Today's domain and next task
+  - Sprint progress tracking
+  - Reviewer status (due cards, boxes)
+  - Interactive drill selection
+
+Keybindings in TUI:
+  ↑/↓ or j/k    Navigate drill list
+  Enter         Drill selected card
+  d             Drill all due cards
+  b             Browse all solutions
+  p             Generate progress report
+  r             Refresh data
+  q             Quit
+""")
+
+
+def run_today():
+    """Print CLI dashboard (equivalent to ./today)."""
+    # Import here to avoid loading TUI dependencies
+    from reviewer.core import (
+        get_todays_domain,
+        get_next_task,
+        get_reviewer_summary,
+        get_overall_progress,
+        collect_focus_files,
+    )
+    import datetime
+    
+    # ANSI Colors
+    BOLD = '\033[1m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    CYAN = '\033[36m'
+    DIM = '\033[2m'
+    RESET = '\033[0m'
+    
+    # Header
+    date_str = datetime.date.today().strftime("%A, %B %d, %Y")
+    print(f"{BOLD}╔════════════════════════════════════════╗{RESET}")
+    print(f"{BOLD}║           TODAY'S STUDY PLAN           ║{RESET}")
+    print(f"{BOLD}║  {CYAN}{date_str:<26}{RESET}{BOLD}     ║{RESET}")
+    print(f"{BOLD}╚════════════════════════════════════════╝{RESET}")
+    print()
+    
+    # Domain
+    domain, override = get_todays_domain()
+    if override:
+        print(f"{BOLD}Current Phase:{RESET} {YELLOW}{domain}{RESET}")
+        print(f"{DIM}{override}{RESET}")
+    else:
+        print(f"{BOLD}Domain:{RESET} {GREEN}{domain}{RESET}")
+    print()
+    
+    # Reviewer status
+    print(f"{BOLD}Reviewer:{RESET}")
+    summary = get_reviewer_summary()
+    
+    if summary["box_zero"] > 0:
+        print(f"  {YELLOW}Box 0 (failed): {summary['box_zero']} cards{RESET}")
+    if summary["overdue"] > 0:
+        print(f"  {YELLOW}Overdue: {summary['overdue']} cards{RESET}")
+    if summary["due_now"] > 0:
+        print(f"  {GREEN}Due now: {summary['due_now']} cards{RESET}")
+    
+    total_due = summary["box_zero"] + summary["overdue"] + summary["due_now"]
+    if total_due == 0:
+        print(f"  {GREEN}All caught up!{RESET}")
+    if summary["never_practiced"] > 0:
+        print(f"  {DIM}Never practiced: {summary['never_practiced']} cards{RESET}")
+    if summary["last_practiced"]:
+        print(f"  {DIM}Last practiced: {summary['last_practiced'][:10]}{RESET}")
+    print()
+    
+    # Focus cards
+    focus_count = len(collect_focus_files())
+    if focus_count > 0:
+        print(f"{BOLD}Reviewer Library:{RESET}")
+        print(f"  {DIM}Focus cards: {focus_count}{RESET}")
+        print()
+    
+    # Phase 0 progress
+    done, total = get_overall_progress()
+    if total > 0:
+        print(f"{BOLD}Phase 0 Progress:{RESET} {done}/{total} tasks complete")
+        next_task = get_next_task()
+        if next_task:
+            print(f"  {CYAN}Next:{RESET}  {next_task}")
+        else:
+            print(f"  {GREEN}All Phase 0 tasks complete!{RESET}")
+        print()
+    
+    # Quick commands
+    print(f"{BOLD}Quick Commands:{RESET}")
+    print(f"  {GREEN}./study{RESET}              # Launch TUI (recommended)")
+    print(f"  {GREEN}./drill{RESET}              # Practice due cards (CLI)")
+    print(f"  {DIM}./study --progress{RESET}   # Generate progress report")
+    print()
+
+
+def run_progress():
+    """Generate and save progress report."""
+    from reviewer.core import generate_progress_report, REPO_ROOT
+    
+    report = generate_progress_report()
+    output_path = REPO_ROOT / "PROGRESS.md"
+    output_path.write_text(report)
+    
+    print(report)
+    print()
+    print(f"Report saved to: {output_path}")
+
+
+def run_tui():
+    """Launch the TUI dashboard."""
+    try:
+        from tui.app import StudyApp
+        app = StudyApp()
+        app.run()
+    except ImportError as e:
+        print(f"Error starting TUI: {e}")
+        print("Try running: uv run ./study")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    
+    if "--help" in args or "-h" in args:
+        print_help()
+    elif "--today" in args:
+        run_today()
+    elif "--progress" in args:
+        run_progress()
+    else:
+        run_tui()

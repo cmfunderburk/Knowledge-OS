@@ -1,0 +1,210 @@
+Screen {
+    align: center top;
+}
+
+DashboardScreen {
+    align: center top;
+}
+
+DrillScreen {
+    align: center top;
+}
+
+DrillQueueScreen {
+    align: center top;
+}
+
+BrowseScreen {
+    align: center top;
+}
+
+/* Dashboard Layout */
+#dashboard-main {
+    width: 100%;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#top-row {
+    width: 100%;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#today-panel {
+    width: 1fr;
+    height: auto;
+    margin-right: 1;
+}
+
+#progress-panel {
+    width: 1fr;
+    height: auto;
+}
+
+#status-panel {
+    width: 100%;
+    height: auto;
+    margin-bottom: 1;
+}
+
+#drill-list {
+    width: 100%;
+    height: auto;
+    min-height: 10;
+}
+
+/* Drill Screen */
+#drill-header {
+    dock: top;
+    height: auto;
+    padding: 0 1;
+}
+
+#drill-scroll {
+    height: 1fr;
+    padding: 0 1;
+}
+
+#drill-queue {
+    width: 100%;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#drill-hint {
+    padding: 0 1 1 1;
+    color: $text-muted;
+}
+
+/* Legacy styles for compatibility */
+#dashboard-container {
+    width: 80%;
+    height: 80%;
+    border: solid green;
+    padding: 1 2;
+}
+
+.header {
+    dock: top;
+    height: 3;
+    content-align: center middle;
+    text-style: bold;
+    color: green;
+}
+
+CardList {
+    height: 1fr;
+    border: solid $accent;
+}
+
+.card-row {
+    height: 1;
+    padding: 0 1;
+}
+
+.card-row:hover {
+    background: $accent 20%;
+}
+
+#browse-container {
+    padding: 1 2;
+}
+
+/* Reader Screens */
+SelectMaterialScreen {
+    align: center top;
+}
+
+SelectChapterScreen {
+    align: center top;
+}
+
+DialogueScreen {
+    align: center top;
+}
+
+#material-container {
+    width: 100%;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#material-header {
+    dock: top;
+    height: 3;
+    content-align: center middle;
+    text-style: bold;
+}
+
+#material-list {
+    height: 1fr;
+    border: solid $accent;
+}
+
+.material-meta {
+    color: $text-muted;
+}
+
+#chapter-container {
+    width: 100%;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#chapter-header {
+    dock: top;
+    height: 2;
+    text-style: bold;
+}
+
+#chapter-subheader {
+    height: 2;
+    color: $text-muted;
+}
+
+#chapter-list {
+    height: 1fr;
+    border: solid $accent;
+}
+
+#dialogue-container {
+    width: 100%;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#dialogue-header {
+    dock: top;
+    height: 3;
+    width: 100%;
+}
+
+#book-title {
+    width: 1fr;
+}
+
+#chapter-title {
+    width: 1fr;
+}
+
+#mode-indicator {
+    width: auto;
+    color: $accent;
+}
+
+#chat-log {
+    height: 1fr;
+    border: solid $accent;
+    padding: 1;
+    margin-bottom: 1;
+}
+
+#input-area {
+    dock: bottom;
+    height: 3;
+}
+
+#chat-input {
+    width: 100%;
+}

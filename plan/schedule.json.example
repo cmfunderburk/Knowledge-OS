@@ -1,0 +1,26 @@
+{
+  "examples/psychology/classical_conditioning.md": {
+    "box": 3,
+    "next_due": "2025-01-18T10:00",
+    "last_score": 100.0,
+    "last_reviewed": "2025-01-15T10:00"
+  },
+  "examples/psychology/research_methods.md": {
+    "box": 1,
+    "next_due": "2025-01-15T14:00",
+    "last_score": 100.0,
+    "last_reviewed": "2025-01-15T10:00"
+  },
+  "examples/economics/supply_demand.md": {
+    "box": 0,
+    "next_due": "2025-01-15T11:30",
+    "last_score": 80.0,
+    "last_reviewed": "2025-01-15T10:30"
+  },
+  "examples/algorithms/binary_search.md": {
+    "box": 2,
+    "next_due": "2025-01-16T10:00",
+    "last_score": 100.0,
+    "last_reviewed": "2025-01-15T10:00"
+  }
+}

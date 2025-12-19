@@ -1,0 +1,54 @@
+# Priority Shift: Exam Prep Sprint
+
+**Status:** Inactive
+**Focus:** Psychology Chapters 6-8 (Learning, Intelligence, Memory)
+**Ratio:** 3h Psychology, 1h Drill Review
+
+---
+
+## Overview
+
+A priority shift temporarily overrides the normal domain rotation to focus intensively on specific material. Use this for:
+- Exam preparation
+- Catching up on a lagging domain
+- Deep-diving into a challenging topic
+
+Enable by setting `priority_shift.enabled: true` in `plan/study_config.yaml`.
+
+---
+
+## Daily Milestones
+
+### Day 1-2: Learning (Chapter 6)
+* [ ] Read Chapter 6 completely
+* [ ] Reader session: Classical vs Operant conditioning
+* [ ] Create 5 drill cards for conditioning terminology
+* [ ] Drill all new cards to Box 1
+
+### Day 3-4: Thinking & Intelligence (Chapter 7)
+* [ ] Read Chapter 7 completely
+* [ ] Reader session: Problem-solving strategies
+* [ ] Create 5 drill cards for cognitive concepts
+* [ ] Drill all cards (clear due queue)
+
+### Day 5-6: Memory (Chapter 8)
+* [ ] Read Chapter 8 completely
+* [ ] Reader session: Encoding, storage, retrieval
+* [ ] Create 5 drill cards for memory models
+* [ ] Drill all cards
+
+### Day 7: Integration & Review
+* [ ] Review all 15+ new cards
+* [ ] Reader session: Connections between chapters
+* [ ] Self-test: Can you explain each concept without notes?
+
+---
+
+## Exit Criteria
+
+Before disabling the priority shift, verify:
+- [ ] All sprint cards at Box 2+ (reviewed successfully twice)
+- [ ] Can explain key concepts from memory
+- [ ] No cards in Box 0 (failed state)
+
+Then set `priority_shift.enabled: false` in study_config.yaml.

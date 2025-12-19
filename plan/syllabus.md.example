@@ -1,0 +1,77 @@
+# Study Syllabus
+
+A high-level study plan showing phases, goals, and materials.
+Copy to `plan/syllabus.md` and customize for your learning goals.
+
+---
+
+## Overview
+
+**Goal:** Build foundational understanding in Psychology and Economics using active recall and spaced repetition.
+
+**Materials:**
+- Psychology 2e (OpenStax) - registered in reader
+- Principles of Economics 3e (OpenStax) - registered in reader
+
+**Method:**
+1. **Read** chapters using the Reader (`./read`) for active dialogue
+2. **Create** drill cards for key concepts
+3. **Drill** daily using spaced repetition (`./study` or `./drill`)
+4. **Review** progress and adjust focus as needed
+
+---
+
+## Phase 0: Foundations (Current)
+
+**Duration:** 4-6 weeks
+**Focus:** Research methods, core terminology, basic models
+
+| Domain | Chapters | Key Concepts |
+|--------|----------|--------------|
+| Psychology | 1-2, 6, 8 | Scientific method, learning, memory |
+| Economics | 1-3 | Scarcity, opportunity cost, supply/demand |
+
+**Success Criteria:**
+- [ ] Complete all Sprint 1-3 tasks in todo.md
+- [ ] 20+ drill cards created and in rotation
+- [ ] All cards at Box 2+ (reviewed successfully twice)
+
+---
+
+## Phase 1: Intermediate (Planned)
+
+**Focus:** Deeper theory and connections between domains
+
+| Domain | Chapters | Key Concepts |
+|--------|----------|--------------|
+| Psychology | 7, 10-11 | Cognition, motivation, personality |
+| Economics | 4-6 | Labor markets, elasticity, consumer choice |
+
+---
+
+## Phase 2: Applications (Planned)
+
+**Focus:** Real-world applications and cross-domain connections
+
+| Domain | Chapters | Key Concepts |
+|--------|----------|--------------|
+| Psychology | 12-14 | Social psychology, I/O psychology, health |
+| Economics | 7-10 | Industry structure, market power |
+
+---
+
+## Daily Workflow
+
+1. **Morning:** Check `./study` dashboard for due cards
+2. **Drill:** Clear the due queue (aim for 0 overdue)
+3. **Read:** One Reader session per day (30-45 min)
+4. **Create:** Turn insights into drill cards
+5. **Evening:** Quick drill of any new cards
+
+---
+
+## Notes
+
+- Adjust pace based on retention. If cards keep resetting to Box 0, slow down.
+- Use priority shifts (`plan/study_config.yaml`) for intensive focus periods.
+- The goal is durable understanding, not speed.

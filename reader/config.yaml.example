@@ -1,0 +1,40 @@
+# Reader Configuration
+# Copy this to config.yaml and fill in your API keys.
+
+llm:
+  # Provider: gemini | anthropic
+  provider: "gemini"
+
+  # Gemini configuration (default - free tier available)
+  gemini:
+    api_key: "your-google-api-key-here"
+    # Or use environment variable:
+    # api_key_env: "GOOGLE_API_KEY"
+    model: "gemini-2.5-flash"  # or gemini-2.0-flash, gemini-2.5-pro
+
+  # Anthropic configuration
+  # anthropic:
+  #   api_key: "your-anthropic-api-key-here"
+  #   # Or use environment variable:
+  #   # api_key_env: "ANTHROPIC_API_KEY"
+  #   model: "claude-sonnet-4-20250514"
+
+# Voice input configuration (Ctrl+R in dialogue)
+voice:
+  enabled: true
+  # Model size: tiny, base, small, medium, large-v3
+  # VRAM: tiny ~1GB, base ~1GB, small ~2GB, medium ~5GB, large-v3 ~10GB
+  model: "large-v3"
+  language: "en"
+  # Silence detection
+  silence_threshold: 0.01  # RMS threshold for silence
+  silence_duration: 10.0   # Seconds of silence before stopping
+
+# Text-to-speech configuration (Ctrl+T to toggle in dialogue)
+tts:
+  enabled: true
+  # Kokoro voices: af_heart (default), af_bella, am_michael, bf_emma, etc.
+  # Full list: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
+  voice: "af_heart"
+  # Speed multiplier: 0.5 = half speed, 1.0 = normal, 1.5 = 50% faster, 2.0 = double
+  speed: 1.0

@@ -1,0 +1,57 @@
+# Content Registry
+# Register materials for the reading companion (./read).
+# Copy to content_registry.yaml and customize.
+#
+# Page numbers are PDF page numbers (1-indexed), not book page numbers.
+
+materials:
+  # OpenStax Psychology 2e (CC BY 4.0)
+  # https://openstax.org/details/books/psychology-2e
+  psychology-2e:
+    title: "Psychology 2e"
+    author: "OpenStax"
+    source: "reader/extracted/psychology-2e/source.pdf"
+    structure:
+      type: "chapters"
+      chapters:
+        - { num: 1, title: "Introduction to Psychology", pages: [19, 46] }
+        - { num: 2, title: "Psychological Research", pages: [47, 82] }
+        - { num: 3, title: "Biopsychology", pages: [83, 122] }
+        - { num: 4, title: "States of Consciousness", pages: [123, 160] }
+        - { num: 5, title: "Sensation and Perception", pages: [161, 206] }
+        - { num: 6, title: "Learning", pages: [207, 244] }
+        - { num: 7, title: "Thinking and Intelligence", pages: [245, 290] }
+        - { num: 8, title: "Memory", pages: [291, 326] }
+        - { num: 9, title: "Lifespan Development", pages: [327, 380] }
+        - { num: 10, title: "Motivation and Emotion", pages: [381, 414] }
+        - { num: 11, title: "Personality", pages: [415, 454] }
+        - { num: 12, title: "Social Psychology", pages: [455, 498] }
+        - { num: 13, title: "Industrial-Organizational Psychology", pages: [499, 530] }
+        - { num: 14, title: "Stress, Lifestyle, and Health", pages: [531, 566] }
+        - { num: 15, title: "Psychological Disorders", pages: [567, 624] }
+        - { num: 16, title: "Therapy and Treatment", pages: [625, 664] }
+
+  # OpenStax Principles of Economics 3e (CC BY 4.0)
+  # https://openstax.org/details/books/principles-economics-3e
+  economics-3e:
+    title: "Principles of Economics 3e"
+    author: "OpenStax"
+    source: "reader/extracted/economics-3e/source.pdf"
+    structure:
+      type: "chapters"
+      chapters:
+        - { num: 1, title: "Welcome to Economics!", pages: [25, 42] }
+        - { num: 2, title: "Choice in a World of Scarcity", pages: [43, 68] }
+        - { num: 3, title: "Demand and Supply", pages: [69, 104] }
+        - { num: 4, title: "Labor and Financial Markets", pages: [105, 132] }
+        - { num: 5, title: "Elasticity", pages: [133, 158] }
+        - { num: 6, title: "Consumer Choices", pages: [159, 182] }
+        - { num: 7, title: "Production, Costs, and Industry Structure", pages: [183, 216] }
+        - { num: 8, title: "Perfect Competition", pages: [217, 244] }
+        - { num: 9, title: "Monopoly", pages: [245, 274] }
+        - { num: 10, title: "Monopolistic Competition and Oligopoly", pages: [275, 300] }
+
+# Tips:
+# - Use `./read --list` to verify your registry loads correctly
+# - Use `./read --extract <material-id>` to pre-extract chapters to markdown
+# - Extracted chapters are cached in reader/extracted/<material-id>/

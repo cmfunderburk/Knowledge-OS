@@ -1,0 +1,67 @@
+# Study Plan: Foundations Phase
+
+This example shows how to structure a todo.md for the ./study dashboard.
+The system parses sprint headers and checkboxes to display progress.
+
+Copy to `plan/todo.md` and customize for your study plan.
+
+---
+
+### 📚 Sprint 1: Research Methods & Critical Thinking
+
+**Focus:** Understanding how knowledge is created and validated.
+
+**1. Psychology: Research Methods (Ch. 2)**
+* [x] **Read:** Chapter 2 - Psychological Research
+* [x] **Reader Session:** Discuss experimental vs correlational designs
+* [x] **Drill Card:** Create card for "independent vs dependent variables"
+* [ ] **Drill Card:** Create card for "types of research bias"
+
+**2. Economics: Models & Methods (Ch. 1)**
+* [ ] **Read:** Chapter 1 - Welcome to Economics!
+* [ ] **Reader Session:** Discuss positive vs normative economics
+* [ ] **Drill Card:** Create card for "ceteris paribus"
+
+---
+
+### 🧠 Sprint 2: Core Concepts
+
+**Focus:** Building foundational vocabulary and mental models.
+
+**1. Psychology: Learning & Memory (Ch. 6, 8)**
+* [ ] **Read:** Chapter 6 - Learning (Classical & Operant Conditioning)
+* [ ] **Read:** Chapter 8 - Memory (Encoding, Storage, Retrieval)
+* [ ] **Drill Cards:** Create cards for conditioning terminology
+* [ ] **Drill Cards:** Create cards for memory models
+
+**2. Economics: Supply & Demand (Ch. 2-3)**
+* [ ] **Read:** Chapter 2 - Choice in a World of Scarcity
+* [ ] **Read:** Chapter 3 - Demand and Supply
+* [ ] **Drill Cards:** Create cards for equilibrium, surplus, shortage
+* [ ] **Practice:** Draw supply/demand diagrams from memory
+
+---
+
+### 🔗 Sprint 3: Applications
+
+**Focus:** Connecting concepts to real-world applications.
+
+**1. Psychology: Social & Applied (Ch. 12-13)**
+* [ ] **Read:** Chapter 12 - Social Psychology
+* [ ] **Read:** Chapter 13 - Industrial-Organizational Psychology
+* [ ] **Drill Cards:** Social influence concepts (conformity, obedience)
+
+**2. Economics: Markets (Ch. 8-10)**
+* [ ] **Read:** Chapter 8 - Perfect Competition
+* [ ] **Read:** Chapter 9 - Monopoly
+* [ ] **Drill Cards:** Market structure characteristics
+
+---
+
+### ✅ Phase Completion Checklist
+
+*Before moving to the next phase, verify:*
+* [ ] Can you explain the scientific method and identify research designs?
+* [ ] Can you draw a supply/demand diagram and predict equilibrium changes?
+* [ ] Have you created at least 10 drill cards and practiced them?
+* [ ] Have you used the Reader for dialogue on at least 3 chapters?

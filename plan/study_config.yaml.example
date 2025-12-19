@@ -1,0 +1,53 @@
+# Study Configuration
+# Copy to study_config.yaml and customize for your study plan.
+#
+# This file configures the ./study dashboard display.
+# All fields are optional - sensible defaults are used if omitted.
+
+# =============================================================================
+# DOMAIN ROTATION
+# =============================================================================
+# Map days of the week (0=Monday, 6=Sunday) to study domains.
+# Shown in the "Today" panel of the dashboard.
+
+domains:
+  0: "Psychology"      # Monday
+  1: "Economics"       # Tuesday
+  2: "Psychology"      # Wednesday
+  3: "Economics"       # Thursday
+  4: "Integration"     # Friday - review both, make connections
+  5: "Off"             # Saturday
+  6: "Off"             # Sunday
+
+# =============================================================================
+# CURRENT PHASE
+# =============================================================================
+# The phase you're currently working through.
+# Shown in the progress panel title.
+
+current_phase:
+  name: "Phase 0"
+  description: "Foundations"
+
+# =============================================================================
+# FUTURE PHASES
+# =============================================================================
+# Phases shown in the progress report as "upcoming".
+
+phases:
+  - { num: 1, name: "Intermediate Theory", status: "Not Started" }
+  - { num: 2, name: "Applications", status: "Not Started" }
+  - { num: 3, name: "Integration & Review", status: "Not Started" }
+
+# =============================================================================
+# PRIORITY SHIFT (optional)
+# =============================================================================
+# Temporarily override domain rotation for intensive focus periods.
+# Set enabled: true to activate.
+
+priority_shift:
+  enabled: false
+  name: "Exam Prep Sprint"
+  focus: "Psychology Chapters 6-8"
+  ratio: "3h Psychology, 1h Drill Review"
+  milestones_file: "schedules/exam_prep.md"  # Optional detailed plan
