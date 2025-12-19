@@ -21,92 +21,63 @@ uv sync        # Install dependencies
 ./read         # Reading companion (requires LLM API)
 ```
 
-## Setup
+The system works out of the box with example drill cards in `solutions/examples/`. Run `./study` or `./drill` immediately after installing to try it.
 
-### 1. Install dependencies
+## Customization
 
-```bash
-uv sync
-```
+To build your own study system, copy and edit the example configuration files.
 
-### 2. Copy required configuration
+### Study Configuration
 
 ```bash
-# Core study configuration (domain rotation, intervals, phases)
+# Copy examples to create your config files
 cp plan/study_config.yaml.example plan/study_config.yaml
-
-# Example scheduler state (shows card format)
 cp plan/schedule.json.example plan/schedule.json
 ```
 
-### 3. Copy optional planning files
+Edit `plan/study_config.yaml` to configure:
+- **Domain rotation**: Which subjects to study on which days
+- **Current phase**: Track your progress through a curriculum
+- **Priority shifts**: Temporary focus overrides for exam prep
 
-These files help organize your study workflow but aren't required to run the system:
+### Planning Files (optional)
 
-```bash
-# Sprint tasks and daily goals
-cp plan/todo.md.example plan/todo.md
-
-# High-level study plan overview
-cp plan/syllabus.md.example plan/syllabus.md
-
-# Chapter progress tracking (Read/Exercises/Cards checkboxes)
-cp plan/checklist.md.example plan/checklist.md
-
-# Temporary focus override for exam prep sprints
-cp plan/priority_shift.md.example plan/priority_shift.md
-```
-
-### 4. Try the example drill cards
+These help organize your workflow but aren't required:
 
 ```bash
-# Copy examples to your solutions folder
-cp -r solutions/examples/* solutions/focus/
-
-# Start the TUI dashboard
-./study
-
-# Or drill directly
-./drill
+cp plan/todo.md.example plan/todo.md          # Sprint tasks and daily goals
+cp plan/syllabus.md.example plan/syllabus.md  # High-level study plan
+cp plan/checklist.md.example plan/checklist.md # Chapter progress tracking
 ```
 
-### 5. Set up the Reader (optional)
+### Your Own Drill Cards
+
+Create markdown files in `solutions/focus/` (or any subdirectory). Every fenced code block becomes a drill target. See [solutions/examples/README.md](solutions/examples/README.md) for the card format guide.
+
+### Reader Setup (optional)
 
 The Reader provides LLM-powered dialogue with textbook content. Requires a Gemini or Anthropic API key.
 
 ```bash
-# LLM configuration
 cp reader/config.yaml.example reader/config.yaml
 # Edit reader/config.yaml with your API key
 
-# Content registry (book → chapter mappings)
 cp reader/content_registry.yaml.example reader/content_registry.yaml
+# Edit to register your own PDFs
 ```
 
-The example registry uses free OpenStax textbooks (CC BY 4.0):
+The example registry uses free OpenStax textbooks (CC BY 4.0). To use them:
 
-```bash
-mkdir -p reader/extracted/{psychology-2e,economics-3e,college-algebra-2e}
+1. Download PDFs from [OpenStax](https://openstax.org/):
+   - [Psychology 2e](https://openstax.org/details/books/psychology-2e) (84 MB)
+   - [Principles of Economics 3e](https://openstax.org/details/books/principles-economics-3e) (63 MB)
+   - [College Algebra 2e](https://openstax.org/details/books/college-algebra-2e) (80 MB)
 
-# Psychology 2e (84 MB)
-# https://openstax.org/details/books/psychology-2e
-# Download PDF → reader/extracted/psychology-2e/source.pdf
+2. Place PDFs in `reader/extracted/<material-id>/source.pdf`
 
-# Economics 3e (63 MB)
-# https://openstax.org/details/books/principles-economics-3e
-# Download PDF → reader/extracted/economics-3e/source.pdf
+3. Extract chapters: `./read --extract psychology-2e`
 
-# College Algebra 2e (80 MB)
-# https://openstax.org/details/books/college-algebra-2e
-# Download PDF → reader/extracted/college-algebra-2e/source.pdf
-```
-
-Then extract chapters for dialogue:
-
-```bash
-./read --extract psychology-2e
-./read
-```
+4. Start dialogue: `./read`
 
 ## Core Components
 
