@@ -35,7 +35,7 @@ cp reader/content_registry.yaml.example reader/content_registry.yaml
 # Register your PDFs (see below)
 ```
 
-The example registry includes free [OpenStax](https://openstax.org/) textbooks and bundled classics from Project Gutenberg. Download a PDF, place it in `reader/sources/<material-id>/source.pdf`, and start a session. The classics work out of the box.
+The example registry includes free [OpenStax](https://openstax.org/) textbooks, bundled classics from Project Gutenberg, and foundational articles (the Transformer paper, Einstein 1905). Download a PDF, place it in `reader/sources/<material-id>/source.pdf`, and start a session. The classics and articles work out of the box.
 
 ## The Reader
 
@@ -46,6 +46,13 @@ Three classics from Project Gutenberg are bundled and work out of the box:
 - **Nicomachean Ethics** — Aristotle (F.H. Peters translation)
 - **Don Quixote** — Cervantes (John Ormsby translation)
 - **The Brothers Karamazov** — Dostoevsky (Constance Garnett translation)
+
+Two foundational articles are also bundled:
+
+- **Attention Is All You Need** — Vaswani et al. (the Transformer paper)
+- **On a Heuristic Point of View Concerning the Production and Transformation of Light** — Einstein (1905 photoelectric effect paper)
+
+To enable the bundled articles, copy their entries from `reader/content_registry.yaml.example` to your `reader/content_registry.yaml`. Articles skip chapter selection and open directly into dialogue.
 
 <details>
 <summary><strong>Example: Discussing Aristotle's Nicomachean Ethics</strong></summary>
