@@ -69,6 +69,13 @@ To enable the bundled articles, copy their entries from `reader/content_registry
 
 </details>
 
+<details>
+<summary><strong>Example: Discussing Einstein's Photoelectric Effect paper</strong></summary>
+
+<video src="TODO" controls width="600"></video>
+
+</details>
+
 The tutor doesn't lecture—it asks questions, probes your understanding, and points you back to the text. When you begin a new chapter, it opens with a genuine question about the reading. Dialogue modes include:
 
 | Mode | Behavior |
