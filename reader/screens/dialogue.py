@@ -155,9 +155,9 @@ class DialogueScreen(Screen):
         self._recording = False
         self._voice_config = self._load_voice_config()
 
-        # TTS state
-        self._tts_enabled = True  # TTS on by default for opening response
+        # TTS state - respect config.enabled setting
         self._tts_config = self._load_tts_config()
+        self._tts_enabled = self._tts_config.get("enabled", True)
         self._speaking = False
 
     def _load_voice_config(self) -> dict:

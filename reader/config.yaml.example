@@ -20,10 +20,12 @@ llm:
   #   model: "claude-sonnet-4-20250514"
 
 # Voice input configuration (Ctrl+R in dialogue)
+# Auto-detects GPU/CPU; use smaller model on CPU for speed
 voice:
   enabled: true
   # Model size: tiny, base, small, medium, large-v3
-  # VRAM: tiny ~1GB, base ~1GB, small ~2GB, medium ~5GB, large-v3 ~10GB
+  # GPU VRAM: tiny ~1GB, base ~1GB, small ~2GB, medium ~5GB, large-v3 ~10GB
+  # CPU: recommend "base" or "small" for reasonable speed
   model: "large-v3"
   language: "en"
   # Silence detection
@@ -31,6 +33,7 @@ voice:
   silence_duration: 10.0   # Seconds of silence before stopping
 
 # Text-to-speech configuration (Ctrl+T to toggle in dialogue)
+# Set enabled: false on machines without GPU (CPU TTS may stutter)
 tts:
   enabled: true
   # Kokoro voices: af_heart (default), af_bella, am_michael, bf_emma, etc.
