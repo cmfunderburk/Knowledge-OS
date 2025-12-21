@@ -114,6 +114,7 @@ class DialogueScreen(Screen):
     BINDINGS = [
         Binding("escape", "back", "Back"),
         Binding("ctrl+m", "select_mode", "Mode"),
+        Binding("ctrl+g", "generate_cards", "Cards"),
         Binding("ctrl+r", "record", "Voice"),
         Binding("ctrl+t", "toggle_tts", "TTS"),
         Binding("q", "quit", "Quit", show=False),
@@ -610,6 +611,28 @@ class DialogueScreen(Screen):
         self._tts_enabled = not self._tts_enabled
         status = "on" if self._tts_enabled else "off"
         self.notify(f"TTS {status}", severity="information")
+
+    def action_generate_cards(self) -> None:
+        """Generate drill cards from this session's transcript."""
+        if not self.session:
+            self.notify("No session to generate cards from", severity="warning")
+            return
+
+        if self.session.exchange_count == 0:
+            self.notify("No dialogue yet - have a conversation first", severity="warning")
+            return
+
+        from .generate_cards import GenerateCardsScreen
+
+        material_title = self.material_info.get("title", self.material_id)
+        self.app.push_screen(
+            GenerateCardsScreen(
+                material_id=self.material_id,
+                material_title=material_title,
+                chapter_num=self.chapter_num,
+                session=self.session,
+            )
+        )
 
     def action_back(self) -> None:
         """Go back to chapter selection."""
