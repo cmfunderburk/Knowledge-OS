@@ -1,122 +1,92 @@
 # Knowledge OS Roadmap
 
-A roadmap for the TUI-based study system, documenting current capabilities and future enhancement ideas.
+Current capabilities and future enhancement ideas for the TUI-based study system.
 
 **Last updated**: 2025-12-20
-
-> **Note:** This system was designed for PhD-level self-study across multiple domains. The examples reference specific textbooks (Tao, CLRS, etc.) as illustration—adapt to your own curriculum.
 
 ---
 
 ## Current State
 
-### Study TUI (`./study`)
+### Unified CLI (`knos`)
 
-The **Textual-based TUI** is fully implemented as the primary entry point:
+Single entry point for all functionality:
+
+```
+knos              Launch study TUI (default)
+knos today        CLI dashboard
+knos study        Launch study TUI
+knos drill        Launch drill TUI
+knos read         Launch reader TUI
+knos progress     Generate PROGRESS.md
+
+knos read list              List registered materials
+knos read clear <id> [ch]   Clear session data
+knos read test              Test LLM provider
+```
+
+### Study Dashboard
+
+The Textual-based TUI provides a unified command center:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    ./study (TUI Entry Point)                    │
+│                         knos (TUI)                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  Dashboard    │  Drill Screen  │  Browse Screen  │  Stats      │
-│  ✅ Today     │  ✅ Line reveal│  ✅ Navigate    │  ⚪ Planned │
-│  ✅ Progress  │  ✅ y/n scoring│  ✅ Categories  │             │
-│  ✅ Due cards │  ✅ Blocks     │                 │             │
+│  TodayPanel     │  ProgressPanel  │  ReaderPanel               │
+│  Domain + Task  │  Sprint bars    │  Materials + sessions      │
+├─────────────────────────────────────────────────────────────────┤
+│  StatusPanel (Box 0, Overdue, Due Now, Never Practiced)        │
+├─────────────────────────────────────────────────────────────────┤
+│  DrillListPanel (navigable queue with ↑↓, Enter to drill)      │
 └─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    reviewer/core.py (Library)                   │
-│  - Schedule management    - Markdown parsing                    │
-│  - Leitner box logic      - Progress tracking                   │
-│  - History logging        - Domain rotation                     │
-└─────────────────────────────────────────────────────────────────┘
+
+Keybindings:
+  d       Drill all cards
+  Enter   Drill selected card
+  r       Open Reader
+  b       Browse solutions
+  p       Progress report
+  s       Syllabus/milestones
+  ctrl+r  Refresh
 ```
 
-**Implemented (✅):**
-- Unified dashboard with TodayPanel, ProgressPanel, StatusPanel, DrillListPanel
+**Implemented:**
+- Dashboard with 5 panels (Today, Progress, Reader, Status, DrillList)
 - Line-by-line reveal drilling with RevealBlock widgets
 - Browse screen for solution navigation
 - Keyboard-first navigation (vim-style: j/k, Enter, Esc)
+- Reader integration (press `r` to push reader screens onto stack)
 - `schedule.json` persistence with Leitner box progression
-- CLI fallbacks (`./study --today`, `./study --progress`)
 - Progress report generation
 
-### Reader Module (`./read`)
+### Reader Module
 
-The **LLM-powered reading companion** provides structured dialogue with textbook content:
+LLM-powered reading companion with structured dialogue:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     ./read (Reader TUI)                         │
-├─────────────────────────────────────────────────────────────────┤
 │  Select Material → Select Chapter → Dialogue Screen             │
-│  ✅ Registry     │  ✅ Progress   │  ✅ Multi-mode dialogue     │
-│  ✅ Extraction   │  ✅ Sessions   │  ✅ Card generation         │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Reader Components                          │
-│  reader/llm.py      — Gemini & Anthropic providers              │
-│  reader/content.py  — PDF extraction, chapter loading           │
-│  reader/prompts/    — Dialogue mode templates                   │
-│  reader/session.py  — Session persistence & history             │
-│  reader/voice.py    — Voice input (Whisper)                     │
-│  reader/tts.py      — Text-to-speech output                     │
+├─────────────────────────────────────────────────────────────────┤
+│  Dialogue Modes: Socratic, Clarify, Challenge, Teach, Quiz      │
+│  LLM Providers:  Gemini (with caching), Anthropic Claude        │
+│  Voice:          Whisper input, TTS output                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Implemented (✅):**
-- Material registry (`content_registry.yaml`) with chapter/page mappings
-- PDF → Markdown extraction (`./read --extract <material-id>`)
-- Five dialogue modes: Socratic, Clarify, Challenge, Teach, Quiz
-- LLM providers: Google Gemini (with context caching), Anthropic Claude
+**Setup:**
+1. Place PDF in `reader/extracted/<material-id>/source.pdf`
+2. Register in `reader/content_registry.yaml` with chapter page ranges
+3. Run `knos read`
+
+Text is extracted on-demand from PDF page ranges during reading sessions.
+
+**Implemented:**
+- Material registry with chapter/page mappings
+- Five dialogue modes with Jinja2 prompt templates
 - Session persistence with transcript history
-- Card generation from dialogue sessions → `reader/drafts/`
-- Voice input via Whisper (local or API)
-- Text-to-speech for LLM responses
-- Jinja2 prompt templates for each dialogue mode
-
----
-
-## Roadmap: Infrastructure
-
-### Unified CLI Entry Point
-**Status:** Planned | **Effort:** Low-Medium
-
-Replace the multiple script files (`./today`, `./read`, `./study`, `./drill`) with a single CLI entry point using subcommands:
-
-```bash
-knos today      # Dashboard
-knos study      # Launch TUI
-knos drill      # Drill due cards
-knos read       # Reading companion
-knos read --extract <material-id>  # Extract chapters
-```
-
-**Benefits:**
-- Single entry point instead of 4+ scripts in project root
-- Cleaner project structure
-- Discoverable commands via `knos --help`
-- Consistent invocation pattern
-- Easier to extend with new commands
-
-**Implementation:**
-1. Create `knos/cli.py` with Click or Typer
-2. Define subcommands that dispatch to existing functionality
-3. Register as console script in `pyproject.toml`:
-   ```toml
-   [project.scripts]
-   knos = "knos.cli:main"
-   ```
-4. Remove standalone scripts from project root
-5. Update docs and help text
-
-**Open Questions:**
-- Name: `knos`, `kos`, `study`, or something else?
-- Should legacy `./study` etc. remain as symlinks during transition?
-- Group related commands? e.g., `knos reader extract` vs `knos read --extract`
+- Card generation from sessions → `reader/drafts/`
+- Voice input (Whisper) and TTS output
 
 ---
 
@@ -124,248 +94,89 @@ knos read --extract <material-id>  # Extract chapters
 
 ### Tier 1: High Value, Low Effort
 
-#### 1.1 Streak Tracking
-**Status:** Not started | **Effort:** Low
-
+#### Streak Tracking
 Display consecutive study days in the dashboard.
 
 ```
 🔥 Streak: 12 days (best: 34)
 ```
 
-**Implementation:**
 - Parse `schedule.json` for `last_reviewed` dates
 - Add streak calculation to `core.py`
-- Display in `StatusPanel`
+- Display in StatusPanel
 
-#### 1.2 Difficulty Calibration
-**Status:** Not started | **Effort:** Low
-
+#### Difficulty Calibration
 Track `reset_count` for each card. Cards that repeatedly fall to box 0 indicate weak spots.
 
-**Implementation:**
 - Add `reset_count` field to schedule entries
-- Increment on box reset (score < threshold)
-- Surface "Hardest cards" in a new panel or stats view
-- Flag cards with >3 resets for attention
+- Surface "Hardest cards" in stats or dashboard
+- Flag cards with >3 resets
 
-#### 1.3 Post-Drill Reflection
-**Status:** Not started | **Effort:** Low-Medium
-
+#### Post-Drill Reflection
 After completing a card, prompt for metacognitive reflection:
-- Which proof technique did you use? (Direct, Contradiction, Induction, ε-δ, etc.)
+- Which proof technique did you use?
 - What was the key insight?
 
-**Implementation:**
-- Add optional reflection modal after DrillScreen completion
-- Store technique tags in `schedule.json` or `history.jsonl`
-- Surface weak techniques in summary view
+Store technique tags in `schedule.json` or `history.jsonl`.
 
 ---
 
 ### Tier 2: High Value, Medium Effort
 
-#### 2.1 Stats Screen
-**Status:** Planned | **Effort:** Medium
-
-A dedicated screen for visualizing progress:
+#### Stats Screen
+Dedicated screen for visualizing progress:
 - Cards by box distribution (histogram)
 - Review history over time
 - Domain coverage breakdown
 - Weak technique identification
 
-**Implementation:**
-- New `StatsScreen` in `tui/screens/stats.py`
-- Rich-based charts (bar graphs via box-drawing characters)
-- Parse `history.jsonl` for temporal data
+#### LLM Hint Integration
+When stuck during drill, press `h` for a Socratic hint (not the answer).
 
-#### 2.2 LLM Help Integration
-**Status:** Not started | **Effort:** Medium
-
-When stuck during drill, press `h` to get a Socratic hint (not the answer).
-
-**Implementation:**
-- Keybind `h` in DrillScreen → "Get Hint"
-- Send current block context + card metadata to Gemini API
-- Display hint in modal (one guiding question only)
+- Send current block context to LLM
+- Display one guiding question in modal
 - Track hint usage in history
 
-**Prompt template:**
-```
-You are a Socratic tutor. The student is trying to recall:
-[BLOCK CONTENT - first 2 lines revealed]
-
-They are stuck. Ask ONE guiding question that points toward the key insight.
-Do NOT reveal the answer.
-```
-
-#### 2.3 Context-Aware Prompt Copier
-**Status:** Not started | **Effort:** Medium
-
-Press `?` anywhere to get a context-appropriate LLM prompt copied to clipboard.
-
-**Examples:**
-- On Dashboard → Weekly synthesis prompt with this week's domains
-- On DrillScreen → Socratic proof guide with current theorem
-- On BrowseScreen → Proof technique identifier for selected card
-
-**Implementation:**
-- `pyperclip` for clipboard access
-- Prompt templates in `reviewer/prompts/` or inline
-- Context injection based on current screen state
-
-#### 2.4 Search Across Solutions
-**Status:** Not started | **Effort:** Medium
-
+#### Search Across Solutions
 Full-text search across all solution files from Browse screen.
 
-**Implementation:**
-- Search input widget in BrowseScreen
+- Search input widget
 - Filter/highlight matching cards
 - Jump to card on selection
 
 ---
 
-### Tier 3: High Value, Higher Effort
+### Tier 3: Higher Effort
 
-#### 3.1 PDF → Markdown Pipeline
-**Status:** ✅ Implemented (Reader module)
-
-Extract textbook chapters as markdown via the Reader:
-
-```bash
-./read --extract <material-id>
-# Output: reader/extracted/<material-id>/ch01.md, ch02.md, ...
-```
-
-Materials are registered in `reader/content_registry.yaml` with chapter-to-page mappings. Extraction uses `pymupdf`.
-
-#### 3.2 LLM-Assisted Card Generation
-**Status:** ✅ Implemented (Reader module)
-
-Generate drill cards from Reader dialogue sessions:
-
-1. Start a reading session: `./read`
-2. Dialogue with the material (Socratic, Challenge, etc.)
-3. Press `g` to generate cards from session insights
-4. Cards saved to `reader/drafts/` for review
-5. Move approved cards to `solutions/focus/`
-
-Uses Jinja2 prompt templates in `reader/prompts/card_generation.md`.
-
-#### 3.3 Adaptive Quiz Mode
-**Status:** Not started | **Effort:** High
-
+#### Adaptive Quiz Mode
 Interactive quiz that adapts difficulty based on performance.
 
 ```
-./study quiz --domain analysis --chapter "Tao Ch. 6"
+knos quiz --domain analysis --chapter "Ch. 6"
 ```
 
-**Flow:**
-1. Start with definition recall
-2. Correct → theorem statement
-3. Correct → proof technique
-4. Correct → "what fails if we drop hypothesis X"
-5. Wrong → hint + retry
-
-**TUI Integration:**
-- New QuizScreen
-- Progress through difficulty tiers
-- Summary at end with weak spots identified
+Flow: definition → theorem → proof technique → edge cases
 
 ---
 
 ## Roadmap: Content & Workflow
 
 ### Domain Templates
-**Status:** Not started | **Effort:** Low
-
 Skeleton templates for manual card creation:
 
 ```
 solutions/templates/
 ├── analysis.md      # Statement, Proof technique, Key insight
 ├── algorithms.md    # Invariant, Complexity, Implementation
-├── micro.md         # Assumptions, Result, Intuition
 └── ml.md            # Model, Key equations, Computational notes
 ```
 
-**TUI Integration:**
-- "New Card" action → select template → open in $EDITOR
-- Template pre-fills frontmatter and section headers
-
 ### Connection Cards
-**Status:** Not started | **Effort:** Low
-
-Cross-domain synthesis cards linking concepts:
-
-```
-solutions/cross_domain/
-├── compactness_equilibrium.md      # Analysis ↔ Micro
-├── bellman_contraction.md          # Algorithms ↔ ML
-├── continuity_preferences.md       # Analysis ↔ Micro
-└── complexity_equilibria.md        # Algorithms ↔ Micro
-```
-
-**Format:**
-````markdown
-# Connection: [Title]
-
-## Domain A: [Concept]
-Brief definition and context.
-
-## Domain B: [Concept]
-Brief definition and context.
-
-## The Connection
-How are they structurally related?
-
-## Guiding Question
-<!-- TARGET -->
-```[proof]
-What mathematical structure appears in both contexts?
-Why does the same technique work?
-```
-<!-- /TARGET -->
-````
-
-### Lean Integration
-**Status:** Blocked | **Effort:** High
-
-Verify recalled Lean proofs by running `lake build`.
-
-**Prerequisite:** Lean 4 environment setup complete
-
-**TUI Integration:**
-- Detect `.lean` code blocks
-- "Verify" action sends to Lean compiler
-- Display success/error inline
-
----
-
-## LLM Prompt Library
-
-A collection of copy-paste prompts for use alongside the TUI workflow is available in **[docs/prompts.md](../prompts.md)**.
-
-Includes prompts for:
-- Socratic proof guidance
-- Proof technique identification
-- Domain-specific tutoring
-- Cross-domain synthesis
-- Metacognitive reflection
-- Card generation
+Cross-domain synthesis cards linking concepts across domains.
 
 ---
 
 ## Implementation Priority
-
-Recommended sequence for remaining features:
-
-### Completed
-- ✅ PDF extraction pipeline (Reader module)
-- ✅ LLM-assisted card generation (Reader module)
-- ✅ Multi-provider LLM integration (Gemini, Anthropic)
 
 ### Phase A: Quick Wins
 1. Streak tracking in StatusPanel
@@ -379,14 +190,11 @@ Recommended sequence for remaining features:
 
 ### Phase C: Future Consideration
 7. Adaptive quiz mode
-8. Lean integration (when environment ready)
-9. Context-aware prompt copier
+8. Domain templates
 
 ---
 
 ## Appendix: Learning Science Principles
-
-These features are designed around five learning science principles:
 
 | Principle | How the system supports it |
 |-----------|---------------------------|

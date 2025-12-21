@@ -105,7 +105,6 @@ The example registry uses free OpenStax textbooks (CC BY 4.0). To use them:
 
 ## Documentation
 
-- [docs/knowledge-os-manifesto.md](docs/knowledge-os-manifesto.md) — Vision and principles
 - [docs/USAGE.md](docs/USAGE.md) — Command reference
 - [docs/specs/roadmap.md](docs/specs/roadmap.md) — Feature roadmap and future plans
 - [docs/prompts.md](docs/prompts.md) — LLM prompt library for study workflows

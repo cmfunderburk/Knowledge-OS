@@ -6,6 +6,7 @@ solutions/*
 !solutions/examples/
 Textbooks/
 extra/
+docs/knowledge-os-manifesto.md
 
 # Plan directory (personal state files, keep examples)
 plan/*

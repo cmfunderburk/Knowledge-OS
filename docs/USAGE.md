@@ -15,7 +15,6 @@ knos read            # Reading companion
 | Resource | Purpose |
 |----------|---------|
 | **[plan/syllabus.md](../plan/syllabus.md)** | **Content**: Master study plan |
-| **[docs/manual/architecture.md](manual/architecture.md)** | **System**: Architecture, Directory Tree, Data Logic |
 | **[docs/manual/workflow.md](manual/workflow.md)** | **Process**: Reading prompts & Study workflow |
 | **[docs/specs/roadmap.md](specs/roadmap.md)** | **Future**: Enhancement plans |
 | **[AGENTS.md](../AGENTS.md)** | **AI**: Context for coding assistants |
@@ -60,8 +59,6 @@ uv run python3 -m reviewer.reviewer --drill-due  # Drill due only
 ```
 
 ## Creating Solutions (Cheat Sheet)
-
-Full details in **[docs/manual/architecture.md](manual/architecture.md)**.
 
 ```markdown
 # Topic Name
