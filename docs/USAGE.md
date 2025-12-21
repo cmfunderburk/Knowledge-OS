@@ -5,7 +5,9 @@ Reference for the self-study TUI and spaced-repetition tooling.
 ## Quick Start
 
 ```bash
-./study              # Launch TUI dashboard (Primary Interface)
+knos                 # Launch study TUI (default)
+knos today           # CLI dashboard
+knos read            # Reading companion
 ```
 
 ## Documentation Index
@@ -23,22 +25,29 @@ Reference for the self-study TUI and spaced-repetition tooling.
 
 | Command | Description |
 |---------|-------------|
-| `./study` | Launch TUI dashboard |
-| `./study --today` | Print CLI dashboard |
-| `./study --progress` | Generate PROGRESS.md |
-| `./today` | CLI daily orientation |
-| `./drill` | Launch drill queue (Textual TUI) |
-| `./read` | Launch reading companion TUI (LLM dialogue) |
+| `knos` | Launch study TUI (default) |
+| `knos today` | Print CLI dashboard |
+| `knos study` | Launch study TUI |
+| `knos drill` | Launch drill TUI |
+| `knos read` | Launch reading companion TUI |
+| `knos progress` | Generate PROGRESS.md |
 
 ### Reader CLI
 
+**Setup:**
+1. Place PDF in `reader/extracted/<material-id>/source.pdf`
+2. Register in `reader/content_registry.yaml` with chapter page ranges
+3. Run: `knos read` → select material → select chapter
+
+Registration can be done manually or with AI tools (e.g. Claude Code to extract TOC).
+
 | Command | Description |
 |---------|-------------|
-| `./read` | Launch TUI (material → chapter → dialogue) |
-| `./read --list` | List registered materials and extraction status |
-| `./read --extract <id>` | Extract chapters from PDF to `reader/extracted/` |
-| `./read --test-llm` | Verify LLM configuration |
-| `./read --help` | Show usage information |
+| `knos read` | Launch TUI (material → chapter → dialogue) |
+| `knos read list` | List registered materials |
+| `knos read clear <id> [chapter]` | Clear session data |
+| `knos read test` | Verify LLM configuration |
+| `knos read --help` | Show setup instructions |
 
 ### Reviewer CLI (Direct)
 

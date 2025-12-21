@@ -7,7 +7,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.binding import Binding
 
 from reviewer.core import get_drill_queue, generate_progress_report, REPO_ROOT, PLAN_DIR, get_priority_shift_config
-from tui.widgets.panels import TodayPanel, ProgressPanel, StatusPanel, DrillListPanel
+from tui.widgets.panels import TodayPanel, ProgressPanel, StatusPanel, DrillListPanel, ReaderPanel
 from .drill import DrillScreen
 from .browse import BrowseScreen
 from .progress_modal import ProgressModal, SyllabusModal
@@ -24,10 +24,11 @@ class DashboardScreen(Screen):
         Binding("k", "move_up", "Up", show=False),
         Binding("j", "move_down", "Down", show=False),
         Binding("b", "browse", "Browse"),
+        Binding("r", "read", "Reader"),
         Binding("p", "progress_preview", "Progress"),
         Binding("P", "progress_export", "Export", show=False),
         Binding("s", "view_syllabus", "Syllabus"),
-        Binding("r", "refresh", "Refresh"),
+        Binding("ctrl+r", "refresh", "Refresh", show=False),
     ]
 
     def __init__(self):
@@ -37,19 +38,20 @@ class DashboardScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        
+
         with Container(id="dashboard-main"):
-            # Top row: Today + Progress side by side
+            # Top row: Today + Progress + Reader side by side
             with Horizontal(id="top-row"):
                 yield TodayPanel(id="today-panel")
                 yield ProgressPanel(id="progress-panel")
-            
+                yield ReaderPanel(id="reader-panel")
+
             # Middle: Status panel (full width)
             yield StatusPanel(id="status-panel")
-            
+
             # Bottom: Drill list
             yield DrillListPanel([], 0, id="drill-list")
-        
+
         yield Footer()
 
     async def on_mount(self) -> None:
@@ -109,6 +111,11 @@ class DashboardScreen(Screen):
 
     def action_browse(self) -> None:
         self.app.push_screen(BrowseScreen())
+
+    def action_read(self) -> None:
+        """Open reader."""
+        from reader.screens import SelectMaterialScreen
+        self.app.push_screen(SelectMaterialScreen())
 
     def action_progress_preview(self) -> None:
         """Show progress report in a modal."""

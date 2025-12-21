@@ -15,13 +15,28 @@ Built for daily use. Open-sourced as proof-of-concept.
 ## Quick Start
 
 ```bash
-uv sync        # Install dependencies
-./study        # TUI dashboard (main entry point)
-./drill        # Drill due cards
-./read         # Reading companion (requires LLM API)
+uv sync              # Install dependencies
+uv run knos          # TUI dashboard (main entry point)
+uv run knos drill    # Drill due cards
+uv run knos read     # Reading companion (requires LLM API)
 ```
 
-The system works out of the box with example drill cards in `solutions/examples/`. Run `./study` or `./drill` immediately after installing to try it.
+The system works out of the box with example drill cards in `solutions/examples/`. Run `uv run knos` immediately after installing to try it.
+
+### CLI Commands
+
+```
+knos              Launch the study TUI (default)
+knos today        Show today's study plan (CLI)
+knos study        Launch the study TUI
+knos drill        Launch the drill TUI
+knos read         Launch the reader TUI
+knos progress     Generate PROGRESS.md report
+
+knos read list              List registered materials
+knos read clear <id> [ch]   Clear session data
+knos read test              Test LLM provider
+```
 
 ## Customization
 
@@ -75,14 +90,13 @@ The example registry uses free OpenStax textbooks (CC BY 4.0). To use them:
 
 2. Place PDFs in `reader/extracted/<material-id>/source.pdf`
 
-3. Extract chapters: `./read --extract psychology-2e`
-
-4. Start dialogue: `./read`
+3. Start dialogue: `uv run knos read`
 
 ## Core Components
 
 | Component | Description |
 |-----------|-------------|
+| `knos/` | Unified CLI entry point |
 | `reviewer/` | Leitner-box spaced repetition engine (boxes 0–6, intervals from 1hr to 30 days) |
 | `tui/` | Textual-based TUI for daily study orientation |
 | `reader/` | Seminar-style reading companion with LLM dialogue |

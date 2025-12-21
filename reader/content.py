@@ -57,7 +57,7 @@ def get_chapter_pdf(material_id: str, chapter_num: int) -> bytes:
 
     if not source_path.exists():
         raise ValueError(
-            f"Source PDF not found. Run: ./read --extract {material_id}"
+            f"Source PDF not found. Place PDF at reader/extracted/{material_id}/source.pdf"
         )
 
     chapters = material.get("structure", {}).get("chapters", [])
@@ -157,63 +157,6 @@ def extract_pages(source_path: Path, page_range: list[int]) -> str:
     return "\n\n".join(parts)
 
 
-def extract_material(material_id: str) -> None:
-    """
-    Extract/copy material to reader/extracted/.
-
-    For PDFs: Copies source to extracted/<material>/source.pdf
-    For EPUBs: Extracts text to extracted/<material>/ch<N>.md
-
-    Args:
-        material_id: The material identifier from content_registry.yaml
-    """
-    material = get_material(material_id)
-
-    # Resolve source path relative to repo root
-    repo_root = READER_DIR.parent
-    source_path = repo_root / material["source"]
-
-    if not source_path.exists():
-        raise FileNotFoundError(f"Source file not found: {source_path}")
-
-    # Create output directory
-    output_dir = EXTRACTED_DIR / material_id
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    source_format = get_source_format(material_id)
-
-    if source_format == "pdf":
-        # Copy PDF source for direct use
-        import shutil
-        dest_path = output_dir / "source.pdf"
-        shutil.copy2(source_path, dest_path)
-        print(f"Copied PDF to: {dest_path}")
-        print("Chapters will be sliced on-demand during reading sessions.")
-    else:
-        # EPUB: extract text to markdown
-        chapters = material.get("structure", {}).get("chapters", [])
-        if not chapters:
-            raise ValueError(f"No chapters defined for material '{material_id}'")
-
-        print(f"Extracting {len(chapters)} chapters from: {source_path.name}")
-
-        for chapter in chapters:
-            chapter_num = chapter["num"]
-            title = chapter["title"]
-            pages = chapter["pages"]
-
-            print(f"  Chapter {chapter_num}: {title} (pages {pages[0]}-{pages[1]})")
-
-            content = extract_pages(source_path, pages)
-
-            # Create markdown file with chapter header
-            output_path = output_dir / f"ch{chapter_num:02d}.md"
-            md_content = f"# Chapter {chapter_num}: {title}\n\n{content}"
-            output_path.write_text(md_content)
-
-        print(f"Extracted to: {output_dir}")
-
-
 def load_chapter(material_id: str, chapter_num: int) -> str:
     """
     Load a pre-extracted chapter (EPUB only).
@@ -232,7 +175,7 @@ def load_chapter(material_id: str, chapter_num: int) -> str:
 
     if not path.exists():
         raise ValueError(
-            f"Chapter not extracted. Run: ./read --extract {material_id}"
+            f"Chapter not found. Verify chapter exists in content_registry.yaml"
         )
 
     return path.read_text()
@@ -266,7 +209,7 @@ def get_chapter_text(material_id: str, chapter_num: int) -> str:
 
         if not source_path.exists():
             raise ValueError(
-                f"Source PDF not found. Run: ./read --extract {material_id}"
+                f"Source PDF not found. Place PDF at reader/extracted/{material_id}/source.pdf"
             )
 
         chapters = material.get("structure", {}).get("chapters", [])

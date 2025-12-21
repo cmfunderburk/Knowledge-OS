@@ -40,6 +40,12 @@ BrowseScreen {
 #progress-panel {
     width: 1fr;
     height: auto;
+    margin-right: 1;
+}
+
+#reader-panel {
+    width: 1fr;
+    height: auto;
 }
 
 #status-panel {

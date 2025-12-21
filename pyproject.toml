@@ -1,9 +1,10 @@
 [project]
-name = "knowledge-os"
+name = "knos"
 version = "0.1.0"
 description = "Spaced-repetition drilling + LLM-powered reading companion for self-study"
 requires-python = ">=3.10"
 dependencies = [
+    "typer>=0.9.0",
     "rich>=13.0.0",
     "readchar>=4.0.0",
     "textual>=0.47.0",
@@ -24,7 +25,17 @@ dependencies = [
     "torch>=2.1",
     "spacy-lookups-data>=1.0.5",
     "nvidia-nccl-cu12>=2.27.5",
+    "en-core-web-sm",
 ]
 
+[project.scripts]
+knos = "knos.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["knos*", "reader*", "reviewer*", "tui*"]
+
 [tool.uv]
-package = false
+package = true
+
+[tool.uv.sources]
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
