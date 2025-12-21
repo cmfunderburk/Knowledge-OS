@@ -23,7 +23,23 @@ app = typer.Typer(
 
 # Reader subcommand group
 read_app = typer.Typer(
-    help="Reading companion - seminar-style dialogue with texts.",
+    help="""Reading companion - seminar-style dialogue with texts.
+
+Workflow:
+  1. Register material in reader/content_registry.yaml (source path + chapters)
+  2. Extract: knos read extract <material-id>
+  3. Read: knos read → select material → select chapter
+
+Example registry entry (reader/content_registry.yaml):
+  materials:
+    my-book:
+      title: "Book Title"
+      author: "Author Name"
+      source: "path/to/book.pdf"
+      structure:
+        chapters:
+          - { num: 1, title: "Introduction", pages: [1, 20] }
+""",
     no_args_is_help=False,
 )
 app.add_typer(read_app, name="read")
@@ -89,9 +105,16 @@ def read_main(ctx: typer.Context) -> None:
 
 @read_app.command("extract")
 def read_extract(
-    material_id: str = typer.Argument(..., help="Material ID to extract"),
+    material_id: str = typer.Argument(..., help="Material ID from content_registry.yaml"),
 ) -> None:
-    """Extract chapters from a registered material."""
+    """Extract chapters from a registered material.
+
+    Prepares a material for reading by extracting/copying content:
+      - PDF: Copies to reader/extracted/<id>/source.pdf (text extracted on-demand)
+      - EPUB: Extracts chapters to reader/extracted/<id>/ch<N>.md
+
+    Use 'knos read list' to see registered materials.
+    """
     from knos.commands.read import run_extract
     run_extract(material_id)
 

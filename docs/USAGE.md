@@ -5,7 +5,9 @@ Reference for the self-study TUI and spaced-repetition tooling.
 ## Quick Start
 
 ```bash
-./study              # Launch TUI dashboard (Primary Interface)
+knos                 # Launch study TUI (default)
+knos today           # CLI dashboard
+knos read            # Reading companion
 ```
 
 ## Documentation Index
@@ -23,22 +25,28 @@ Reference for the self-study TUI and spaced-repetition tooling.
 
 | Command | Description |
 |---------|-------------|
-| `./study` | Launch TUI dashboard |
-| `./study --today` | Print CLI dashboard |
-| `./study --progress` | Generate PROGRESS.md |
-| `./today` | CLI daily orientation |
-| `./drill` | Launch drill queue (Textual TUI) |
-| `./read` | Launch reading companion TUI (LLM dialogue) |
+| `knos` | Launch study TUI (default) |
+| `knos today` | Print CLI dashboard |
+| `knos study` | Launch study TUI |
+| `knos drill` | Launch drill TUI |
+| `knos read` | Launch reading companion TUI |
+| `knos progress` | Generate PROGRESS.md |
 
 ### Reader CLI
 
+**Workflow:**
+1. Register material in `reader/content_registry.yaml` (source path + chapter structure)
+2. Extract: `knos read extract <material-id>`
+3. Read: `knos read` → select material → select chapter
+
 | Command | Description |
 |---------|-------------|
-| `./read` | Launch TUI (material → chapter → dialogue) |
-| `./read --list` | List registered materials and extraction status |
-| `./read --extract <id>` | Extract chapters from PDF to `reader/extracted/` |
-| `./read --test-llm` | Verify LLM configuration |
-| `./read --help` | Show usage information |
+| `knos read` | Launch TUI (material → chapter → dialogue) |
+| `knos read list` | List registered materials |
+| `knos read extract <id>` | Extract/copy material to `reader/extracted/` |
+| `knos read clear <id> [chapter]` | Clear session data |
+| `knos read test` | Verify LLM configuration |
+| `knos read --help` | Show usage and workflow |
 
 ### Reviewer CLI (Direct)
 

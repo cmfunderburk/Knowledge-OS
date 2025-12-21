@@ -27,11 +27,11 @@ def run_today() -> None:
     from reader.session import list_sessions, SESSIONS_DIR
 
     _print_header()
-    _print_domain(get_todays_domain)
+    _print_domain(get_todays_domain())
     _print_reviewer_status(get_reviewer_summary)
     _print_reader_status(load_registry, list_sessions, SESSIONS_DIR)
-    _print_card_summary(collect_focus_files)
-    _print_next_task(get_overall_progress, get_next_task)
+    _print_card_summary(collect_focus_files())
+    _print_next_task(get_overall_progress(), get_next_task())
     _print_quick_commands()
 
 
@@ -44,8 +44,8 @@ def _print_header() -> None:
     print()
 
 
-def _print_domain(get_todays_domain) -> None:
-    domain, override = get_todays_domain()
+def _print_domain(domain_info: tuple[str, str | None]) -> None:
+    domain, override = domain_info
     if override:
         print(f"{BOLD}Current Phase:{RESET} {YELLOW}{domain}{RESET}")
         print(f"{DIM}{override}{RESET}")
@@ -54,10 +54,11 @@ def _print_domain(get_todays_domain) -> None:
     print()
 
 
-def _print_reviewer_status(get_reviewer_summary) -> None:
+def _print_reviewer_status(get_reviewer_summary_fn) -> None:
+    """Print reviewer status. Takes callable to handle exceptions gracefully."""
     print(f"{BOLD}Reviewer:{RESET}")
     try:
-        summary = get_reviewer_summary()
+        summary = get_reviewer_summary_fn()
         box_zero = summary["box_zero"]
         overdue = summary["overdue"]
         due_now = summary["due_now"]
@@ -83,10 +84,11 @@ def _print_reviewer_status(get_reviewer_summary) -> None:
     print()
 
 
-def _print_reader_status(load_registry, list_sessions, sessions_dir) -> None:
+def _print_reader_status(load_registry_fn, list_sessions_fn, sessions_dir) -> None:
+    """Print reader status. Takes callables to handle exceptions gracefully."""
     print(f"{BOLD}Reader:{RESET}")
     try:
-        registry = load_registry()
+        registry = load_registry_fn()
         materials = registry.get("materials", {})
         material_count = len(materials)
 
@@ -95,7 +97,7 @@ def _print_reader_status(load_registry, list_sessions, sessions_dir) -> None:
             for material_dir in sessions_dir.iterdir():
                 if material_dir.is_dir():
                     material_id = material_dir.name
-                    sessions = list_sessions(material_id)
+                    sessions = list_sessions_fn(material_id)
                     for chapter_num, session in sessions.items():
                         material_info = materials.get(material_id, {})
                         title = material_info.get("title", material_id)
@@ -125,8 +127,7 @@ def _print_reader_status(load_registry, list_sessions, sessions_dir) -> None:
     print()
 
 
-def _print_card_summary(collect_focus_files) -> None:
-    focus_files = collect_focus_files()
+def _print_card_summary(focus_files: list) -> None:
     count = len(focus_files)
     if count > 0:
         print(f"{BOLD}Reviewer Library:{RESET}")
@@ -134,13 +135,12 @@ def _print_card_summary(collect_focus_files) -> None:
         print()
 
 
-def _print_next_task(get_overall_progress, get_next_task) -> None:
-    done, total = get_overall_progress()
+def _print_next_task(progress: tuple[int, int], next_task: str | None) -> None:
+    done, total = progress
     if total == 0:
         return
 
     print(f"{BOLD}Phase 0 Progress:{RESET} {done}/{total} tasks complete")
-    next_task = get_next_task()
     if next_task:
         print(f"  {CYAN}Next:{RESET}  {next_task}")
     else:
