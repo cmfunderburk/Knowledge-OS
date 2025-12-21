@@ -6,7 +6,7 @@ from rich.table import Table
 from textual.widget import Widget
 from textual.reactive import reactive
 
-from reviewer.core import CodeBlock, BlockResult
+from knos.reviewer.core import CodeBlock, BlockResult
 
 class RevealBlock(Widget):
     """

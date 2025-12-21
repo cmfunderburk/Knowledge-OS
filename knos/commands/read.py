@@ -12,7 +12,7 @@ from typing import Optional
 def run_read_tui() -> None:
     """Launch the reader TUI."""
     try:
-        from tui.app import ReaderApp
+        from knos.tui.app import ReaderApp
         app = ReaderApp()
         app.run()
     except ImportError as e:

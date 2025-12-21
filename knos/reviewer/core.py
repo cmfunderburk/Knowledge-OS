@@ -18,8 +18,8 @@ import yaml
 # ==========================================================================
 # CONSTANTS & CONFIGURATION
 # ==========================================================================
-BASE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = BASE_DIR.parent
+BASE_DIR = Path(__file__).resolve().parent  # knos/reviewer/
+REPO_ROOT = BASE_DIR.parent.parent  # repo root (up from knos/reviewer/ to knos/ to root)
 SOLUTIONS_ROOT = REPO_ROOT / "solutions"
 FOCUS_DIR = SOLUTIONS_ROOT / "focus"
 PLAN_DIR = REPO_ROOT / "plan"

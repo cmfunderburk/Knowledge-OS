@@ -10,7 +10,7 @@ from rich.progress_bar import ProgressBar as RichProgressBar
 from textual.widget import Widget
 from textual.widgets import Static
 
-from reviewer.core import (
+from knos.reviewer.core import (
     get_todays_domain,
     get_next_task,
     get_sprint_progress,

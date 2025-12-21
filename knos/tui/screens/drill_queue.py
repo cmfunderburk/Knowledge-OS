@@ -4,8 +4,8 @@ from textual.containers import Container
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
-from reviewer.core import get_drill_queue
-from tui.widgets.panels import DrillListPanel
+from knos.reviewer.core import get_drill_queue
+from knos.tui.widgets.panels import DrillListPanel
 from .drill import DrillScreen
 
 

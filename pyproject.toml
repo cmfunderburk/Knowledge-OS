@@ -32,7 +32,7 @@ dependencies = [
 knos = "knos.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["knos*", "reader*", "reviewer*", "tui*"]
+include = ["knos*", "reader*"]
 
 [tool.uv]
 package = true

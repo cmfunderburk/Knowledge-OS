@@ -7,7 +7,7 @@ Generates and saves PROGRESS.md report.
 
 def run_progress() -> None:
     """Generate and save progress report."""
-    from reviewer.core import generate_progress_report, REPO_ROOT
+    from knos.reviewer.core import generate_progress_report, REPO_ROOT
 
     report = generate_progress_report()
     output_path = REPO_ROOT / "PROGRESS.md"

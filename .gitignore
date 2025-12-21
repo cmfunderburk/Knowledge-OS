@@ -22,7 +22,7 @@ reader/drafts/
 reader/docs/
 
 # ===== Reviewer State =====
-reviewer/history.jsonl
+knos/reviewer/history.jsonl
 
 # ===== Schedule Configs (personal) =====
 schedules-llm/

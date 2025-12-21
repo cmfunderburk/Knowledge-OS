@@ -6,8 +6,8 @@ from textual.widgets import Header, Footer, Static, Label
 from textual.containers import Container, Horizontal, Vertical
 from textual.binding import Binding
 
-from reviewer.core import get_drill_queue, generate_progress_report, REPO_ROOT, PLAN_DIR, get_priority_shift_config
-from tui.widgets.panels import TodayPanel, ProgressPanel, StatusPanel, DrillListPanel, ReaderPanel
+from knos.reviewer.core import get_drill_queue, generate_progress_report, REPO_ROOT, PLAN_DIR, get_priority_shift_config
+from knos.tui.widgets.panels import TodayPanel, ProgressPanel, StatusPanel, DrillListPanel, ReaderPanel
 from .drill import DrillScreen
 from .browse import BrowseScreen
 from .progress_modal import ProgressModal, SyllabusModal
