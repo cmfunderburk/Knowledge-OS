@@ -5,8 +5,8 @@ from textual.widgets import Header, Footer, Markdown, Static, Label
 from textual.containers import VerticalScroll, Container
 from textual.binding import Binding
 
-from reviewer.core import parse_markdown, SessionResult, update_schedule, append_history
-from tui.widgets.reveal_block import RevealBlock
+from knos.reviewer.core import parse_markdown, SessionResult, update_schedule, append_history
+from knos.tui.widgets.reveal_block import RevealBlock
 
 class DrillScreen(Screen):
     """Screen for drilling a specific solution."""

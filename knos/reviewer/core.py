@@ -18,13 +18,13 @@ import yaml
 # ==========================================================================
 # CONSTANTS & CONFIGURATION
 # ==========================================================================
-BASE_DIR = Path(__file__).resolve().parent
-REPO_ROOT = BASE_DIR.parent
+BASE_DIR = Path(__file__).resolve().parent  # knos/reviewer/
+REPO_ROOT = BASE_DIR.parent.parent  # repo root (up from knos/reviewer/ to knos/ to root)
 SOLUTIONS_ROOT = REPO_ROOT / "solutions"
 FOCUS_DIR = SOLUTIONS_ROOT / "focus"
 PLAN_DIR = REPO_ROOT / "plan"
 SCHEDULE_PATH = PLAN_DIR / "schedule.json"
-HISTORY_PATH = BASE_DIR / "history.jsonl"
+HISTORY_PATH = PLAN_DIR / "history.jsonl"
 TODO_FILE = PLAN_DIR / "todo.md"
 STUDY_CONFIG_PATH = PLAN_DIR / "study_config.yaml"
 PRIORITY_SHIFT_PATH = PLAN_DIR / "priority_shift.md"

@@ -4,7 +4,7 @@ from textual.widgets import Input, ListView, ListItem, Label, Header, Footer
 from textual.containers import Container
 from textual.binding import Binding
 
-from reviewer.core import collect_all_solutions, load_schedule, get_solution_key
+from knos.reviewer.core import collect_all_solutions, load_schedule, get_solution_key
 from .drill import DrillScreen
 
 class BrowseScreen(Screen):

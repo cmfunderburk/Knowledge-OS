@@ -8,7 +8,7 @@ from textual.widgets import Markdown, Footer, Static
 from textual.containers import Container, VerticalScroll
 from textual.binding import Binding
 
-from reviewer.core import generate_progress_report, REPO_ROOT
+from knos.reviewer.core import generate_progress_report, REPO_ROOT
 
 
 class ProgressModal(ModalScreen):

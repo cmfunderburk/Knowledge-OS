@@ -10,6 +10,7 @@ Falls back to raw pymupdf extraction for pages with many images
 (e.g., figure-heavy pages with embedded sprites).
 """
 from pathlib import Path
+from typing import TypeAlias
 
 import pymupdf
 import pymupdf4llm
@@ -21,6 +22,47 @@ EXTRACTED_DIR = READER_DIR / "extracted"
 
 # Pages with more than this many images use fallback extraction
 MAX_IMAGES_PER_PAGE = 20
+
+# Content identifier: integer for chapters (1, 2, 3), string for appendices ("A", "B")
+ContentId: TypeAlias = int | str
+
+
+def get_content_info(material_id: str, content_id: ContentId) -> dict | None:
+    """
+    Look up content (chapter or appendix) by ID.
+
+    Args:
+        material_id: The material identifier
+        content_id: Chapter number (int) or appendix ID (str like "A", "B")
+
+    Returns:
+        Dict with 'title' and 'pages' keys, or None if not found
+    """
+    material = get_material(material_id)
+    structure = material.get("structure", {})
+
+    if isinstance(content_id, int):
+        # Look up chapter by number
+        chapters = structure.get("chapters", [])
+        for ch in chapters:
+            if ch["num"] == content_id:
+                return {"title": ch["title"], "pages": ch["pages"]}
+    else:
+        # Look up appendix by ID
+        appendices = structure.get("appendices", [])
+        for app in appendices:
+            if app["id"] == content_id:
+                return {"title": app["title"], "pages": app["pages"]}
+
+    return None
+
+
+def format_content_id(content_id: ContentId) -> str:
+    """Format a content ID for display (e.g., 'Chapter 1' or 'Appendix A')."""
+    if isinstance(content_id, int):
+        return f"Chapter {content_id}"
+    else:
+        return f"Appendix {content_id}"
 
 
 def get_source_format(material_id: str) -> str:
@@ -38,21 +80,20 @@ def get_source_format(material_id: str) -> str:
     return "pdf" if source.lower().endswith(".pdf") else "epub"
 
 
-def get_chapter_pdf(material_id: str, chapter_num: int) -> bytes:
+def get_chapter_pdf(material_id: str, content_id: ContentId) -> bytes:
     """
-    Extract chapter page range as PDF bytes (for PDF sources only).
+    Extract content page range as PDF bytes (for PDF sources only).
 
     Args:
         material_id: The material identifier
-        chapter_num: The chapter number
+        content_id: Chapter number (int) or appendix ID (str)
 
     Returns:
-        PDF bytes for the chapter page range
+        PDF bytes for the content page range
 
     Raises:
-        ValueError: If source PDF not found in extracted/
+        ValueError: If source PDF not found or content not found
     """
-    material = get_material(material_id)
     source_path = EXTRACTED_DIR / material_id / "source.pdf"
 
     if not source_path.exists():
@@ -60,12 +101,11 @@ def get_chapter_pdf(material_id: str, chapter_num: int) -> bytes:
             f"Source PDF not found. Place PDF at reader/extracted/{material_id}/source.pdf"
         )
 
-    chapters = material.get("structure", {}).get("chapters", [])
-    chapter = next((c for c in chapters if c["num"] == chapter_num), None)
-    if not chapter:
-        raise ValueError(f"Chapter {chapter_num} not found in material '{material_id}'")
+    content_info = get_content_info(material_id, content_id)
+    if not content_info:
+        raise ValueError(f"{format_content_id(content_id)} not found in material '{material_id}'")
 
-    start, end = chapter["pages"]
+    start, end = content_info["pages"]
 
     doc = pymupdf.open(source_path)
     new_doc = pymupdf.open()
@@ -181,19 +221,19 @@ def load_chapter(material_id: str, chapter_num: int) -> str:
     return path.read_text()
 
 
-def get_chapter_text(material_id: str, chapter_num: int) -> str:
+def get_chapter_text(material_id: str, content_id: ContentId) -> str:
     """
-    Get chapter content as text for any format.
+    Get content as text for any format.
 
-    For EPUBs: Returns pre-extracted markdown text
+    For EPUBs: Returns pre-extracted markdown text (chapters only)
     For PDFs: Extracts text from the PDF page range on-demand
 
     Args:
         material_id: The material identifier
-        chapter_num: The chapter number
+        content_id: Chapter number (int) or appendix ID (str)
 
     Returns:
-        Chapter content as text
+        Content as text
 
     Raises:
         ValueError: If source not found
@@ -201,10 +241,12 @@ def get_chapter_text(material_id: str, chapter_num: int) -> str:
     source_format = get_source_format(material_id)
 
     if source_format == "epub":
-        return load_chapter(material_id, chapter_num)
+        if isinstance(content_id, int):
+            return load_chapter(material_id, content_id)
+        else:
+            raise ValueError("EPUB appendices not yet supported")
     else:
         # PDF: extract text on-demand
-        material = get_material(material_id)
         source_path = EXTRACTED_DIR / material_id / "source.pdf"
 
         if not source_path.exists():
@@ -212,12 +254,11 @@ def get_chapter_text(material_id: str, chapter_num: int) -> str:
                 f"Source PDF not found. Place PDF at reader/extracted/{material_id}/source.pdf"
             )
 
-        chapters = material.get("structure", {}).get("chapters", [])
-        chapter = next((c for c in chapters if c["num"] == chapter_num), None)
-        if not chapter:
-            raise ValueError(f"Chapter {chapter_num} not found")
+        content_info = get_content_info(material_id, content_id)
+        if not content_info:
+            raise ValueError(f"{format_content_id(content_id)} not found")
 
-        return extract_pages(source_path, chapter["pages"])
+        return extract_pages(source_path, content_info["pages"])
 
 
 def list_extracted_chapters(material_id: str) -> list[int]:
@@ -250,3 +291,53 @@ def list_extracted_chapters(material_id: str) -> list[int]:
             continue
 
     return sorted(chapters)
+
+
+def list_extracted_appendices(material_id: str) -> list[str]:
+    """
+    List which appendices are available for a material.
+
+    For PDFs: All appendices if source.pdf exists
+    For EPUBs: Not yet supported
+
+    Returns:
+        List of appendix IDs (e.g., ["A", "B", "C"])
+    """
+    material_dir = EXTRACTED_DIR / material_id
+    if not material_dir.exists():
+        return []
+
+    # PDF: if source.pdf exists, all appendices are available
+    if (material_dir / "source.pdf").exists():
+        material = get_material(material_id)
+        appendices = material.get("structure", {}).get("appendices", [])
+        return [a["id"] for a in appendices]
+
+    # EPUB: appendices not yet supported
+    return []
+
+
+def list_all_content(material_id: str) -> tuple[list[dict], list[dict]]:
+    """
+    List all available content (chapters and appendices) for a material.
+
+    Returns:
+        Tuple of (chapters, appendices) where each is a list of dicts
+        with 'num'/'id' and 'title' keys
+    """
+    material = get_material(material_id)
+    structure = material.get("structure", {})
+
+    material_dir = EXTRACTED_DIR / material_id
+    has_source = material_dir.exists() and (material_dir / "source.pdf").exists()
+
+    if has_source:
+        chapters = structure.get("chapters", [])
+        appendices = structure.get("appendices", [])
+    else:
+        # EPUB: only chapters with extracted files
+        available_nums = list_extracted_chapters(material_id)
+        chapters = [c for c in structure.get("chapters", []) if c["num"] in available_nums]
+        appendices = []
+
+    return chapters, appendices

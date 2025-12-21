@@ -116,11 +116,11 @@ def read_list() -> None:
 @read_app.command("clear")
 def read_clear(
     material_id: str = typer.Argument(..., help="Material ID (or 'ALL' for all materials)"),
-    chapter: Optional[int] = typer.Argument(None, help="Specific chapter number to clear"),
+    content: Optional[str] = typer.Argument(None, help="Chapter number (e.g., '1') or appendix ID (e.g., 'A')"),
 ) -> None:
     """Clear session data for a material."""
     from knos.commands.read import run_clear
-    run_clear(material_id, chapter)
+    run_clear(material_id, content)
 
 
 @read_app.command("test")

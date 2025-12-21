@@ -16,7 +16,7 @@ RESET = '\033[0m'
 
 def run_today() -> None:
     """Print CLI dashboard."""
-    from reviewer.core import (
+    from knos.reviewer.core import (
         get_todays_domain,
         get_next_task,
         get_reviewer_summary,

@@ -3,6 +3,7 @@ LLM provider abstraction for the reader module.
 """
 import os
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
@@ -39,6 +40,23 @@ class LLMProvider(ABC):
             ChatResponse with text and token counts
         """
         pass
+
+    def stream_chat(
+        self, messages: list[dict], system: str | None = None
+    ) -> Iterator[str]:
+        """
+        Stream messages and yield text chunks.
+
+        Args:
+            messages: List of {"role": "user"|"assistant", "content": "..."}
+            system: Optional system prompt
+
+        Yields:
+            Text chunks as they arrive
+        """
+        # Default implementation: just yield the full response
+        response = self.chat(messages, system)
+        yield response.text
 
 
 class GeminiProvider(LLMProvider):
@@ -165,34 +183,41 @@ class GeminiProvider(LLMProvider):
             cached_tokens=cached_tokens,
         )
 
+    def stream_chat(
+        self, messages: list[dict], system: str | None = None
+    ) -> Iterator[str]:
+        """Stream messages and yield text chunks."""
+        from google.genai import types
 
-class AnthropicProvider(LLMProvider):
-    """Anthropic Claude provider."""
+        # Convert messages to Gemini Content format
+        contents = []
+        for msg in messages:
+            role = "model" if msg["role"] == "assistant" else "user"
+            contents.append(
+                types.Content(
+                    role=role,
+                    parts=[types.Part.from_text(text=msg["content"])]
+                )
+            )
 
-    def __init__(self, api_key: str, model: str = "claude-sonnet-4-20250514"):
-        import anthropic
+        # Build generation config (same logic as chat)
+        if self._cache_name:
+            gen_config = types.GenerateContentConfig(
+                cached_content=self._cache_name,
+            )
+        else:
+            gen_config = types.GenerateContentConfig(
+                system_instruction=system,
+            )
 
-        self.client = anthropic.Anthropic(api_key=api_key)
-        self.model = model
-
-    def chat(self, messages: list[dict], system: str | None = None) -> ChatResponse:
-        """Send messages to Claude and get a response."""
-        response = self.client.messages.create(
+        # Use streaming API
+        for chunk in self.client.models.generate_content_stream(
             model=self.model,
-            max_tokens=4096,
-            system=system or "",
-            messages=messages,
-        )
-
-        # Extract token counts from usage
-        input_tokens = getattr(response.usage, "input_tokens", 0) or 0
-        output_tokens = getattr(response.usage, "output_tokens", 0) or 0
-
-        return ChatResponse(
-            text=response.content[0].text,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-        )
+            contents=contents,
+            config=gen_config,
+        ):
+            if chunk.text:
+                yield chunk.text
 
 
 def get_provider(config: dict[str, Any] | None = None) -> LLMProvider:
@@ -211,29 +236,19 @@ def get_provider(config: dict[str, Any] | None = None) -> LLMProvider:
     llm_config = config.get("llm", {})
     provider_name = llm_config.get("provider", "gemini")
 
-    if provider_name == "gemini":
-        gemini_config = llm_config.get("gemini", {})
-        api_key = gemini_config.get("api_key") or os.environ.get(
-            gemini_config.get("api_key_env", "GOOGLE_API_KEY")
+    if provider_name != "gemini":
+        raise ValueError(
+            f"Unknown LLM provider: {provider_name}. "
+            "Only 'gemini' is currently supported (requires context caching)."
         )
-        if not api_key:
-            raise ValueError(
-                "Gemini API key not found. Set in config.yaml or GOOGLE_API_KEY env var"
-            )
-        model = gemini_config.get("model", "gemini-2.5-flash")
-        return GeminiProvider(api_key=api_key, model=model)
 
-    elif provider_name == "anthropic":
-        anthropic_config = llm_config.get("anthropic", {})
-        api_key = anthropic_config.get("api_key") or os.environ.get(
-            anthropic_config.get("api_key_env", "ANTHROPIC_API_KEY")
+    gemini_config = llm_config.get("gemini", {})
+    api_key = gemini_config.get("api_key") or os.environ.get(
+        gemini_config.get("api_key_env", "GOOGLE_API_KEY")
+    )
+    if not api_key:
+        raise ValueError(
+            "Gemini API key not found. Set in config.yaml or GOOGLE_API_KEY env var"
         )
-        if not api_key:
-            raise ValueError(
-                "Anthropic API key not found. Set in config.yaml or ANTHROPIC_API_KEY env var"
-            )
-        model = anthropic_config.get("model", "claude-sonnet-4-20250514")
-        return AnthropicProvider(api_key=api_key, model=model)
-
-    else:
-        raise ValueError(f"Unknown LLM provider: {provider_name}")
+    model = gemini_config.get("model", "gemini-2.5-flash")
+    return GeminiProvider(api_key=api_key, model=model)

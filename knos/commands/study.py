@@ -9,7 +9,7 @@ import sys
 def run_study() -> None:
     """Launch the study TUI."""
     try:
-        from tui.app import StudyApp
+        from knos.tui.app import StudyApp
         app = StudyApp()
         app.run()
     except ImportError as e:

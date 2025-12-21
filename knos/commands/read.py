@@ -12,7 +12,7 @@ from typing import Optional
 def run_read_tui() -> None:
     """Launch the reader TUI."""
     try:
-        from tui.app import ReaderApp
+        from knos.tui.app import ReaderApp
         app = ReaderApp()
         app.run()
     except ImportError as e:
@@ -41,10 +41,14 @@ def run_list() -> None:
         print()
 
 
-def run_clear(material_id: str, chapter: Optional[int] = None) -> None:
-    """Clear session data for a material (or all materials if 'ALL')."""
-    # Get sessions root from reader module
-    from reader.session import SESSIONS_DIR as sessions_root
+def run_clear(material_id: str, content: Optional[str] = None) -> None:
+    """Clear session data for a material (or all materials if 'ALL').
+
+    Args:
+        material_id: Material ID or 'ALL' to clear everything
+        content: Chapter number (e.g., '1') or appendix ID (e.g., 'A')
+    """
+    from reader.session import SESSIONS_DIR as sessions_root, _content_id_to_prefix
 
     if material_id.upper() == "ALL":
         # Clear everything
@@ -66,11 +70,19 @@ def run_clear(material_id: str, chapter: Optional[int] = None) -> None:
         print(f"No sessions found for: {material_id}")
         return
 
-    if chapter is not None:
-        # Clear specific chapter
+    if content is not None:
+        # Parse content ID (integer for chapters, string for appendices)
+        try:
+            content_id: int | str = int(content)
+            label = f"chapter {content_id}"
+        except ValueError:
+            content_id = content.upper()
+            label = f"appendix {content_id}"
+
+        prefix = _content_id_to_prefix(content_id)
         files = [
-            sessions_dir / f"ch{chapter:02d}.jsonl",
-            sessions_dir / f"ch{chapter:02d}.meta.json",
+            sessions_dir / f"{prefix}.jsonl",
+            sessions_dir / f"{prefix}.meta.json",
         ]
         deleted = 0
         for f in files:
@@ -78,9 +90,9 @@ def run_clear(material_id: str, chapter: Optional[int] = None) -> None:
                 f.unlink()
                 deleted += 1
         if deleted:
-            print(f"Cleared session for {material_id} chapter {chapter}")
+            print(f"Cleared session for {material_id} {label}")
         else:
-            print(f"No session found for {material_id} chapter {chapter}")
+            print(f"No session found for {material_id} {label}")
     else:
         # Clear all sessions for this material
         shutil.rmtree(sessions_dir)
@@ -104,7 +116,7 @@ def run_test_llm() -> None:
         response = provider.chat(
             messages=[{"role": "user", "content": "Say 'Hello from Reader!' and nothing else."}]
         )
-        print(f"  Response: {response.strip()}")
+        print(f"  Response: {response.text.strip()}")
         print("\nLLM integration working!")
     except Exception as e:
         print(f"Error: {e}")

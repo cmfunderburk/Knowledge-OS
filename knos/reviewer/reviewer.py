@@ -16,8 +16,8 @@ from pathlib import Path
 
 # Import core logic
 from .core import (
-    BASE_DIR,
     FOCUS_DIR,
+    REPO_ROOT,
     BlockResult,
     CodeBlock,
     ParsedMarkdown,
@@ -479,9 +479,9 @@ def main():
 
     solution_path = Path(args.solution)
 
-    # Handle relative paths
+    # Handle relative paths (resolve from repo root, not package directory)
     if not solution_path.is_absolute():
-        solution_path = BASE_DIR / solution_path
+        solution_path = REPO_ROOT / solution_path
 
     if not solution_path.exists():
         print(f"Error: File not found: {solution_path}")

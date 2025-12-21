@@ -9,8 +9,8 @@ from textual.widgets import Header, Footer, Label, RichLog, Static
 from textual.containers import Container
 from textual.binding import Binding
 
-from reader.content import get_chapter_text
-from reader.session import Session, load_transcript
+from reader.content import ContentId, get_chapter_text, format_content_id
+from reader.session import Session, load_transcript, _content_id_to_prefix
 from reader.llm import get_provider
 from reader.prompts import load_prompt
 
@@ -32,12 +32,15 @@ def parse_cards(response: str) -> list[str]:
     return cards
 
 
+def extract_card_title(card_content: str) -> str:
+    """Extract title from card content."""
+    first_line = card_content.split("\n")[0]
+    return re.sub(r"^#+\s*", "", first_line).strip()
+
+
 def generate_filename(card_content: str, index: int) -> str:
     """Generate a filename from card title."""
-    # Extract title from first line
-    first_line = card_content.split("\n")[0]
-    # Remove markdown heading prefix
-    title = re.sub(r"^#+\s*", "", first_line)
+    title = extract_card_title(card_content)
     # Convert to snake_case filename
     slug = re.sub(r"[^\w\s-]", "", title.lower())
     slug = re.sub(r"[-\s]+", "_", slug).strip("_")
@@ -60,13 +63,13 @@ class GenerateCardsScreen(Screen):
         self,
         material_id: str,
         material_title: str,
-        chapter_num: int,
+        content_id: ContentId,
         session: Session,
     ) -> None:
         super().__init__()
         self.material_id = material_id
         self.material_title = material_title
-        self.chapter_num = chapter_num
+        self.content_id = content_id
         self.session = session
 
     def compose(self) -> ComposeResult:
@@ -74,7 +77,7 @@ class GenerateCardsScreen(Screen):
 
         with Container(id="generate-container"):
             yield Label(
-                f"[bold]Generating Cards[/bold] · {self.material_title} Ch.{self.chapter_num}",
+                f"[bold]Generating Cards[/bold] · {self.material_title} {format_content_id(self.content_id)}",
                 id="generate-header",
             )
             yield RichLog(id="generate-log", wrap=True, markup=True)
@@ -86,17 +89,17 @@ class GenerateCardsScreen(Screen):
         self.run_worker(self._generate_cards(), exclusive=True)
 
     async def _generate_cards(self) -> None:
-        """Generate cards from session transcript."""
+        """Generate cards from session transcript with streaming progress."""
         import asyncio
 
         log = self.query_one("#generate-log", RichLog)
 
-        log.write("[dim]Loading chapter content...[/dim]")
-        chapter_content = get_chapter_text(self.material_id, self.chapter_num)
-        log.write(f"  Chapter: {len(chapter_content):,} chars")
+        log.write("[dim]Loading content...[/dim]")
+        chapter_content = get_chapter_text(self.material_id, self.content_id)
+        log.write(f"  Content: {len(chapter_content):,} chars")
 
         log.write("[dim]Loading transcript...[/dim]")
-        transcript = load_transcript(self.material_id, self.chapter_num)
+        transcript = load_transcript(self.material_id, self.content_id)
         log.write(f"  Transcript: {len(transcript)} messages")
 
         if not transcript:
@@ -124,35 +127,67 @@ class GenerateCardsScreen(Screen):
 
 Generate drill cards based on the concepts the user engaged with in this dialogue."""
 
-        log.write("[dim]Calling LLM...[/dim]")
         log.write("")
+        log.write("[dim]Generating cards...[/dim]")
 
         try:
             provider = get_provider()
 
-            # Call LLM
-            response = await asyncio.to_thread(
-                provider.chat,
-                [{"role": "user", "content": user_message}],
-                system_prompt,
-            )
+            # Stream the response and detect cards as they're generated
+            def stream_and_parse():
+                """Run streaming in thread, return cards as they're found."""
+                buffer = ""
+                cards_found = []
 
-            log.write(f"[green]Response received[/green] ({response.output_tokens} tokens)")
-            log.write("")
+                for chunk in provider.stream_chat(
+                    [{"role": "user", "content": user_message}],
+                    system_prompt,
+                ):
+                    buffer += chunk
 
-            # Parse cards from response
-            cards = parse_cards(response.text)
-            log.write(f"[bold]Parsed {len(cards)} cards[/bold]")
+                    # Check if we have a complete card (delimiter followed by content)
+                    while "===CARD===" in buffer:
+                        parts = buffer.split("===CARD===", 1)
+                        before = parts[0].strip()
+                        after = parts[1] if len(parts) > 1 else ""
+
+                        # If there's content before the delimiter, it's a card
+                        if before and before.startswith("#"):
+                            cards_found.append(before)
+                            # Notify UI of new card
+                            title = extract_card_title(before)
+                            self.app.call_from_thread(
+                                log.write,
+                                f"  [green]✓[/green] Found: [bold]{title}[/bold]"
+                            )
+
+                        buffer = after
+
+                # Handle final card (after last delimiter or if no delimiters)
+                final = buffer.strip()
+                if final and final.startswith("#"):
+                    cards_found.append(final)
+                    title = extract_card_title(final)
+                    self.app.call_from_thread(
+                        log.write,
+                        f"  [green]✓[/green] Found: [bold]{title}[/bold]"
+                    )
+
+                return cards_found
+
+            cards = await asyncio.to_thread(stream_and_parse)
+
             log.write("")
 
             if not cards:
-                log.write("[yellow]No cards found in response[/yellow]")
-                log.write("[dim]Raw response:[/dim]")
-                log.write(response.text[:500] + "..." if len(response.text) > 500 else response.text)
+                log.write("[yellow]No cards generated[/yellow]")
                 return
 
+            log.write(f"[bold]Writing {len(cards)} cards...[/bold]")
+
             # Write cards to drafts directory
-            drafts_dir = DRAFTS_DIR / self.material_id / f"ch{self.chapter_num:02d}"
+            content_prefix = _content_id_to_prefix(self.content_id)
+            drafts_dir = DRAFTS_DIR / self.material_id / content_prefix
             drafts_dir.mkdir(parents=True, exist_ok=True)
 
             for i, card_content in enumerate(cards, 1):
@@ -166,15 +201,15 @@ Generate drill cards based on the concepts the user engaged with in this dialogu
                     filepath = drafts_dir / f"{stem}_{timestamp}.md"
 
                 filepath.write_text(card_content)
-
-                # Show card preview
-                title = card_content.split("\n")[0]
-                log.write(f"  [green]✓[/green] {filename}")
-                log.write(f"    {title}")
+                log.write(f"  [dim]{filename}[/dim]")
 
             log.write("")
             log.write(f"[bold green]Done![/bold green] Cards written to:")
-            log.write(f"  [cyan]{drafts_dir.relative_to(Path.cwd())}[/cyan]")
+            try:
+                display_path = drafts_dir.relative_to(Path.cwd())
+            except ValueError:
+                display_path = drafts_dir
+            log.write(f"  [cyan]{display_path}[/cyan]")
 
         except Exception as e:
             log.write(f"[red]Error: {e}[/red]")

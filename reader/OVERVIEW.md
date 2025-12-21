@@ -47,14 +47,13 @@ Each reading session follows phases inspired by seminar preparation:
 
 2. **Active Dialogue** — Engage with the text
    - Work through the material with the LLM
-   - Switch modes as needed (Socratic, Clarify, Challenge)
-   - Capture insights for later card creation
+   - Switch modes as needed (Socratic, Clarify, Challenge, Teach, Quiz)
+   - Focus on understanding—the transcript captures your learning journey
 
-3. **Synthesis** — Consolidate understanding
-   - What were the key insights?
-   - How does this connect to prior knowledge?
-   - What's still unclear?
-   - Generate candidate drill cards
+3. **Card Generation** — Create drill cards from the session
+   - Press `Ctrl+G` to generate cards from the dialogue
+   - LLM mines the transcript for concepts worth drilling
+   - Cards go to `reader/drafts/` for manual review
 
 ### Dialogue Modes
 
@@ -156,41 +155,46 @@ Materials populated from `content_registry.yaml` (explicit registration required
 ├─────────────────────────────────────────────────────────┤
 │ > _                                      [🎤 Voice: On] │
 │                                                         │
-│ [Enter] Send  [Ctrl+M] Mode  [Ctrl+C] Capture           │
-│ [Ctrl+S] Synthesize  [Ctrl+V] Voice toggle  [Ctrl+Q]    │
+│ [Enter] Send  [Ctrl+M] Mode  [Ctrl+G] Cards             │
+│ [Ctrl+R] Voice  [Ctrl+T] TTS  [Esc] Back                │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Synthesis Phase
+### Card Generation
+
+Press `Ctrl+G` during or after a dialogue to generate drill cards. The LLM reviews the full chapter content and conversation transcript to identify card-worthy concepts based on:
+
+- **Clarify mode exchanges** — User needed direct explanation
+- **Extended back-and-forth** — Deep engagement signals importance
+- **Repeated questions** — Concept was difficult
+- **Challenge mode success** — Understanding worth cementing
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Session Synthesis: 1.3 Variables and Sets              │
+│  Generating Cards · Logic Book Ch.3                     │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
-│  Duration: 47 minutes                                   │
-│  Exchanges: 23                                          │
+│  Loading chapter content...                             │
+│    Chapter: 12,450 chars                                │
+│  Loading transcript...                                  │
+│    Transcript: 23 messages                              │
+│  Calling LLM...                                         │
 │                                                         │
-│  Captured Insights (4):                                 │
+│  Response received (1,247 tokens)                       │
 │                                                         │
-│  1. "Universe of discourse restricts set-builder to     │
-│      avoid Russell's paradox—can only form subsets      │
-│      of existing sets"                                  │
+│  Parsed 3 cards                                         │
 │                                                         │
-│  2. "Free vs bound variables: free variables make       │
-│      expressions into predicates, not statements"       │
+│    ✓ universe_of_discourse.md                           │
+│      # Universe of Discourse                            │
+│    ✓ free_vs_bound_variables.md                         │
+│      # Free vs Bound Variables                          │
+│    ✓ vacuous_truth.md                                   │
+│      # Vacuous Truth                                    │
 │                                                         │
-│  3. "Truth set of P(x) = {x ∈ U : P(x)} — the set      │
-│      of all elements satisfying the predicate"          │
+│  Done! Cards written to:                                │
+│    reader/drafts/logic-book/ch03/                       │
 │                                                         │
-│  4. "Empty set subtlety: ∀x ∈ ∅, P(x) is vacuously     │
-│      true for any P"                                    │
-│                                                         │
-│  ─────────────────────────────────────────────────────  │
-│                                                         │
-│  Generate drill cards from insights?                    │
-│                                                         │
-│  [g] Generate cards  [e] Edit insights  [s] Save only   │
+│  [Esc] Back                                             │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -415,11 +419,6 @@ Previous sessions on this material covered:
 {{prior_session_summary}}
 {{/if}}
 
-{{#if captured_insights}}
-Insights captured so far this session:
-{{captured_insights}}
-{{/if}}
-
 ## Your Role
 
 1. **Ask, don't tell.** When the user claims understanding, probe it.
@@ -560,7 +559,6 @@ reader/
       ch01-sentential-logic/
         2025-01-15T14-30-00.jsonl    # Dialogue transcript
         2025-01-15T14-30-00.meta.json # Session metadata
-        insights.md                   # Accumulated insights
       ch02-quantificational-logic/
         ...
     build-llm-from-scratch/
@@ -587,7 +585,6 @@ reader/
     "clarify": 3,
     "challenge": 2
   },
-  "insights_captured": 4,
   "cards_generated": 3
 }
 ```
@@ -600,7 +597,6 @@ reader/
 {"role": "user", "content": "A set is a collection...", "input_mode": "voice", "timestamp": "..."}
 {"role": "assistant", "content": "Good instinct to worry about Russell...", "timestamp": "..."}
 {"event": "mode_change", "from": "socratic", "to": "clarify", "timestamp": "..."}
-{"event": "insight_captured", "content": "Universe of discourse restricts...", "timestamp": "..."}
 ```
 
 ### Resume Capability
@@ -624,27 +620,31 @@ Materials list populated from `Syllabus-v2.md`:
 
 ### With Card Creation
 
-Post-synthesis flow:
-1. User selects insights to convert to cards
-2. LLM drafts cards, adapting format to content type:
+Card generation flow:
+1. User presses `Ctrl+G` during or after dialogue
+2. LLM reviews chapter + full transcript, identifies card-worthy concepts
+3. LLM drafts cards, adapting format to content type:
    - **Algorithm**: Time/Space → How It Works → Code blocks → When to Use
-   - **Logic/Proof**: Source ref → Statement → Key Insight
-   - **Tactic**: Use for → Syntax → Effect → Key Insight
-   - **Definition**: Term → Formal definition → Examples
-   - **Theorem**: Statement → Proof sketch → Key insight
-3. Cards saved to `reader/drafts/` (flat structure, auto-generated filenames)
-4. User manually reviews and moves approved cards to `solutions/`
-5. Cards enter drill system independently
-
-**Drafts location**: `reader/drafts/` (flat, not mirroring `solutions/` subdirectories)
+   - **Concept**: Term → Formal definition → Why it matters
+   - **Process**: When to use → Steps → Key insight
+   - **Distinction**: A vs B → Key difference → When it matters
+   - **Principle**: Statement → Rationale
+4. Cards saved to `reader/drafts/{material_id}/ch{N}/`
+5. User manually reviews and moves approved cards to `solutions/focus/`
+6. Cards enter drill system on next session
 
 ```
 reader/
   drafts/
-    demorgan_laws.md
-    bpe_algorithm.md
-    induction_template.md
-    ...
+    logic-book/
+      ch03/
+        universe_of_discourse.md
+        free_vs_bound_variables.md
+        vacuous_truth.md
+    llm-from-scratch/
+      ch02/
+        bpe_algorithm.md
+        ...
 ```
 
 **Not** auto-queued—manual review workflow.
@@ -803,17 +803,15 @@ Summary of key design choices:
 
 ### Phase 2: TUI & Dialogue
 
-- [ ] TUI skeleton (material → chapter → dialogue flow)
-- [ ] Basic dialogue with mode switching
-- [ ] Session persistence (save/resume)
-- [ ] Insight capture during dialogue
+- [x] TUI skeleton (material → chapter → dialogue flow)
+- [x] Basic dialogue with mode switching
+- [x] Session persistence (save/resume)
 
-### Phase 3: Structured Sessions
+### Phase 3: Card Generation
 
-- [ ] Pre-reading phase prompts
-- [ ] Synthesis phase UI
-- [ ] Card generation from insights (to `reader/drafts/`)
-- [ ] Session history and progress tracking
+- [x] Card generation from transcript (Ctrl+G → `reader/drafts/`)
+- [ ] Session history browser
+- [ ] Batch generation from session browser
 
 ### Phase 4: Voice Input
 

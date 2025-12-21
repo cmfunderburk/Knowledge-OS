@@ -9,7 +9,7 @@ import sys
 def run_drill() -> None:
     """Launch the drill TUI."""
     try:
-        from tui.app import DrillApp
+        from knos.tui.app import DrillApp
         app = DrillApp()
         app.run()
     except ImportError as e:
