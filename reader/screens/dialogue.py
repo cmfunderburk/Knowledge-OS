@@ -9,7 +9,7 @@ from textual.widgets.option_list import Option
 from textual.containers import Container, Vertical, Horizontal
 from textual.binding import Binding
 
-from reader.content import get_source_format, get_chapter_pdf, load_chapter
+from reader.content import ContentId, get_source_format, get_chapter_pdf, load_chapter, format_content_id
 from reader.llm import get_provider
 from reader.prompts import build_system_prompt, MODES
 from reader.session import (
@@ -29,6 +29,7 @@ MODE_COLORS = {
     "challenge": "red",
     "teach": "magenta",
     "quiz": "blue",
+    "technical": "yellow",
 }
 
 # Mode descriptions for selection UI
@@ -38,6 +39,7 @@ MODE_INFO = {
     "challenge": "Stress-test claims with counterarguments",
     "teach": "Explain concepts to a confused student",
     "quiz": "Rapid-fire recall testing",
+    "technical": "Step-by-step guidance through formulas and procedures",
 }
 
 
@@ -124,13 +126,13 @@ class DialogueScreen(Screen):
         self,
         material_id: str,
         material_info: dict,
-        chapter_num: int,
+        chapter_num: ContentId,  # int for chapters, str for appendices
         chapter_title: str,
     ) -> None:
         super().__init__()
         self.material_id = material_id
         self.material_info = material_info
-        self.chapter_num = chapter_num
+        self.chapter_num = chapter_num  # ContentId - kept as chapter_num for compatibility
         self.chapter_title = chapter_title
 
         # Session state
@@ -183,7 +185,8 @@ class DialogueScreen(Screen):
             # Header info
             with Horizontal(id="dialogue-header"):
                 yield Label(f"[bold]{book_title}[/bold]", id="book-title")
-                yield Label(f"Chapter {self.chapter_num}: {self.chapter_title}", id="chapter-title")
+                content_label = format_content_id(self.chapter_num)
+                yield Label(f"{content_label}: {self.chapter_title}", id="chapter-title")
                 mode_color = MODE_COLORS.get(self.mode, "cyan")
                 mode_desc = MODE_INFO.get(self.mode, "")
                 yield Label(f"[{mode_color}]{self.mode}[/{mode_color}] [dim]{mode_desc}[/dim]", id="mode-indicator")
@@ -278,7 +281,8 @@ class DialogueScreen(Screen):
             chat_log = self.query_one("#chat-log", RichLog)
             chat_log.write("")
             chat_log.write("[bold cyan]Reader[/bold cyan]")
-            chat_log.write(f"  Welcome to Chapter {self.chapter_num}: {self.chapter_title}")
+            content_label = format_content_id(self.chapter_num)
+            chat_log.write(f"  Welcome to {content_label}: {self.chapter_title}")
             chat_log.write("  What would you like to explore?")
             chat_log.write("")
 

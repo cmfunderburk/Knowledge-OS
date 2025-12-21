@@ -93,4 +93,4 @@ def build_system_prompt(
 
 
 # Available dialogue modes
-MODES = ["socratic", "clarify", "challenge", "teach", "quiz"]
+MODES = ["socratic", "clarify", "challenge", "teach", "quiz", "technical"]

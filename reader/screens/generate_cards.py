@@ -174,7 +174,11 @@ Generate drill cards based on the concepts the user engaged with in this dialogu
 
             log.write("")
             log.write(f"[bold green]Done![/bold green] Cards written to:")
-            log.write(f"  [cyan]{drafts_dir.relative_to(Path.cwd())}[/cyan]")
+            try:
+                display_path = drafts_dir.relative_to(Path.cwd())
+            except ValueError:
+                display_path = drafts_dir
+            log.write(f"  [cyan]{display_path}[/cyan]")
 
         except Exception as e:
             log.write(f"[red]Error: {e}[/red]")

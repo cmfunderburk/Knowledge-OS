@@ -1,24 +1,47 @@
 """Session persistence for reader dialogues.
 
 Sessions are stored as:
-  reader/sessions/<material-id>/ch<N>.jsonl   # Append-only transcript
-  reader/sessions/<material-id>/ch<N>.meta.json  # Session metadata
+  reader/sessions/<material-id>/ch<N>.jsonl     # Append-only transcript (chapters)
+  reader/sessions/<material-id>/appA.jsonl      # Append-only transcript (appendices)
+  reader/sessions/<material-id>/ch<N>.meta.json # Session metadata
 """
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 import json
+from typing import TypeAlias
+
+# Content identifier: integer for chapters (1, 2, 3), string for appendices ("A", "B")
+ContentId: TypeAlias = int | str
 
 # Base directory for sessions
 SESSIONS_DIR = Path(__file__).parent / "sessions"
 
 
+def _content_id_to_prefix(content_id: ContentId) -> str:
+    """Convert content ID to file prefix (e.g., 1 -> 'ch01', 'A' -> 'appA')."""
+    if isinstance(content_id, int):
+        return f"ch{content_id:02d}"
+    else:
+        return f"app{content_id}"
+
+
+def _prefix_to_content_id(prefix: str) -> ContentId:
+    """Convert file prefix back to content ID."""
+    if prefix.startswith("ch"):
+        return int(prefix[2:])
+    elif prefix.startswith("app"):
+        return prefix[3:]
+    else:
+        raise ValueError(f"Unknown prefix: {prefix}")
+
+
 @dataclass
 class Session:
-    """A reading session for a chapter."""
+    """A reading session for a chapter or appendix."""
 
     material_id: str
-    chapter_num: int
+    chapter_num: ContentId  # int for chapters, str for appendices
     chapter_title: str
     started: datetime
     last_updated: datetime
@@ -68,24 +91,26 @@ def _get_session_dir(material_id: str) -> Path:
     return SESSIONS_DIR / material_id
 
 
-def _get_transcript_path(material_id: str, chapter_num: int) -> Path:
+def _get_transcript_path(material_id: str, content_id: ContentId) -> Path:
     """Get path to transcript JSONL file."""
-    return _get_session_dir(material_id) / f"ch{chapter_num:02d}.jsonl"
+    prefix = _content_id_to_prefix(content_id)
+    return _get_session_dir(material_id) / f"{prefix}.jsonl"
 
 
-def _get_meta_path(material_id: str, chapter_num: int) -> Path:
+def _get_meta_path(material_id: str, content_id: ContentId) -> Path:
     """Get path to metadata JSON file."""
-    return _get_session_dir(material_id) / f"ch{chapter_num:02d}.meta.json"
+    prefix = _content_id_to_prefix(content_id)
+    return _get_session_dir(material_id) / f"{prefix}.meta.json"
 
 
-def session_exists(material_id: str, chapter_num: int) -> bool:
-    """Check if a session exists for this chapter."""
-    return _get_meta_path(material_id, chapter_num).exists()
+def session_exists(material_id: str, content_id: ContentId) -> bool:
+    """Check if a session exists for this content."""
+    return _get_meta_path(material_id, content_id).exists()
 
 
-def load_session(material_id: str, chapter_num: int) -> Session | None:
+def load_session(material_id: str, content_id: ContentId) -> Session | None:
     """Load session metadata, or None if no session exists."""
-    meta_path = _get_meta_path(material_id, chapter_num)
+    meta_path = _get_meta_path(material_id, content_id)
     if not meta_path.exists():
         return None
 
@@ -94,9 +119,9 @@ def load_session(material_id: str, chapter_num: int) -> Session | None:
     return Session.from_dict(data)
 
 
-def load_transcript(material_id: str, chapter_num: int) -> list[dict]:
+def load_transcript(material_id: str, content_id: ContentId) -> list[dict]:
     """Load transcript messages from JSONL file."""
-    transcript_path = _get_transcript_path(material_id, chapter_num)
+    transcript_path = _get_transcript_path(material_id, content_id)
     if not transcript_path.exists():
         return []
 
@@ -111,18 +136,18 @@ def load_transcript(material_id: str, chapter_num: int) -> list[dict]:
 
 def create_session(
     material_id: str,
-    chapter_num: int,
+    content_id: ContentId,
     chapter_title: str,
 ) -> Session:
     """Create a new session (or return existing)."""
-    existing = load_session(material_id, chapter_num)
+    existing = load_session(material_id, content_id)
     if existing:
         return existing
 
     now = datetime.now()
     session = Session(
         material_id=material_id,
-        chapter_num=chapter_num,
+        chapter_num=content_id,
         chapter_title=chapter_title,
         started=now,
         last_updated=now,
@@ -149,14 +174,14 @@ def save_metadata(session: Session) -> None:
 
 def append_message(
     material_id: str,
-    chapter_num: int,
+    content_id: ContentId,
     role: str,
     content: str,
     mode: str,
     tokens: dict | None = None,
 ) -> None:
     """Append a message to the transcript (JSONL, append-only)."""
-    transcript_path = _get_transcript_path(material_id, chapter_num)
+    transcript_path = _get_transcript_path(material_id, content_id)
     transcript_path.parent.mkdir(parents=True, exist_ok=True)
 
     message = {
@@ -172,20 +197,23 @@ def append_message(
         f.write(json.dumps(message) + "\n")
 
 
-def list_sessions(material_id: str) -> dict[int, Session]:
-    """List all sessions for a material, keyed by chapter number."""
+def list_sessions(material_id: str) -> dict[ContentId, Session]:
+    """List all sessions for a material, keyed by content ID."""
     session_dir = _get_session_dir(material_id)
     if not session_dir.exists():
         return {}
 
-    sessions = {}
-    for meta_file in session_dir.glob("ch*.meta.json"):
-        # Extract chapter number from filename (ch01.meta.json -> 1)
+    sessions: dict[ContentId, Session] = {}
+    for meta_file in session_dir.glob("*.meta.json"):
+        # Extract content ID from filename (ch01.meta.json -> 1, appA.meta.json -> "A")
         stem = meta_file.stem.replace(".meta", "")
-        chapter_num = int(stem[2:])
+        try:
+            content_id = _prefix_to_content_id(stem)
+        except ValueError:
+            continue
 
-        session = load_session(material_id, chapter_num)
+        session = load_session(material_id, content_id)
         if session:
-            sessions[chapter_num] = session
+            sessions[content_id] = session
 
     return sessions
