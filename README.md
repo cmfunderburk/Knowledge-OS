@@ -39,7 +39,13 @@ The example registry includes free [OpenStax](https://openstax.org/) textbooks a
 
 ## The Reader
 
-A dialogue interface for working through textbook chapters with an LLM tutor.
+A dialogue interface for working through texts with an LLM tutor—textbooks, philosophy, literature.
+
+Three classics from Project Gutenberg are bundled and work out of the box:
+
+- **Nicomachean Ethics** — Aristotle (F.H. Peters translation)
+- **Don Quixote** — Cervantes (John Ormsby translation)
+- **The Brothers Karamazov** — Dostoevsky (Constance Garnett translation)
 
 The tutor doesn't lecture—it asks questions, probes your understanding, and points you back to the text. When you begin a new chapter, it opens with a genuine question about the reading. Dialogue modes include:
 
