@@ -72,7 +72,7 @@ To enable the bundled articles, copy their entries from `reader/content_registry
 <details>
 <summary><strong>Example: Discussing Einstein's Photoelectric Effect paper</strong></summary>
 
-<video src="TODO" controls width="600"></video>
+<video src="https://github.com/user-attachments/assets/1bb29977-dcf3-4375-a962-3f9cc40df5d1" controls width="600"></video>
 
 </details>
 
