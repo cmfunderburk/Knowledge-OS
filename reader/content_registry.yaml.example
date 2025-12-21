@@ -76,13 +76,35 @@ materials:
     author: "Fyodor Dostoevsky"
     source: "reader/classics/brothers-karamazov.epub"
 
+# === Articles ===
+# Articles are single-unit content (no chapters). Use type: article.
+# Bundled articles go in reader/articles/, user articles in reader/sources/.
+
+  # Attention Is All You Need (Transformer paper)
+  # https://arxiv.org/abs/1706.03762
+  attention:
+    title: "Attention Is All You Need"
+    author: "Vaswani et al."
+    source: "reader/articles/attention.pdf"
+    structure:
+      type: article
+
+  # Einstein's photoelectric effect paper (1905)
+  # https://astro1.panet.utoledo.edu/~ljc/PE_eng.pdf
+  einstein-photoelectric:
+    title: "On a Heuristic Point of View Concerning the Production and Transformation of Light"
+    author: "Albert Einstein"
+    source: "reader/articles/einstein-photoelectric.pdf"
+    structure:
+      type: article
+
 # Setup:
 #
 # Bundled classics (reader/classics/) work out of the box - just copy entries above.
 #
 # To add your own materials:
 #
-# For PDFs:
+# For PDFs (books with chapters):
 # 1. Place PDF at reader/sources/<material-id>/source.pdf
 # 2. Add entry with chapter page ranges (1-indexed PDF pages)
 # 3. Verify with: knos read list
@@ -90,4 +112,9 @@ materials:
 # For EPUBs:
 # 1. Place EPUB at reader/sources/<material-id>/source.epub
 # 2. Add entry with title/author only (structure extracted automatically)
+# 3. Verify with: knos read list
+#
+# For Articles (PDFs without chapters):
+# 1. Place PDF at reader/articles/<name>.pdf (bundled) or reader/sources/<name>.pdf
+# 2. Add entry with structure.type: article
 # 3. Verify with: knos read list

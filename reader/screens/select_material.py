@@ -5,7 +5,7 @@ from textual.widgets import Header, Footer, Static, ListItem, ListView, Label
 from textual.containers import Container, Vertical
 from textual.binding import Binding
 
-from reader.config import load_registry
+from reader.config import load_registry, get_material_type
 from reader.content import list_all_content, get_source_path
 
 
@@ -21,16 +21,22 @@ class MaterialItem(ListItem):
         title = self.info.get("title", self.material_id)
         author = self.info.get("author", "Unknown")
 
-        # Get chapter count from actual source (works for both PDF and EPUB)
-        chapters, _ = list_all_content(self.material_id)
-        chapter_count = len(chapters)
-
         # Check if source file exists
         source_exists = get_source_path(self.material_id).exists()
-        status = "ready" if source_exists and chapter_count > 0 else "missing"
+
+        # Format based on material type
+        material_type = get_material_type(self.material_id)
+        if material_type == "article":
+            type_label = "article"
+            status = "ready" if source_exists else "missing"
+        else:
+            chapters, _ = list_all_content(self.material_id)
+            chapter_count = len(chapters)
+            type_label = f"{chapter_count} chapters"
+            status = "ready" if source_exists and chapter_count > 0 else "missing"
 
         yield Label(f"[bold]{title}[/bold]")
-        yield Label(f"  {author} · {chapter_count} chapters · {status}", classes="material-meta")
+        yield Label(f"  {author} · {type_label} · {status}", classes="material-meta")
 
 
 class SelectMaterialScreen(Screen):
@@ -77,19 +83,32 @@ class SelectMaterialScreen(Screen):
             material_id = list_view.highlighted_child.material_id
             info = list_view.highlighted_child.info
 
-            # Check if source exists and has chapters
+            # Check if source exists
             source_path = get_source_path(material_id)
             if not source_path.exists():
                 self.notify(f"Source not found: {source_path}", title="Missing source")
                 return
 
-            chapters, _ = list_all_content(material_id)
-            if not chapters:
-                self.notify("No chapters found in source", title="Empty source")
-                return
+            material_type = get_material_type(material_id)
 
-            from .select_chapter import SelectChapterScreen
-            self.app.push_screen(SelectChapterScreen(material_id, info))
+            if material_type == "article":
+                # Articles skip chapter selection, go directly to dialogue
+                from .dialogue import DialogueScreen
+                self.app.push_screen(DialogueScreen(
+                    material_id=material_id,
+                    material_info=info,
+                    chapter_num=None,  # Signals article mode
+                    chapter_title=info.get("title", material_id),
+                ))
+            else:
+                # Books go to chapter selection
+                chapters, _ = list_all_content(material_id)
+                if not chapters:
+                    self.notify("No chapters found in source", title="Empty source")
+                    return
+
+                from .select_chapter import SelectChapterScreen
+                self.app.push_screen(SelectChapterScreen(material_id, info))
 
     def action_sessions(self) -> None:
         """Open sessions browser."""

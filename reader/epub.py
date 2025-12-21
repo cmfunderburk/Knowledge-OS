@@ -299,3 +299,28 @@ def list_chapters(epub_path: Path) -> list[tuple[int, str]]:
     """
     structure = parse_epub_structure(epub_path)
     return [(ch.num, ch.title) for ch in structure.chapters]
+
+
+def extract_all_text(epub_path: Path) -> str:
+    """
+    Extract all text content from an EPUB.
+
+    Used for article-type materials where the entire document
+    is treated as a single unit.
+
+    Args:
+        epub_path: Path to the EPUB file
+
+    Returns:
+        All text content concatenated
+    """
+    book = epub.read_epub(str(epub_path))
+
+    parts = []
+    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+        html = item.get_content().decode('utf-8')
+        text = _html_to_clean_text(html)
+        if text.strip():
+            parts.append(text)
+
+    return '\n\n'.join(parts)

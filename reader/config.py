@@ -38,3 +38,15 @@ def get_material(material_id: str) -> dict[str, Any]:
         raise ValueError(f"Material '{material_id}' not found in registry")
 
     return materials[material_id]
+
+
+def get_material_type(material_id: str) -> str:
+    """
+    Get the material type ('article' or 'chapters').
+
+    Articles are single-unit content (no chapter structure).
+    Chapters is the default for books with chapter/appendix structure.
+    """
+    material = get_material(material_id)
+    structure = material.get("structure", {})
+    return structure.get("type", "chapters")

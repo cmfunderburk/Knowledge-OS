@@ -9,7 +9,8 @@ from textual.widgets.option_list import Option
 from textual.containers import Container, Vertical, Horizontal
 from textual.binding import Binding
 
-from reader.content import ContentId, get_source_format, get_chapter_pdf, load_chapter, format_content_id
+from reader.content import ContentId, get_source_format, get_chapter_pdf, load_chapter, format_content_id, get_article_text, get_article_pdf
+from reader.config import get_material_type
 from reader.llm import get_provider
 from reader.prompts import build_cache_prompt, get_mode_instruction, MODES
 from reader.session import (
@@ -126,14 +127,15 @@ class DialogueScreen(Screen):
         self,
         material_id: str,
         material_info: dict,
-        chapter_num: ContentId,  # int for chapters, str for appendices
+        chapter_num: ContentId | None,  # int for chapters, str for appendices, None for articles
         chapter_title: str,
     ) -> None:
         super().__init__()
         self.material_id = material_id
         self.material_info = material_info
-        self.chapter_num = chapter_num  # ContentId - kept as chapter_num for compatibility
+        self.chapter_num = chapter_num  # ContentId | None - kept as chapter_num for compatibility
         self.chapter_title = chapter_title
+        self.is_article = get_material_type(material_id) == "article"
 
         # Session state
         self.messages: list[dict] = []
@@ -150,6 +152,7 @@ class DialogueScreen(Screen):
         self.total_output_tokens = 0
         self.cache_size = 0  # Size of cached content (constant per session)
         self.using_cache = False
+        self._system_prompt: str | None = None  # For non-cached article mode
 
         # Voice input state
         self._recording = False
@@ -185,8 +188,13 @@ class DialogueScreen(Screen):
             # Header info
             with Horizontal(id="dialogue-header"):
                 yield Label(f"[bold]{book_title}[/bold]", id="book-title")
-                content_label = format_content_id(self.chapter_num)
-                yield Label(f"{content_label}: {self.chapter_title}", id="chapter-title")
+                if self.is_article:
+                    # Articles show author instead of chapter
+                    author = self.material_info.get("author", "")
+                    yield Label(f"[dim]{author}[/dim]", id="chapter-title")
+                else:
+                    content_label = format_content_id(self.chapter_num)
+                    yield Label(f"{content_label}: {self.chapter_title}", id="chapter-title")
                 mode_color = MODE_COLORS.get(self.mode, "cyan")
                 mode_desc = MODE_INFO.get(self.mode, "")
                 yield Label(f"[{mode_color}]{self.mode}[/{mode_color}] [dim]{mode_desc}[/dim]", id="mode-indicator")
@@ -204,19 +212,43 @@ class DialogueScreen(Screen):
     def _build_cache_prompt(self) -> str:
         """Build system prompt for cache (mode-agnostic)."""
         book_title = self.material_info.get("title", self.material_id)
-        content_label = format_content_id(self.chapter_num)
-        return build_cache_prompt(
-            book_title=book_title,
-            chapter_title=f"{content_label}: {self.chapter_title}",
-        )
+        if self.is_article:
+            # For articles, use title directly (no chapter prefix)
+            return build_cache_prompt(
+                book_title=book_title,
+                chapter_title=self.chapter_title,
+            )
+        else:
+            content_label = format_content_id(self.chapter_num)
+            return build_cache_prompt(
+                book_title=book_title,
+                chapter_title=f"{content_label}: {self.chapter_title}",
+            )
 
     def _create_cache(self) -> bool:
-        """Create the context cache. Only called once per session."""
+        """Create the context cache. Only called once per session.
+
+        For EPUB articles that are too short for caching, falls back to
+        including content in the system prompt for each request.
+        PDF articles always use the cache (Gemini reads PDFs natively).
+        """
         if not self.provider:
             return False
 
+        system_prompt = self._build_cache_prompt()
+
+        # Fallback only works for text content (EPUB articles), not PDFs
+        can_fallback = self.is_article and self.chapter_content is not None
+
+        def _setup_article_fallback():
+            """Set up non-cached article mode (EPUB only)."""
+            self.using_cache = False
+            self._system_prompt = (
+                f"{system_prompt}\n\n"
+                f"<article>\n{self.chapter_content}\n</article>"
+            )
+
         try:
-            system_prompt = self._build_cache_prompt()
             cache_name = self.provider.create_cache(
                 system_prompt=system_prompt,
                 chapter_content=self.chapter_content,
@@ -227,10 +259,17 @@ class DialogueScreen(Screen):
                 self.using_cache = True
                 return True
             else:
+                # Cache not created (content too small)
+                if can_fallback:
+                    _setup_article_fallback()
+                    return True
                 self.using_cache = False
                 return False
         except Exception as e:
-            self.notify(f"Cache error: {e}", severity="warning")
+            # Cache creation failed - EPUB articles can still proceed without cache
+            if can_fallback:
+                _setup_article_fallback()
+                return True
             self.using_cache = False
             return False
 
@@ -285,10 +324,18 @@ class DialogueScreen(Screen):
         chat_log = self.query_one("#chat-log", RichLog)
         input_widget = self.query_one("#chat-input", Input)
 
-        # Load chapter content based on source format
+        # Load content based on material type and source format
         self.source_format = get_source_format(self.material_id)
 
-        if self.source_format == "pdf":
+        if self.is_article:
+            # Articles: use PDF bytes for PDFs, text for EPUBs
+            if self.source_format == "pdf":
+                self.chapter_pdf = get_article_pdf(self.material_id)
+                self.chapter_content = None
+            else:
+                self.chapter_content = get_article_text(self.material_id)
+                self.chapter_pdf = None
+        elif self.source_format == "pdf":
             self.chapter_pdf = get_chapter_pdf(self.material_id, self.chapter_num)
             self.chapter_content = None
         else:
@@ -316,19 +363,18 @@ class DialogueScreen(Screen):
             return
 
         # Create context cache (blocking operation - runs in thread pool)
-        chat_log.write("[dim]Creating context cache...[/dim]")
+        chat_log.write("[dim]Preparing session...[/dim]")
 
         cache_success = await asyncio.to_thread(self._create_cache)
 
         if not cache_success:
-            chat_log.write("[red]Cache creation failed. Cannot proceed.[/red]")
+            chat_log.write("[red]Session setup failed. Cannot proceed.[/red]")
             return
 
         # Clear loading messages and prepare display
         chat_log.clear()
 
         # Build opening prompt based on session state
-        content_label = format_content_id(self.chapter_num)
         book_title = self.material_info.get("title", self.material_id)
         is_resumed = existing_session and existing_session.exchange_count > 0
 
@@ -344,21 +390,28 @@ class DialogueScreen(Screen):
         if is_resumed:
             last_session_empty = self._was_last_session_empty()
 
+        # Build content reference based on type
+        if self.is_article:
+            author = self.material_info.get("author", "")
+            content_ref = f"the article \"{book_title}\" by {author}" if author else f"the article \"{book_title}\""
+        else:
+            content_label = format_content_id(self.chapter_num)
+            content_ref = f"{content_label}: {self.chapter_title} from {book_title}"
+
         if is_resumed:
             if last_session_empty:
                 # User opened session previously but left without engaging
                 opening_prompt = (
-                    f"I'm returning to {content_label}: {self.chapter_title} from {book_title}. "
+                    f"I'm returning to {content_ref}. "
                     f"Note: I opened this session before but got distracted and left without "
                     f"actually engaging with the material. This is effectively a fresh start. "
-                    f"Can you help orient me to what this section covers and suggest "
+                    f"Can you help orient me to what this {'article' if self.is_article else 'section'} covers and suggest "
                     f"how we might approach it together?"
                 )
             else:
                 # Resumed session with real prior conversation
                 opening_prompt = (
-                    f"I'm returning to continue our discussion of {content_label}: "
-                    f"{self.chapter_title} from {book_title}. "
+                    f"I'm returning to continue our discussion of {content_ref}. "
                     f"We've had {existing_session.exchange_count} exchanges so far. "
                     f"Based on our previous conversation, what direction would you suggest "
                     f"we go from here, or what might be worth revisiting?"
@@ -366,9 +419,9 @@ class DialogueScreen(Screen):
         else:
             # New session - introduce the material
             opening_prompt = (
-                f"Hello! I'm beginning to read {content_label}: {self.chapter_title} "
-                f"from {book_title}. This is my first time engaging with this material. "
-                f"Can you help orient me to what this section covers and suggest "
+                f"Hello! I'm beginning to read {content_ref}. "
+                f"This is my first time engaging with this material. "
+                f"Can you help orient me to what this {'article' if self.is_article else 'section'} covers and suggest "
                 f"how we might approach it together?"
             )
 
@@ -389,8 +442,10 @@ class DialogueScreen(Screen):
         messages_with_mode = self._inject_mode_context(opening_messages)
 
         try:
+            # Use system prompt for non-cached articles, None for cached content
+            system = self._system_prompt if not self.using_cache else None
             chat_response = await asyncio.to_thread(
-                self.provider.chat, messages_with_mode, None
+                self.provider.chat, messages_with_mode, system
             )
 
             # For resumed sessions, preserve the transcript history
@@ -591,8 +646,8 @@ class DialogueScreen(Screen):
             self._show_error("LLM not configured")
             return
 
-        # Cache is required - chapter content is only available via cache
-        if not self.using_cache:
+        # Cache is required for books; articles can use system prompt fallback
+        if not self.using_cache and not self._system_prompt:
             self._show_error("Cache required but not available. Check provider configuration.")
             return
 
@@ -601,8 +656,10 @@ class DialogueScreen(Screen):
 
         try:
             # Run blocking LLM call in thread pool
+            # Use system prompt for non-cached articles, None for cached content
+            system = self._system_prompt if not self.using_cache else None
             chat_response = await asyncio.to_thread(
-                self.provider.chat, messages_with_mode, None
+                self.provider.chat, messages_with_mode, system
             )
             # Back on main event loop - safe to update UI
             self._show_response(chat_response)

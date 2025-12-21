@@ -15,7 +15,7 @@ from typing import TypeAlias
 import pymupdf
 import pymupdf4llm
 
-from reader.config import get_material, READER_DIR
+from reader.config import get_material, get_material_type, READER_DIR
 
 
 SOURCES_DIR = READER_DIR / "sources"
@@ -23,8 +23,8 @@ SOURCES_DIR = READER_DIR / "sources"
 # Pages with more than this many images use fallback extraction
 MAX_IMAGES_PER_PAGE = 20
 
-# Content identifier: integer for chapters (1, 2, 3), string for appendices ("A", "B")
-ContentId: TypeAlias = int | str
+# Content identifier: integer for chapters, string for appendices, None for articles
+ContentId: TypeAlias = int | str | None
 
 
 def get_content_info(material_id: str, content_id: ContentId) -> dict | None:
@@ -274,6 +274,57 @@ def get_chapter_text(material_id: str, content_id: ContentId) -> str:
         return extract_pages(source_path, content_info["pages"])
 
 
+def get_article_text(material_id: str) -> str:
+    """
+    Get entire article content as text (for EPUB articles only).
+
+    For PDF articles, use get_article_pdf() instead.
+
+    Args:
+        material_id: The material identifier
+
+    Returns:
+        Full article text
+
+    Raises:
+        ValueError: If source not found or is PDF
+    """
+    source_path = get_source_path(material_id)
+    source_format = get_source_format(material_id)
+
+    if not source_path.exists():
+        raise ValueError(f"Source not found: {source_path}")
+
+    if source_format == "pdf":
+        raise ValueError("Use get_article_pdf() for PDF articles")
+
+    # EPUB: extract all text
+    from reader.epub import extract_all_text
+    return extract_all_text(source_path)
+
+
+def get_article_pdf(material_id: str) -> bytes:
+    """
+    Get entire article as PDF bytes (for PDF articles).
+
+    Args:
+        material_id: The material identifier
+
+    Returns:
+        PDF bytes for the entire article
+
+    Raises:
+        ValueError: If source not found
+    """
+    source_path = get_source_path(material_id)
+
+    if not source_path.exists():
+        raise ValueError(f"Source PDF not found: {source_path}")
+
+    with open(source_path, "rb") as f:
+        return f.read()
+
+
 def list_extracted_chapters(material_id: str) -> list[int]:
     """
     List which chapters are available for a material.
@@ -331,11 +382,16 @@ def list_all_content(material_id: str) -> tuple[list[dict], list[dict]]:
     List all available content (chapters and appendices) for a material.
 
     Uses the source path from the registry to find the file.
+    Returns empty lists for article-type materials (no chapter structure).
 
     Returns:
         Tuple of (chapters, appendices) where each is a list of dicts
         with 'num'/'id' and 'title' keys
     """
+    # Articles have no chapter structure
+    if get_material_type(material_id) == "article":
+        return [], []
+
     source_path = get_source_path(material_id)
 
     if not source_path.exists():

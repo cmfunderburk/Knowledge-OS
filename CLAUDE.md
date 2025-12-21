@@ -47,14 +47,15 @@ knos/                     # Unified CLI package
 
 reader/                   # LLM reading companion (separate package)
 ├── llm.py                # LLM provider (Gemini)
-├── content.py            # PDF/EPUB extraction, chapter loading
+├── content.py            # PDF/EPUB extraction, chapter/article loading
 ├── prompts.py            # Jinja2 prompt template loader
 ├── session.py            # Dialogue session state
 ├── voice.py              # Voice input (faster-whisper)
 ├── tts.py                # Text-to-speech (Kokoro)
 ├── screens/              # Reader TUI screens
 ├── prompts/              # Dialogue mode prompts (base.md, socratic.md, etc.)
-└── classics/             # Bundled classics (Aristotle, Cervantes, Dostoevsky)
+├── classics/             # Bundled classics (Aristotle, Cervantes, Dostoevsky)
+└── articles/             # Bundled articles (single-unit PDFs, no chapters)
 
 solutions/                # Drill cards (user content, gitignored)
 ├── focus/                # Active cards for drilling
@@ -109,7 +110,7 @@ def algorithm():
 | `plan/study_config.yaml` | Domain rotation, current phase, priority shifts |
 | `plan/schedule.json` | Leitner box state (auto-managed) |
 | `reader/config.yaml` | LLM API keys and model selection |
-| `reader/content_registry.yaml` | PDF/EPUB registration (classics bundled in `reader/classics/`) |
+| `reader/content_registry.yaml` | PDF/EPUB/article registration (classics in `reader/classics/`, articles in `reader/articles/`) |
 
 Copy `.example` versions to get started.
 
@@ -125,7 +126,7 @@ Key: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `ebooklib`, `faster-
 
 ## Development Notes
 
-- Engine code tracked in git: `knos/`, `reader/`, `reader/classics/`
+- Engine code tracked in git: `knos/`, `reader/`, `reader/classics/`, `reader/articles/`
 - User content gitignored: `solutions/`, `plan/` state files, `reader/sources/`
 - The CLI entry point is `knos/cli.py` → `knos.cli:main`
 - TUI built on Textual; CLI tools use Rich

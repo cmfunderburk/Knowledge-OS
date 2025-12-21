@@ -3,6 +3,7 @@
 Sessions are stored as:
   reader/sessions/<material-id>/ch<N>.jsonl     # Append-only transcript (chapters)
   reader/sessions/<material-id>/appA.jsonl      # Append-only transcript (appendices)
+  reader/sessions/<material-id>/article.jsonl   # Append-only transcript (articles)
   reader/sessions/<material-id>/ch<N>.meta.json # Session metadata
 """
 from dataclasses import dataclass, field
@@ -11,16 +12,18 @@ from pathlib import Path
 import json
 from typing import TypeAlias
 
-# Content identifier: integer for chapters (1, 2, 3), string for appendices ("A", "B")
-ContentId: TypeAlias = int | str
+# Content identifier: integer for chapters, string for appendices, None for articles
+ContentId: TypeAlias = int | str | None
 
 # Base directory for sessions
 SESSIONS_DIR = Path(__file__).parent / "sessions"
 
 
 def _content_id_to_prefix(content_id: ContentId) -> str:
-    """Convert content ID to file prefix (e.g., 1 -> 'ch01', 'A' -> 'appA')."""
-    if isinstance(content_id, int):
+    """Convert content ID to file prefix (e.g., 1 -> 'ch01', 'A' -> 'appA', None -> 'article')."""
+    if content_id is None:
+        return "article"
+    elif isinstance(content_id, int):
         return f"ch{content_id:02d}"
     else:
         return f"app{content_id}"
@@ -28,7 +31,9 @@ def _content_id_to_prefix(content_id: ContentId) -> str:
 
 def _prefix_to_content_id(prefix: str) -> ContentId:
     """Convert file prefix back to content ID."""
-    if prefix.startswith("ch"):
+    if prefix == "article":
+        return None
+    elif prefix.startswith("ch"):
         return int(prefix[2:])
     elif prefix.startswith("app"):
         return prefix[3:]
@@ -38,10 +43,10 @@ def _prefix_to_content_id(prefix: str) -> ContentId:
 
 @dataclass
 class Session:
-    """A reading session for a chapter or appendix."""
+    """A reading session for a chapter, appendix, or article."""
 
     material_id: str
-    chapter_num: ContentId  # int for chapters, str for appendices
+    chapter_num: ContentId  # int for chapters, str for appendices, None for articles
     chapter_title: str
     started: datetime
     last_updated: datetime
