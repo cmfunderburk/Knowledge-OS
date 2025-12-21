@@ -4,6 +4,22 @@ A seminar-style reading companion that brings St. John's College pedagogy to sel
 
 ---
 
+## The St. John's College Tradition
+
+This module draws explicitly from the pedagogy of [St. John's College](https://www.sjc.edu/) (Annapolis and Santa Fe)—a Great Books program where students spend four years reading primary sources from Homer to Einstein, engaging with them through seminar discussion rather than lecture.
+
+Key aspects of this tradition that inform the Reader:
+
+**Tutors, not professors.** Faculty at St. John's are called "tutors" and position themselves as fellow travelers in understanding, not authorities delivering interpretations. They have expertise, but within seminar they inquire alongside students.
+
+**The text is the authority.** When disagreements arise, the resolution is "let's look at what the text says"—not "here's what scholars think" or "here's the right answer." The author's words are primary.
+
+**Collaborative inquiry.** This is not adversarial cross-examination. The goal is shared understanding. When material is technical, those with relevant expertise help bring everyone to a common level so exploration can continue together.
+
+**The opening question.** Seminars traditionally begin with a tutor posing a genuine question about the reading—not rhetorical, not leading, but an authentic point of entry into the text.
+
+---
+
 ## Vision
 
 The **reader** module fills the gap between passive reading and active drilling. In the St. John's model, understanding emerges through *dialogue*—articulating ideas, defending interpretations, and responding to challenges. The reader creates this experience with an LLM as seminar partner.
