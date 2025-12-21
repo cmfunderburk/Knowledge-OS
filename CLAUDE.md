@@ -118,11 +118,15 @@ Copy `.example` versions to get started.
 
 Uses `uv` for package management:
 ```bash
-uv sync              # Install dependencies
+uv sync              # Install core dependencies
+uv sync --extra voice  # Include voice input/TTS (requires PyTorch)
 uv run knos          # Run with dependencies
 ```
 
-Key: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `ebooklib`, `faster-whisper`, `kokoro`
+Core: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `ebooklib`
+Voice (optional): `faster-whisper`, `kokoro`, `sounddevice`, `torch`
+
+Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and Windows.
 
 ## Development Notes
 

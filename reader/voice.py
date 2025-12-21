@@ -1,8 +1,32 @@
-"""Voice input module using faster-whisper for local transcription."""
+"""Voice input module using faster-whisper for local transcription.
+
+Requires optional voice dependencies: uv sync --extra voice
+"""
 import os
 import queue
 import threading
 from typing import Callable
+
+# Check if voice dependencies are available
+_voice_available: bool | None = None
+
+
+def is_voice_available() -> bool:
+    """Check if voice input dependencies are installed."""
+    global _voice_available
+    if _voice_available is not None:
+        return _voice_available
+
+    try:
+        import sounddevice  # noqa: F401
+        import numpy  # noqa: F401
+        import faster_whisper  # noqa: F401
+        _voice_available = True
+    except ImportError:
+        _voice_available = False
+
+    return _voice_available
+
 
 _cuda_available: bool | None = None
 
@@ -49,8 +73,24 @@ def _preload_cuda_libraries():
 
 _preload_cuda_libraries()
 
-import numpy as np
-import sounddevice as sd
+# Lazy imports for optional dependencies
+np = None
+sd = None
+
+
+def _ensure_voice_deps():
+    """Import voice dependencies, raising ImportError if not available."""
+    global np, sd
+    if np is None:
+        if not is_voice_available():
+            raise ImportError(
+                "Voice input requires optional dependencies. "
+                "Install with: uv sync --extra voice"
+            )
+        import numpy
+        import sounddevice
+        np = numpy
+        sd = sounddevice
 
 
 class WhisperTranscriber:
@@ -72,6 +112,7 @@ class WhisperTranscriber:
             device: "cuda" for GPU, "cpu" for CPU, or None for auto-detect
             compute_type: "float16" for GPU, "int8" for CPU, or None for auto
         """
+        _ensure_voice_deps()
         self.model_size = model_size
         self.language = language
 
@@ -153,6 +194,7 @@ class VoiceRecorder:
             silence_duration: Seconds of silence before stopping
             max_duration: Maximum recording duration in seconds
         """
+        _ensure_voice_deps()
         self.sample_rate = sample_rate
         self.channels = channels
         self.silence_threshold = silence_threshold

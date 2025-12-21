@@ -1,16 +1,56 @@
-"""Text-to-speech module using Kokoro for high-quality local neural TTS."""
+"""Text-to-speech module using Kokoro for high-quality local neural TTS.
+
+Requires optional voice dependencies: uv sync --extra voice
+"""
 import os
 import re
 import threading
 import warnings
 from typing import Callable
 
-import numpy as np
-import sounddevice as sd
-
 # Suppress warnings from ML libraries
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+# Check if TTS dependencies are available
+_tts_available: bool | None = None
+
+
+def is_tts_available() -> bool:
+    """Check if TTS dependencies are installed."""
+    global _tts_available
+    if _tts_available is not None:
+        return _tts_available
+
+    try:
+        import sounddevice  # noqa: F401
+        import numpy  # noqa: F401
+        import kokoro  # noqa: F401
+        _tts_available = True
+    except ImportError:
+        _tts_available = False
+
+    return _tts_available
+
+
+# Lazy imports for optional dependencies
+np = None
+sd = None
+
+
+def _ensure_tts_deps():
+    """Import TTS dependencies, raising ImportError if not available."""
+    global np, sd
+    if np is None:
+        if not is_tts_available():
+            raise ImportError(
+                "TTS requires optional dependencies. "
+                "Install with: uv sync --extra voice"
+            )
+        import numpy
+        import sounddevice
+        np = numpy
+        sd = sounddevice
 
 _cuda_available: bool | None = None
 
@@ -197,6 +237,7 @@ class KokoroTTS:
             lang_code: Language code ('a'=American, 'b'=British, etc.)
             speed: Playback speed multiplier (0.5 = half speed, 2.0 = double speed)
         """
+        _ensure_tts_deps()
         self.voice = voice
         self.lang_code = lang_code
         self.speed = speed

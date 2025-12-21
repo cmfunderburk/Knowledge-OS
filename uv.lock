@@ -1048,12 +1048,9 @@ dependencies = [
     { name = "anthropic" },
     { name = "beautifulsoup4" },
     { name = "ebooklib" },
-    { name = "en-core-web-sm" },
-    { name = "faster-whisper" },
     { name = "google-genai" },
     { name = "httpx" },
     { name = "jinja2" },
-    { name = "kokoro" },
     { name = "lxml" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -1062,11 +1059,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "readchar" },
     { name = "rich" },
-    { name = "sounddevice" },
-    { name = "soundfile" },
-    { name = "spacy-lookups-data" },
     { name = "textual" },
-    { name = "torch" },
     { name = "typer" },
 ]
 
@@ -1074,18 +1067,27 @@ dependencies = [
 cuda = [
     { name = "nvidia-nccl-cu12" },
 ]
+voice = [
+    { name = "en-core-web-sm" },
+    { name = "faster-whisper" },
+    { name = "kokoro" },
+    { name = "sounddevice" },
+    { name = "soundfile" },
+    { name = "spacy-lookups-data" },
+    { name = "torch" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=0.18.0" },
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
     { name = "ebooklib", specifier = ">=0.20" },
-    { name = "en-core-web-sm", url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" },
-    { name = "faster-whisper", specifier = ">=1.0.0" },
+    { name = "en-core-web-sm", marker = "extra == 'voice'", url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" },
+    { name = "faster-whisper", marker = "extra == 'voice'", specifier = ">=1.0.0" },
     { name = "google-genai", specifier = ">=1.0.0" },
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "jinja2", specifier = ">=3.0" },
-    { name = "kokoro", specifier = ">=0.9.4" },
+    { name = "kokoro", marker = "extra == 'voice'", specifier = ">=0.9.4" },
     { name = "lxml", specifier = ">=6.0.2" },
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "nvidia-nccl-cu12", marker = "extra == 'cuda'", specifier = ">=2.27.5" },
@@ -1094,14 +1096,14 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "readchar", specifier = ">=4.0.0" },
     { name = "rich", specifier = ">=13.0.0" },
-    { name = "sounddevice", specifier = ">=0.5.0" },
-    { name = "soundfile", specifier = ">=0.13.1" },
-    { name = "spacy-lookups-data", specifier = ">=1.0.5" },
+    { name = "sounddevice", marker = "extra == 'voice'", specifier = ">=0.5.0" },
+    { name = "soundfile", marker = "extra == 'voice'", specifier = ">=0.13.1" },
+    { name = "spacy-lookups-data", marker = "extra == 'voice'", specifier = ">=1.0.5" },
     { name = "textual", specifier = ">=0.47.0" },
-    { name = "torch", specifier = ">=2.1" },
+    { name = "torch", marker = "extra == 'voice'", specifier = ">=2.1" },
     { name = "typer", specifier = ">=0.9.0" },
 ]
-provides-extras = ["cuda"]
+provides-extras = ["voice", "cuda"]
 
 [[package]]
 name = "kokoro"
