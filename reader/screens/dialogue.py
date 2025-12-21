@@ -11,7 +11,7 @@ from textual.binding import Binding
 
 from reader.content import ContentId, get_source_format, get_chapter_pdf, load_chapter, format_content_id
 from reader.llm import get_provider
-from reader.prompts import build_system_prompt, MODES
+from reader.prompts import build_cache_prompt, get_mode_instruction, MODES
 from reader.session import (
     Session,
     create_session,
@@ -156,7 +156,7 @@ class DialogueScreen(Screen):
         self._voice_config = self._load_voice_config()
 
         # TTS state
-        self._tts_enabled = False
+        self._tts_enabled = True  # TTS on by default for opening response
         self._tts_config = self._load_tts_config()
         self._speaking = False
 
@@ -201,23 +201,22 @@ class DialogueScreen(Screen):
 
         yield Footer()
 
-    def _build_system_prompt(self) -> str:
-        """Build system prompt for current mode (content provided via cache)."""
+    def _build_cache_prompt(self) -> str:
+        """Build system prompt for cache (mode-agnostic)."""
         book_title = self.material_info.get("title", self.material_id)
-        return build_system_prompt(
-            mode=self.mode,
+        content_label = format_content_id(self.chapter_num)
+        return build_cache_prompt(
             book_title=book_title,
-            chapter_title=f"Chapter {self.chapter_num}: {self.chapter_title}",
-            session_phase="dialogue",
+            chapter_title=f"{content_label}: {self.chapter_title}",
         )
 
     def _create_cache(self) -> bool:
-        """Create or recreate the context cache. Returns True if successful."""
+        """Create the context cache. Only called once per session."""
         if not self.provider:
             return False
 
         try:
-            system_prompt = self._build_system_prompt()
+            system_prompt = self._build_cache_prompt()
             cache_name = self.provider.create_cache(
                 system_prompt=system_prompt,
                 chapter_content=self.chapter_content,
@@ -235,8 +234,57 @@ class DialogueScreen(Screen):
             self.using_cache = False
             return False
 
+    def _inject_mode_context(self, messages: list[dict]) -> list[dict]:
+        """
+        Inject mode instruction into the first user message.
+
+        Returns a new list with mode context prepended to the first user message.
+        """
+        if not messages:
+            return messages
+
+        # Get mode instruction
+        mode_instruction = get_mode_instruction(self.mode)
+
+        # Create modified messages list
+        modified = []
+        mode_injected = False
+
+        for msg in messages:
+            if msg["role"] == "user" and not mode_injected:
+                # Prepend mode context to first user message
+                mode_prefix = f"[MODE: {self.mode}]\n\n{mode_instruction}\n\n---\n\n"
+                modified.append({
+                    "role": "user",
+                    "content": mode_prefix + msg["content"]
+                })
+                mode_injected = True
+            else:
+                modified.append(msg)
+
+        return modified
+
     def on_mount(self) -> None:
         """Initialize the dialogue session."""
+        # Show loading state immediately
+        chat_log = self.query_one("#chat-log", RichLog)
+        chat_log.write("")
+        chat_log.write("[dim]Preparing session...[/dim]")
+
+        # Disable input while loading
+        input_widget = self.query_one("#chat-input", Input)
+        input_widget.disabled = True
+
+        # Run initialization in background
+        self.run_worker(self._initialize_session(), exclusive=True)
+
+    async def _initialize_session(self) -> None:
+        """Initialize session in background (cache creation + opening prompt)."""
+        import asyncio
+
+        chat_log = self.query_one("#chat-log", RichLog)
+        input_widget = self.query_one("#chat-input", Input)
+
         # Load chapter content based on source format
         self.source_format = get_source_format(self.material_id)
 
@@ -244,15 +292,15 @@ class DialogueScreen(Screen):
             self.chapter_pdf = get_chapter_pdf(self.material_id, self.chapter_num)
             self.chapter_content = None
         else:
-            # EPUB: load pre-extracted text
             self.chapter_content = load_chapter(self.material_id, self.chapter_num)
             self.chapter_pdf = None
 
-        # Load or create session
+        # Load or create session (don't restore yet - we'll do that after cache is ready)
         existing_session = load_session(self.material_id, self.chapter_num)
         if existing_session:
             self.session = existing_session
-            self._restore_session()
+            # Load messages into memory but don't display yet
+            self._load_session_messages()
         else:
             self.session = create_session(
                 self.material_id,
@@ -264,38 +312,164 @@ class DialogueScreen(Screen):
         try:
             self.provider = get_provider()
         except Exception as e:
-            self.notify(f"LLM error: {e}", severity="error")
+            chat_log.write(f"[red]LLM error: {e}[/red]")
             return
 
-        # Create context cache (15 min TTL for testing)
-        if self._create_cache():
-            self.notify("Cache created", severity="information")
+        # Create context cache (blocking operation - runs in thread pool)
+        chat_log.write("[dim]Creating context cache...[/dim]")
+
+        cache_success = await asyncio.to_thread(self._create_cache)
+
+        if not cache_success:
+            chat_log.write("[red]Cache creation failed. Cannot proceed.[/red]")
+            return
+
+        # Clear loading messages and prepare display
+        chat_log.clear()
+
+        # Build opening prompt based on session state
+        content_label = format_content_id(self.chapter_num)
+        book_title = self.material_info.get("title", self.material_id)
+        is_resumed = existing_session and existing_session.exchange_count > 0
+
+        # For resumed sessions, display the previous conversation first
+        if is_resumed:
+            self._display_transcript()
+            self.update_token_display()
         else:
-            self.notify("Running without cache", severity="warning")
-
-        # Focus input
-        self.query_one("#chat-input", Input).focus()
-
-        # Show welcome message (only for new sessions)
-        if not existing_session:
-            chat_log = self.query_one("#chat-log", RichLog)
-            chat_log.write("")
-            chat_log.write("[bold cyan]Reader[/bold cyan]")
-            content_label = format_content_id(self.chapter_num)
-            chat_log.write(f"  Welcome to {content_label}: {self.chapter_title}")
-            chat_log.write("  What would you like to explore?")
             chat_log.write("")
 
-    def _restore_session(self) -> None:
-        """Restore a previous session from transcript."""
+        if is_resumed:
+            # Resumed session - ask about direction (ephemeral, not saved to transcript)
+            opening_prompt = (
+                f"I'm returning to continue our discussion of {content_label}: "
+                f"{self.chapter_title} from {book_title}. "
+                f"We've had {existing_session.exchange_count} exchanges so far. "
+                f"Based on our previous conversation, what direction would you suggest "
+                f"we go from here, or what might be worth revisiting?"
+            )
+        else:
+            # New session - introduce the material
+            opening_prompt = (
+                f"Hello! I'm beginning to read {content_label}: {self.chapter_title} "
+                f"from {book_title}. This is my first time engaging with this material. "
+                f"Can you help orient me to what this section covers and suggest "
+                f"how we might approach it together?"
+            )
+
+        # Send opening prompt (hidden from user) and get LLM response
+        chat_log.write("[dim italic]  thinking...[/dim italic]")
+
+        # Build messages for opening exchange
+        # For resumed sessions, include history for context but opening prompt is ephemeral
+        if is_resumed:
+            # Append opening prompt to existing conversation for LLM context
+            opening_messages = self.messages + [{"role": "user", "content": opening_prompt}]
+        else:
+            opening_messages = [{"role": "user", "content": opening_prompt}]
+
+        messages_with_mode = self._inject_mode_context(opening_messages)
+
+        try:
+            chat_response = await asyncio.to_thread(
+                self.provider.chat, messages_with_mode, None
+            )
+
+            # Clear thinking indicator
+            chat_log.clear()
+            chat_log.write("")
+
+            # Display LLM response as opening message
+            mode_color = MODE_COLORS.get(self.mode, "cyan")
+            chat_log.write(f"[bold {mode_color}]Reader[/bold {mode_color}] [{mode_color}][{self.mode}][/{mode_color}]")
+            chat_log.write(Markdown(chat_response.text.strip()))
+            chat_log.write("")
+
+            if is_resumed:
+                # Resumed session: opening exchange is ephemeral (not persisted)
+                # But we do add to self.messages so LLM has context for next turn
+                self.messages.append({"role": "user", "content": opening_prompt})
+                self.messages.append({"role": "assistant", "content": chat_response.text})
+            else:
+                # New session: persist opening exchange to transcript
+                self.messages.append({"role": "user", "content": opening_prompt})
+                self.messages.append({"role": "assistant", "content": chat_response.text})
+
+                append_message(
+                    self.material_id, self.chapter_num,
+                    role="user", content=opening_prompt, mode=self.mode,
+                )
+                append_message(
+                    self.material_id, self.chapter_num,
+                    role="assistant", content=chat_response.text, mode=self.mode,
+                    tokens={
+                        "input": chat_response.input_tokens,
+                        "output": chat_response.output_tokens,
+                        "cached": chat_response.cached_tokens,
+                    },
+                )
+
+                # Update session metadata (only for new sessions)
+                if self.session:
+                    self.session.exchange_count += 1
+                    self.session.mode_distribution[self.mode] = (
+                        self.session.mode_distribution.get(self.mode, 0) + 1
+                    )
+                    non_cached = chat_response.input_tokens - chat_response.cached_tokens
+                    self.session.total_input_tokens += non_cached
+                    self.session.total_output_tokens += chat_response.output_tokens
+                    if chat_response.cached_tokens > 0:
+                        self.session.cache_tokens = chat_response.cached_tokens
+                    self.session.last_updated = datetime.now()
+                    save_metadata(self.session)
+
+            # Update token display
+            non_cached = chat_response.input_tokens - chat_response.cached_tokens
+            self.total_input_tokens += non_cached
+            self.total_output_tokens += chat_response.output_tokens
+            if chat_response.cached_tokens > 0:
+                self.cache_size = chat_response.cached_tokens
+            self.update_token_display()
+
+            # Speak opening response if TTS enabled
+            if self._tts_enabled:
+                self.run_worker(
+                    self._speak_response(chat_response.text),
+                    exclusive=False,
+                    name="tts_opening",
+                )
+
+        except Exception as e:
+            chat_log.write(f"[red]Error getting opening response: {e}[/red]")
+
+        # Enable input and focus
+        input_widget.disabled = False
+        input_widget.focus()
+
+    def _load_session_messages(self) -> None:
+        """Load session transcript into memory (without displaying)."""
+        transcript = load_transcript(self.material_id, self.chapter_num)
+
+        for msg in transcript:
+            role = msg["role"]
+            content = msg["content"]
+            self.messages.append({"role": role, "content": content})
+
+        # Restore token counts from session metadata
+        if self.session:
+            self.total_input_tokens = self.session.total_input_tokens
+            self.total_output_tokens = self.session.total_output_tokens
+            self.cache_size = self.session.cache_tokens
+
+    def _display_transcript(self) -> None:
+        """Display the session transcript in the chat log."""
         chat_log = self.query_one("#chat-log", RichLog)
         transcript = load_transcript(self.material_id, self.chapter_num)
 
         if not transcript:
             return
 
-        chat_log.write("")
-        chat_log.write("[dim]── Resuming session ──[/dim]")
+        chat_log.write("[dim]── Previous conversation ──[/dim]")
         chat_log.write("")
 
         for msg in transcript:
@@ -313,17 +487,7 @@ class DialogueScreen(Screen):
 
             chat_log.write("")
 
-            # Rebuild messages list for LLM context
-            self.messages.append({"role": role, "content": content})
-
-        # Restore token counts and insights from session metadata
-        if self.session:
-            self.total_input_tokens = self.session.total_input_tokens
-            self.total_output_tokens = self.session.total_output_tokens
-            self.cache_size = self.session.cache_tokens
-            self.update_token_display()
-
-        chat_log.write("[dim]── Session resumed ──[/dim]")
+        chat_log.write("[dim]── Continuing ──[/dim]")
         chat_log.write("")
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
@@ -373,12 +537,14 @@ class DialogueScreen(Screen):
         if not self.using_cache:
             self._show_error("Cache required but not available. Check provider configuration.")
             return
-        system = None  # System prompt is baked into cache
+
+        # Inject mode instructions into messages (mode-specific behavior without cache recreation)
+        messages_with_mode = self._inject_mode_context(self.messages)
 
         try:
             # Run blocking LLM call in thread pool
             chat_response = await asyncio.to_thread(
-                self.provider.chat, self.messages, system
+                self.provider.chat, messages_with_mode, None
             )
             # Back on main event loop - safe to update UI
             self._show_response(chat_response)
@@ -515,11 +681,8 @@ class DialogueScreen(Screen):
         mode_label = self.query_one("#mode-indicator", Label)
         mode_label.update(f"[{mode_color}]{self.mode}[/{mode_color}] [dim]{mode_desc}[/dim]")
 
-        # Recreate cache with new mode (system prompt includes mode)
-        if self._create_cache():
-            self.notify(f"Mode: {self.mode} (cache updated)", severity="information")
-        else:
-            self.notify(f"Mode: {self.mode}", severity="information")
+        # Mode is injected into messages, no cache recreation needed
+        self.notify(f"Mode: {self.mode}", severity="information")
 
         # Refocus input
         self.query_one("#chat-input", Input).focus()

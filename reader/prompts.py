@@ -48,48 +48,47 @@ def render_prompt(name: str, **context: Any) -> str:
     return template.render(**context)
 
 
-def build_system_prompt(
-    mode: str,
+def build_cache_prompt(
     book_title: str,
     chapter_title: str,
-    session_phase: str = "dialogue",
     prior_session_summary: str | None = None,
-    captured_insights: list[str] | None = None,
 ) -> str:
     """
-    Build system prompt for a reading session.
+    Build system prompt for the context cache (mode-agnostic).
 
-    Chapter content is provided separately via cache - this prompt does not
-    include it inline.
+    This prompt is cached along with the chapter content. Mode-specific
+    instructions are injected into conversation messages instead.
 
     Args:
-        mode: Dialogue mode ("socratic", "clarify", "challenge", "teach", "quiz")
         book_title: Title of the book being read
         chapter_title: Title of the current chapter
-        session_phase: Current phase ("pre_reading", "dialogue", "synthesis")
         prior_session_summary: Optional summary of previous sessions
-        captured_insights: Optional list of insights captured this session
 
     Returns:
-        System prompt string
+        System prompt string for caching
     """
-    base = render_prompt(
+    return render_prompt(
         "base",
         book_title=book_title,
         chapter_title=chapter_title,
-        session_phase=session_phase,
         prior_session_summary=prior_session_summary,
-        captured_insights=captured_insights,
     )
 
-    try:
-        mode_additions = render_prompt(mode)
-    except FileNotFoundError:
-        mode_additions = ""
 
-    if mode_additions:
-        return f"{base}\n\n{mode_additions}"
-    return base
+def get_mode_instruction(mode: str) -> str:
+    """
+    Get the mode instruction text to inject into conversation.
+
+    Args:
+        mode: Dialogue mode name
+
+    Returns:
+        Mode instruction text, or empty string if mode not found
+    """
+    try:
+        return load_prompt(mode)
+    except FileNotFoundError:
+        return ""
 
 
 # Available dialogue modes
