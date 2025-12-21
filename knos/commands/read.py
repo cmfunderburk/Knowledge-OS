@@ -41,19 +41,6 @@ def run_list() -> None:
         print()
 
 
-def run_extract(material_id: str) -> None:
-    """Extract chapters from a material."""
-    from reader.content import extract_material
-
-    print(f"Extracting: {material_id}")
-    try:
-        extract_material(material_id)
-        print(f"Done. Check reader/extracted/{material_id}/")
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-
-
 def run_clear(material_id: str, chapter: Optional[int] = None) -> None:
     """Clear session data for a material (or all materials if 'ALL')."""
     # Get sessions root from reader module

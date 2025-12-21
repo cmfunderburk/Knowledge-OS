@@ -267,11 +267,13 @@ The registry is the single source of truth for available materials. To add or re
 
 **Adding a new material:**
 
-1. Add entry to `content_registry.yaml` with:
-   - `title`, `author`, `source` (path to PDF/EPUB/Markdown)
-   - `structure.chapters` with explicit page ranges
-2. Run extraction: `./reader --extract <material-id>`
-3. Verify extracted chapters in `reader/extracted/<material-id>/`
+1. Place PDF in `reader/extracted/<material-id>/source.pdf`
+2. Add entry to `content_registry.yaml` with:
+   - `title`, `author`, `source` (path to the PDF)
+   - `structure.chapters` with explicit page ranges (1-indexed PDF pages)
+3. Verify with `knos read list`
+
+Registration can be done manually or with AI tools (e.g. Claude Code to extract TOC and page ranges from the PDF).
 
 **Removing a material:**
 
@@ -281,41 +283,26 @@ The registry is the single source of truth for available materials. To add or re
 
 **Updating chapter boundaries:**
 
-1. Edit `structure.chapters` in registry
-2. Re-run extraction: `./reader --extract <material-id>`
+1. Edit `structure.chapters` in registry (page ranges are applied on-demand)
 
 ### Text Extraction Pipeline
 
-Extraction is explicit via CLI command:
-
-```bash
-# Extract all chapters for a material
-./reader --extract how-to-prove-it
-
-# Output: reader/extracted/how-to-prove-it/ch01.md, ch02.md, ...
-```
+Text is extracted **on-demand** from PDFs during reading sessions using `pymupdf4llm`:
 
 ```python
 # reader/content.py
 
-def extract_material(material_id: str) -> None:
-    """Extract all chapters from source to reader/extracted/."""
-    registry = load_registry()
-    material = registry[material_id]
-    output_dir = Path("reader/extracted") / material_id
-    output_dir.mkdir(parents=True, exist_ok=True)
+def get_chapter_text(material_id: str, chapter_num: int) -> str:
+    """Get chapter content as text, extracted on-demand from PDF page range."""
+    source_path = EXTRACTED_DIR / material_id / "source.pdf"
+    chapter = get_chapter_metadata(material_id, chapter_num)
+    return extract_pages(source_path, chapter["pages"])
 
-    for chapter in material["structure"]["chapters"]:
-        content = extract_pages(material["source"], chapter["pages"])
-        output_path = output_dir / f"ch{chapter['num']:02d}.md"
-        output_path.write_text(content)
-
-def load_chapter(material_id: str, chapter_num: int) -> str:
-    """Load pre-extracted chapter content."""
-    path = Path("reader/extracted") / material_id / f"ch{chapter_num:02d}.md"
-    if not path.exists():
-        raise ValueError(f"Chapter not extracted. Run: ./reader --extract {material_id}")
-    return path.read_text()
+def extract_pages(source_path: Path, page_range: list[int]) -> str:
+    """Extract text from PDF page range using pymupdf4llm."""
+    # Uses pymupdf4llm for text-heavy pages (preserves formatting)
+    # Falls back to raw pymupdf for image-heavy pages (>20 images)
+    ...
 ```
 
 ### Chapter Detection

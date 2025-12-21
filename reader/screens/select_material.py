@@ -78,7 +78,7 @@ class SelectMaterialScreen(Screen):
             extracted = len(list_extracted_chapters(material_id))
 
             if extracted < chapters:
-                self.notify(f"Run: ./read --extract {material_id}", title="Not extracted")
+                self.notify(f"Place PDF at reader/extracted/{material_id}/source.pdf", title="PDF not found")
                 return
 
             from .select_chapter import SelectChapterScreen

@@ -19,20 +19,17 @@ The atomic unit is the **drill target**: a fenced code block revealed line-by-li
 ## Commands
 
 ```bash
-# Primary interfaces
-./study              # TUI dashboard (recommended)
-./drill              # Drill due cards TUI
-./read               # Reading companion TUI (LLM dialogue)
-
-# CLI variants
-./study --today      # Print daily orientation
-./study --progress   # Generate PROGRESS.md
-./today              # Daily orientation snapshot
+# Primary interfaces (unified CLI)
+uv run knos              # TUI dashboard (default)
+uv run knos drill        # Drill due cards TUI
+uv run knos read         # Reading companion TUI (LLM dialogue)
+uv run knos today        # CLI daily orientation
+uv run knos progress     # Generate PROGRESS.md
 
 # Reader CLI
-./read --list                     # List registered materials
-./read --extract <material-id>    # Extract chapters from PDF
-./read --test-llm                 # Verify LLM configuration
+uv run knos read list              # List registered materials
+uv run knos read clear <id> [ch]   # Clear session data
+uv run knos read test              # Verify LLM configuration
 
 # Direct reviewer access
 uv run python3 -m reviewer.reviewer --focus        # All cards, random order

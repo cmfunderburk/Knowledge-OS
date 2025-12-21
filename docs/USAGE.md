@@ -34,19 +34,20 @@ knos read            # Reading companion
 
 ### Reader CLI
 
-**Workflow:**
-1. Register material in `reader/content_registry.yaml` (source path + chapter structure)
-2. Extract: `knos read extract <material-id>`
-3. Read: `knos read` → select material → select chapter
+**Setup:**
+1. Place PDF in `reader/extracted/<material-id>/source.pdf`
+2. Register in `reader/content_registry.yaml` with chapter page ranges
+3. Run: `knos read` → select material → select chapter
+
+Registration can be done manually or with AI tools (e.g. Claude Code to extract TOC).
 
 | Command | Description |
 |---------|-------------|
 | `knos read` | Launch TUI (material → chapter → dialogue) |
 | `knos read list` | List registered materials |
-| `knos read extract <id>` | Extract/copy material to `reader/extracted/` |
 | `knos read clear <id> [chapter]` | Clear session data |
 | `knos read test` | Verify LLM configuration |
-| `knos read --help` | Show usage and workflow |
+| `knos read --help` | Show setup instructions |
 
 ### Reviewer CLI (Direct)
 

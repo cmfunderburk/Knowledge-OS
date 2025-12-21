@@ -51,7 +51,10 @@ materials:
         - { num: 9, title: "Monopoly", pages: [245, 274] }
         - { num: 10, title: "Monopolistic Competition and Oligopoly", pages: [275, 300] }
 
-# Tips:
-# - Use `./read --list` to verify your registry loads correctly
-# - Use `./read --extract <material-id>` to pre-extract chapters to markdown
-# - Extracted chapters are cached in reader/extracted/<material-id>/
+# Setup:
+# 1. Place PDF in reader/extracted/<material-id>/source.pdf
+# 2. Add entry above with title, author, source path, and chapter page ranges
+# 3. Verify with: knos read list
+#
+# Page numbers are 1-indexed PDF pages, not book page numbers.
+# Text is extracted on-demand from page ranges during reading.

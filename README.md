@@ -33,7 +33,6 @@ knos drill        Launch the drill TUI
 knos read         Launch the reader TUI
 knos progress     Generate PROGRESS.md report
 
-knos read extract <id>      Extract chapters from a material
 knos read list              List registered materials
 knos read clear <id> [ch]   Clear session data
 knos read test              Test LLM provider
@@ -91,9 +90,7 @@ The example registry uses free OpenStax textbooks (CC BY 4.0). To use them:
 
 2. Place PDFs in `reader/extracted/<material-id>/source.pdf`
 
-3. Extract chapters: `uv run knos read extract psychology-2e`
-
-4. Start dialogue: `uv run knos read`
+3. Start dialogue: `uv run knos read`
 
 ## Core Components
 
