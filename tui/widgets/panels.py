@@ -275,3 +275,65 @@ class DrillListPanel(Widget):
         if self.drill_queue and 0 <= self.selected_idx < len(self.drill_queue):
             return self.drill_queue[self.selected_idx][0]
         return None
+
+
+class ReaderPanel(Widget):
+    """Shows available reading materials and session counts."""
+
+    DEFAULT_CSS = """
+    ReaderPanel {
+        height: auto;
+        padding: 0 1;
+    }
+    """
+
+    def render(self) -> RenderableType:
+        from reader.config import load_registry
+        from reader.session import list_sessions
+
+        try:
+            registry = load_registry()
+            materials = registry.get("materials", {})
+        except Exception:
+            materials = {}
+
+        table = Table.grid(padding=(0, 1))
+        table.add_column("Title", width=28)
+        table.add_column("Sessions", justify="right", width=10)
+
+        if materials:
+            for material_id, info in materials.items():
+                try:
+                    sessions = list_sessions(material_id)
+                    session_count = len(sessions)
+                except Exception:
+                    session_count = 0
+
+                title = info.get("title", material_id)
+                # Truncate title if needed
+                if len(title) > 26:
+                    display_title = title[:23] + "..."
+                else:
+                    display_title = title
+
+                session_str = f"{session_count} ch" if session_count > 0 else "—"
+                session_style = "cyan" if session_count > 0 else "dim"
+
+                table.add_row(
+                    Text(display_title),
+                    Text(session_str, style=session_style)
+                )
+        else:
+            table.add_row(
+                Text("No materials registered", style="dim italic"),
+                Text("")
+            )
+
+        # Footer hint
+        table.add_row(Text(""), Text(""))
+        table.add_row(
+            Text("[r] Open Reader", style="dim"),
+            Text("")
+        )
+
+        return Panel(table, title="READER", border_style="blue")
