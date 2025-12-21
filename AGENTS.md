@@ -42,13 +42,13 @@ uv run python3 -m reviewer.reviewer --summary      # Mastery status
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     TUI (./study)                       │
+│                     TUI (knos)                          │
 │              Dashboard · Drill · Browse                 │
 └───────────────────────┬─────────────────────────────────┘
                         │
 ┌───────────────────────▼─────────────────────────────────┐
 │                   Core Library                          │
-│         reviewer/core.py — shared data layer            │
+│       knos/reviewer/core.py — shared data layer         │
 │    (scheduling, parsing, history, state management)     │
 └───────────────────────┬─────────────────────────────────┘
                         │
@@ -59,25 +59,28 @@ uv run python3 -m reviewer.reviewer --summary      # Mastery status
 └─────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────┐
-│                  Reader (./read)                        │
+│                  Reader (knos read)                     │
 │    St. John's-style seminar dialogue with LLM tutor     │
 ├─────────────────────────────────────────────────────────┤
 │  reader/llm.py      — LLM provider (Gemini)             │
-│  reader/content.py  — PDF extraction, chapter loading   │
+│  reader/content.py  — PDF/EPUB extraction, chapters     │
 │  reader/prompts.py  — Jinja2 prompt templates           │
 ├─────────────────────────────────────────────────────────┤
-│  reader/sources/    — User-provided PDFs for reading    │
+│  reader/classics/   — Bundled classics (Project Guten.) │
+│  reader/sources/    — User-provided PDFs/EPUBs          │
 │  reader/content_registry.yaml — Material definitions    │
 └─────────────────────────────────────────────────────────┘
 ```
 
 **Key files:**
-- `reviewer/core.py` — Business logic: parsing, Leitner scheduling, progress tracking
-- `reviewer/reviewer.py` — CLI interface for drilling
-- `tui/app.py` — Textual app entry points (StudyApp, DrillApp, ReaderApp)
-- `tui/screens/` — TUI screens: dashboard.py, drill.py, drill_queue.py, browse.py
+- `knos/cli.py` — Typer CLI entry point
+- `knos/reviewer/core.py` — Business logic: parsing, Leitner scheduling, progress tracking
+- `knos/reviewer/reviewer.py` — Legacy CLI interface for drilling
+- `knos/tui/app.py` — Textual app entry points (StudyApp, DrillApp, ReaderApp)
+- `knos/tui/screens/` — TUI screens: dashboard.py, drill.py, drill_queue.py, browse.py
 - `reader/screens/` — Reader TUI: select_material.py, select_chapter.py, dialogue.py
 - `reader/prompts/` — Dialogue mode prompts: base.md, socratic.md, clarify.md, challenge.md
+- `reader/classics/` — Bundled classics (Aristotle, Cervantes, Dostoevsky)
 
 ## Card Format
 
@@ -134,10 +137,15 @@ Copy `plan/study_config.yaml.example` to get started.
 
 ### Reader Materials (`reader/content_registry.yaml`)
 
-Register PDFs/EPUBs for the reading companion:
+Register PDFs/EPUBs for the reading companion. Three classics from Project Gutenberg are bundled in `reader/classics/` and work out of the box:
+
+- Nicomachean Ethics (Aristotle)
+- Don Quixote (Cervantes)
+- The Brothers Karamazov (Dostoevsky)
 
 ```yaml
 materials:
+  # PDF with chapter page ranges
   my-textbook:
     title: "Introduction to X"
     author: "Author Name"
@@ -146,6 +154,12 @@ materials:
       type: "chapters"
       chapters:
         - { num: 1, title: "Chapter One", pages: [10, 30] }
+
+  # EPUB (structure extracted automatically)
+  nicomachean-ethics:
+    title: "Nicomachean Ethics"
+    author: "Aristotle"
+    source: "reader/classics/nicomachean-ethics.epub"
 ```
 
 Copy `reader/content_registry.yaml.example` to get started.
@@ -169,10 +183,10 @@ Uses `uv` for package management:
 
 ```bash
 uv sync              # Install dependencies
-uv run ./study       # Run with dependencies
+uv run knos          # Run with dependencies
 ```
 
-Key dependencies: `textual`, `rich`, `readchar`, `google-genai`, `pymupdf`, `jinja2`, `pyyaml`.
+Key dependencies: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `ebooklib`, `jinja2`, `pyyaml`.
 
 ## Design Constraints
 

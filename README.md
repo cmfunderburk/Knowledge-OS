@@ -47,6 +47,20 @@ Three classics from Project Gutenberg are bundled and work out of the box:
 - **Don Quixote** — Cervantes (John Ormsby translation)
 - **The Brothers Karamazov** — Dostoevsky (Constance Garnett translation)
 
+<details>
+<summary><strong>Example: Discussing Aristotle's Nicomachean Ethics</strong></summary>
+
+<video src="docs/media/Aristotle-Reader.mp4" controls width="600"></video>
+
+</details>
+
+<details>
+<summary><strong>Example: Opening question for Don Quixote</strong></summary>
+
+<video src="docs/media/DonQuixote-Reader.mp4" controls width="600"></video>
+
+</details>
+
 The tutor doesn't lecture—it asks questions, probes your understanding, and points you back to the text. When you begin a new chapter, it opens with a genuine question about the reading. Dialogue modes include:
 
 | Mode | Behavior |

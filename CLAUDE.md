@@ -47,13 +47,14 @@ knos/                     # Unified CLI package
 
 reader/                   # LLM reading companion (separate package)
 ├── llm.py                # LLM provider (Gemini)
-├── content.py            # PDF extraction, chapter loading
+├── content.py            # PDF/EPUB extraction, chapter loading
 ├── prompts.py            # Jinja2 prompt template loader
 ├── session.py            # Dialogue session state
 ├── voice.py              # Voice input (faster-whisper)
 ├── tts.py                # Text-to-speech (Kokoro)
 ├── screens/              # Reader TUI screens
-└── prompts/              # Dialogue mode prompts (base.md, socratic.md, etc.)
+├── prompts/              # Dialogue mode prompts (base.md, socratic.md, etc.)
+└── classics/             # Bundled classics (Aristotle, Cervantes, Dostoevsky)
 
 solutions/                # Drill cards (user content, gitignored)
 ├── focus/                # Active cards for drilling
@@ -108,7 +109,7 @@ def algorithm():
 | `plan/study_config.yaml` | Domain rotation, current phase, priority shifts |
 | `plan/schedule.json` | Leitner box state (auto-managed) |
 | `reader/config.yaml` | LLM API keys and model selection |
-| `reader/content_registry.yaml` | PDF registration with chapter page ranges |
+| `reader/content_registry.yaml` | PDF/EPUB registration (classics bundled in `reader/classics/`) |
 
 Copy `.example` versions to get started.
 
@@ -120,11 +121,11 @@ uv sync              # Install dependencies
 uv run knos          # Run with dependencies
 ```
 
-Key: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `faster-whisper`, `kokoro`
+Key: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `ebooklib`, `faster-whisper`, `kokoro`
 
 ## Development Notes
 
-- Engine code tracked in git: `knos/`, `reader/`
+- Engine code tracked in git: `knos/`, `reader/`, `reader/classics/`
 - User content gitignored: `solutions/`, `plan/` state files, `reader/sources/`
 - The CLI entry point is `knos/cli.py` → `knos.cli:main`
 - TUI built on Textual; CLI tools use Rich
