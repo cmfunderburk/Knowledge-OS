@@ -9,8 +9,8 @@ from textual.widgets import Header, Footer, Label, RichLog, Static
 from textual.containers import Container
 from textual.binding import Binding
 
-from reader.content import get_chapter_text
-from reader.session import Session, load_transcript
+from reader.content import ContentId, get_chapter_text, format_content_id
+from reader.session import Session, load_transcript, _content_id_to_prefix
 from reader.llm import get_provider
 from reader.prompts import load_prompt
 
@@ -60,13 +60,13 @@ class GenerateCardsScreen(Screen):
         self,
         material_id: str,
         material_title: str,
-        chapter_num: int,
+        content_id: ContentId,
         session: Session,
     ) -> None:
         super().__init__()
         self.material_id = material_id
         self.material_title = material_title
-        self.chapter_num = chapter_num
+        self.content_id = content_id
         self.session = session
 
     def compose(self) -> ComposeResult:
@@ -74,7 +74,7 @@ class GenerateCardsScreen(Screen):
 
         with Container(id="generate-container"):
             yield Label(
-                f"[bold]Generating Cards[/bold] · {self.material_title} Ch.{self.chapter_num}",
+                f"[bold]Generating Cards[/bold] · {self.material_title} {format_content_id(self.content_id)}",
                 id="generate-header",
             )
             yield RichLog(id="generate-log", wrap=True, markup=True)
@@ -91,12 +91,12 @@ class GenerateCardsScreen(Screen):
 
         log = self.query_one("#generate-log", RichLog)
 
-        log.write("[dim]Loading chapter content...[/dim]")
-        chapter_content = get_chapter_text(self.material_id, self.chapter_num)
-        log.write(f"  Chapter: {len(chapter_content):,} chars")
+        log.write("[dim]Loading content...[/dim]")
+        chapter_content = get_chapter_text(self.material_id, self.content_id)
+        log.write(f"  Content: {len(chapter_content):,} chars")
 
         log.write("[dim]Loading transcript...[/dim]")
-        transcript = load_transcript(self.material_id, self.chapter_num)
+        transcript = load_transcript(self.material_id, self.content_id)
         log.write(f"  Transcript: {len(transcript)} messages")
 
         if not transcript:
@@ -152,7 +152,8 @@ Generate drill cards based on the concepts the user engaged with in this dialogu
                 return
 
             # Write cards to drafts directory
-            drafts_dir = DRAFTS_DIR / self.material_id / f"ch{self.chapter_num:02d}"
+            content_prefix = _content_id_to_prefix(self.content_id)
+            drafts_dir = DRAFTS_DIR / self.material_id / content_prefix
             drafts_dir.mkdir(parents=True, exist_ok=True)
 
             for i, card_content in enumerate(cards, 1):

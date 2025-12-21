@@ -8,6 +8,7 @@ from textual.containers import Container
 from textual.binding import Binding
 
 from reader.config import load_registry
+from reader.content import ContentId, format_content_id
 from reader.session import list_sessions, Session, SESSIONS_DIR
 
 
@@ -18,13 +19,13 @@ class SessionItem(ListItem):
         self,
         material_id: str,
         material_title: str,
-        chapter_num: int,
+        content_id: ContentId,
         session: Session,
     ) -> None:
         super().__init__()
         self.material_id = material_id
         self.material_title = material_title
-        self.chapter_num = chapter_num
+        self.content_id = content_id
         self.session = session
 
     def compose(self) -> ComposeResult:
@@ -33,8 +34,9 @@ class SessionItem(ListItem):
         modes = self.session.mode_distribution
         mode_str = ", ".join(f"{m}:{c}" for m, c in modes.items()) if modes else "none"
 
+        content_label = format_content_id(self.content_id)
         yield Label(
-            f"[bold]{self.material_title}[/bold] · Chapter {self.chapter_num}: {self.session.chapter_title}"
+            f"[bold]{self.material_title}[/bold] · {content_label}: {self.session.chapter_title}"
         )
         yield Label(
             f"  [dim]{exchanges} exchanges · modes: {mode_str}[/dim]",
@@ -95,10 +97,16 @@ class SessionBrowserScreen(Screen):
             # Get sessions for this material
             sessions = list_sessions(material_id)
 
-            for chapter_num in sorted(sessions.keys()):
-                session = sessions[chapter_num]
+            # Sort: chapters (int) first, then appendices (str)
+            def sort_key(cid: ContentId) -> tuple[int, int | str]:
+                if isinstance(cid, int):
+                    return (0, cid)
+                return (1, cid)
+
+            for content_id in sorted(sessions.keys(), key=sort_key):
+                session = sessions[content_id]
                 list_view.append(
-                    SessionItem(material_id, material_title, chapter_num, session)
+                    SessionItem(material_id, material_title, content_id, session)
                 )
                 session_count += 1
 
@@ -124,7 +132,7 @@ class SessionBrowserScreen(Screen):
             GenerateCardsScreen(
                 material_id=item.material_id,
                 material_title=item.material_title,
-                chapter_num=item.chapter_num,
+                content_id=item.content_id,
                 session=item.session,
             )
         )

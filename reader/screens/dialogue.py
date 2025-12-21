@@ -358,7 +358,10 @@ class DialogueScreen(Screen):
             )
 
         # Send opening prompt (hidden from user) and get LLM response
-        chat_log.write("[dim italic]  thinking...[/dim italic]")
+        if is_resumed:
+            chat_log.write("[dim italic]  reviewing our discussion...[/dim italic]")
+        else:
+            chat_log.write("[dim italic]  thinking...[/dim italic]")
 
         # Build messages for opening exchange
         # For resumed sessions, include history for context but opening prompt is ephemeral
@@ -375,9 +378,14 @@ class DialogueScreen(Screen):
                 self.provider.chat, messages_with_mode, None
             )
 
-            # Clear thinking indicator
-            chat_log.clear()
-            chat_log.write("")
+            # For resumed sessions, preserve the transcript history
+            # For new sessions, clear loading messages
+            if is_resumed:
+                # Just add a separator after the "thinking..." line
+                chat_log.write("")
+            else:
+                chat_log.clear()
+                chat_log.write("")
 
             # Display LLM response as opening message
             mode_color = MODE_COLORS.get(self.mode, "cyan")
@@ -385,43 +393,37 @@ class DialogueScreen(Screen):
             chat_log.write(Markdown(chat_response.text.strip()))
             chat_log.write("")
 
-            if is_resumed:
-                # Resumed session: opening exchange is ephemeral (not persisted)
-                # But we do add to self.messages so LLM has context for next turn
-                self.messages.append({"role": "user", "content": opening_prompt})
-                self.messages.append({"role": "assistant", "content": chat_response.text})
-            else:
-                # New session: persist opening exchange to transcript
-                self.messages.append({"role": "user", "content": opening_prompt})
-                self.messages.append({"role": "assistant", "content": chat_response.text})
+            # Persist opening exchange to transcript (both new and resumed sessions)
+            self.messages.append({"role": "user", "content": opening_prompt})
+            self.messages.append({"role": "assistant", "content": chat_response.text})
 
-                append_message(
-                    self.material_id, self.chapter_num,
-                    role="user", content=opening_prompt, mode=self.mode,
-                )
-                append_message(
-                    self.material_id, self.chapter_num,
-                    role="assistant", content=chat_response.text, mode=self.mode,
-                    tokens={
-                        "input": chat_response.input_tokens,
-                        "output": chat_response.output_tokens,
-                        "cached": chat_response.cached_tokens,
-                    },
-                )
+            append_message(
+                self.material_id, self.chapter_num,
+                role="user", content=opening_prompt, mode=self.mode,
+            )
+            append_message(
+                self.material_id, self.chapter_num,
+                role="assistant", content=chat_response.text, mode=self.mode,
+                tokens={
+                    "input": chat_response.input_tokens,
+                    "output": chat_response.output_tokens,
+                    "cached": chat_response.cached_tokens,
+                },
+            )
 
-                # Update session metadata (only for new sessions)
-                if self.session:
-                    self.session.exchange_count += 1
-                    self.session.mode_distribution[self.mode] = (
-                        self.session.mode_distribution.get(self.mode, 0) + 1
-                    )
-                    non_cached = chat_response.input_tokens - chat_response.cached_tokens
-                    self.session.total_input_tokens += non_cached
-                    self.session.total_output_tokens += chat_response.output_tokens
-                    if chat_response.cached_tokens > 0:
-                        self.session.cache_tokens = chat_response.cached_tokens
-                    self.session.last_updated = datetime.now()
-                    save_metadata(self.session)
+            # Update session metadata
+            if self.session:
+                self.session.exchange_count += 1
+                self.session.mode_distribution[self.mode] = (
+                    self.session.mode_distribution.get(self.mode, 0) + 1
+                )
+                non_cached = chat_response.input_tokens - chat_response.cached_tokens
+                self.session.total_input_tokens += non_cached
+                self.session.total_output_tokens += chat_response.output_tokens
+                if chat_response.cached_tokens > 0:
+                    self.session.cache_tokens = chat_response.cached_tokens
+                self.session.last_updated = datetime.now()
+                save_metadata(self.session)
 
             # Update token display
             non_cached = chat_response.input_tokens - chat_response.cached_tokens
@@ -796,7 +798,7 @@ class DialogueScreen(Screen):
             GenerateCardsScreen(
                 material_id=self.material_id,
                 material_title=material_title,
-                chapter_num=self.chapter_num,
+                content_id=self.chapter_num,
                 session=self.session,
             )
         )
