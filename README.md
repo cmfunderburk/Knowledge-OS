@@ -1,113 +1,113 @@
-# knowledge
+# Knowledge OS
 
-A knowledge operating system: spaced-repetition drilling + LLM-powered reading companion for self-study.
+A study system built on dialogue.
 
-## What This Is
+## Why Dialogue?
 
-A personal autodidact toolkit built around active recall and spaced repetition. Two core systems:
+At [St. John's College](https://www.sjc.edu/), students spend four years reading primary sources—Homer to Einstein—not through lectures, but through seminar discussion. Understanding emerges through articulation: defending interpretations, responding to challenges, returning to the text when claims don't hold up.
 
-- **Reviewer**: Leitner-box spaced repetition. Cards contain fenced code blocks revealed line-by-line — you reconstruct the content, then self-assess. 100% accuracy advances; any failure resets to box 0. This enforces mastery at the edge of recall.
+Knowledge OS brings this approach to self-study. The Reader module pairs you with an LLM tutor who engages with the same material you're reading. It asks questions rather than lectures. It treats the text as the authority. When you claim to understand something, it probes.
 
-- **Reader**: LLM-powered reading companion. Structured dialogue with textbook chapters — Socratic questioning, challenge mode, quiz, teach-back. Surfaces gaps in understanding before they calcify.
+## The Loop
 
-Built for daily use. Open-sourced as proof-of-concept.
+```
+Read → Discuss with tutor → (optionally) Generate drill cards
+              ↑                              │
+              └────── revisit as needed ─────┘
+```
+
+The dialogue is the core. Card generation is there when you identify concepts worth drilling—definitions, procedures, distinctions you want to retain long-term.
 
 ## Quick Start
 
 ```bash
 uv sync              # Install dependencies
-uv run knos          # TUI dashboard (main entry point)
+uv run knos read     # Start the Reader (requires LLM API key)
+```
+
+To set up the Reader:
+
+```bash
+cp reader/config.yaml.example reader/config.yaml
+# Edit with your Gemini API key
+
+cp reader/content_registry.yaml.example reader/content_registry.yaml
+# Register your PDFs (see below)
+```
+
+The example registry includes free [OpenStax](https://openstax.org/) textbooks and bundled classics from Project Gutenberg. Download a PDF, place it in `reader/sources/<material-id>/source.pdf`, and start a session. The classics work out of the box.
+
+## The Reader
+
+A dialogue interface for working through textbook chapters with an LLM tutor.
+
+The tutor doesn't lecture—it asks questions, probes your understanding, and points you back to the text. When you begin a new chapter, it opens with a genuine question about the reading. Dialogue modes include:
+
+| Mode | Behavior |
+|------|----------|
+| **Socratic** | Probing questions, rarely gives answers (default) |
+| **Clarify** | Direct explanations when you're genuinely stuck |
+| **Challenge** | Devil's advocate, stress-tests your claims |
+| **Teach** | You explain to a "confused student" |
+| **Quiz** | Rapid-fire recall check |
+
+Press `Ctrl+G` during a session to generate drill cards from the conversation. The LLM identifies concepts worth retaining based on the dialogue—what you struggled with, what required clarification, what you explored deeply.
+
+## The Reviewer
+
+For concepts that benefit from long-term retention, Knowledge OS includes a spaced repetition system.
+
+Cards are markdown files containing fenced code blocks. During drill, content is revealed line-by-line—you reconstruct it, then self-assess. The system uses Leitner-box scheduling: 100% accuracy advances the card; any mistake resets it. This enforces mastery at the edge of recall.
+
+```bash
 uv run knos drill    # Drill due cards
-uv run knos read     # Reading companion (requires LLM API)
+uv run knos          # TUI dashboard (shows what's due)
 ```
 
-The system works out of the box with example drill cards in `solutions/examples/`. Run `uv run knos` immediately after installing to try it.
+Cards generated from Reader sessions go to `reader/drafts/` for review before entering the drill system.
 
-### CLI Commands
+## CLI Reference
 
 ```
-knos              Launch the study TUI (default)
-knos today        Show today's study plan (CLI)
-knos study        Launch the study TUI
-knos drill        Launch the drill TUI
-knos read         Launch the reader TUI
-knos progress     Generate PROGRESS.md report
+knos              TUI dashboard (default)
+knos read         Reader TUI
+knos drill        Drill TUI
+knos today        Today's study plan (CLI)
+knos progress     Generate PROGRESS.md
 
 knos read list              List registered materials
 knos read clear <id> [ch]   Clear session data
-knos read test              Test LLM provider
+knos read test              Test LLM configuration
 ```
 
-## Customization
+## Configuration
 
-To build your own study system, copy and edit the example configuration files.
-
-### Study Configuration
+### Reader Setup
 
 ```bash
-# Copy examples to create your config files
+cp reader/config.yaml.example reader/config.yaml
+cp reader/content_registry.yaml.example reader/content_registry.yaml
+```
+
+Edit `reader/config.yaml` with your Gemini API key. Edit `reader/content_registry.yaml` to register PDFs with chapter page ranges.
+
+### Study Configuration (optional)
+
+```bash
 cp plan/study_config.yaml.example plan/study_config.yaml
 cp plan/schedule.json.example plan/schedule.json
 ```
 
-Edit `plan/study_config.yaml` to configure:
-- **Domain rotation**: Which subjects to study on which days
-- **Current phase**: Track your progress through a curriculum
-- **Priority shifts**: Temporary focus overrides for exam prep
+Configure domain rotation (which subjects on which days), curriculum phases, and priority shifts.
 
-### Planning Files (optional)
+### Drill Cards
 
-These help organize your workflow but aren't required:
-
-```bash
-cp plan/todo.md.example plan/todo.md          # Sprint tasks and daily goals
-cp plan/syllabus.md.example plan/syllabus.md  # High-level study plan
-cp plan/checklist.md.example plan/checklist.md # Chapter progress tracking
-```
-
-### Your Own Drill Cards
-
-Create markdown files in `solutions/focus/` (or any subdirectory). Every fenced code block becomes a drill target. See [solutions/examples/README.md](solutions/examples/README.md) for the card format guide.
-
-### Reader Setup (optional)
-
-The Reader provides LLM-powered dialogue with textbook content. Requires a Gemini or Anthropic API key.
-
-```bash
-cp reader/config.yaml.example reader/config.yaml
-# Edit reader/config.yaml with your API key
-
-cp reader/content_registry.yaml.example reader/content_registry.yaml
-# Edit to register your own PDFs
-```
-
-The example registry uses free OpenStax textbooks (CC BY 4.0). To use them:
-
-1. Download PDFs from [OpenStax](https://openstax.org/):
-   - [Psychology 2e](https://openstax.org/details/books/psychology-2e) (84 MB)
-   - [Principles of Economics 3e](https://openstax.org/details/books/principles-economics-3e) (63 MB)
-   - [College Algebra 2e](https://openstax.org/details/books/college-algebra-2e) (80 MB)
-
-2. Place PDFs in `reader/extracted/<material-id>/source.pdf`
-
-3. Start dialogue: `uv run knos read`
-
-## Core Components
-
-| Component | Description |
-|-----------|-------------|
-| `knos/` | Unified CLI entry point |
-| `reviewer/` | Leitner-box spaced repetition engine (boxes 0–6, intervals from 1hr to 30 days) |
-| `tui/` | Textual-based TUI for daily study orientation |
-| `reader/` | Seminar-style reading companion with LLM dialogue |
-| `solutions/` | Drill cards — code, proofs, definitions, models |
-| `docs/` | Architecture, workflow guides, and design specs |
+Create markdown files in `solutions/focus/`. Every fenced code block becomes a drill target. See [solutions/examples/](solutions/examples/) for the card format.
 
 ## Documentation
 
+- [reader/OVERVIEW.md](reader/OVERVIEW.md) — Reader module design and pedagogy
 - [docs/USAGE.md](docs/USAGE.md) — Command reference
-- [docs/specs/roadmap.md](docs/specs/roadmap.md) — Feature roadmap and future plans
-- [docs/prompts.md](docs/prompts.md) — LLM prompt library for study workflows
 - [solutions/examples/README.md](solutions/examples/README.md) — Card format guide
 - [AGENTS.md](AGENTS.md) — Technical documentation for AI assistants
 

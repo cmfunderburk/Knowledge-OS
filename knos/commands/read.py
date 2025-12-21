@@ -24,6 +24,7 @@ def run_read_tui() -> None:
 def run_list() -> None:
     """List all registered materials."""
     from reader.config import load_registry
+    from reader.content import list_all_content
 
     registry = load_registry()
     if not registry.get("materials"):
@@ -34,10 +35,12 @@ def run_list() -> None:
     for material_id, info in registry["materials"].items():
         title = info.get("title", material_id)
         author = info.get("author", "Unknown")
-        chapters = len(info.get("structure", {}).get("chapters", []))
+        # Get chapter count from actual content (works for both PDF and EPUB)
+        chapters, appendices = list_all_content(material_id)
+        chapter_count = len(chapters)
         print(f"  {material_id}")
         print(f"    {title} ({author})")
-        print(f"    {chapters} chapters")
+        print(f"    {chapter_count} chapters")
         print()
 
 

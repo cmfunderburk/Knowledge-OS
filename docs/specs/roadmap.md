@@ -69,13 +69,13 @@ LLM-powered reading companion with structured dialogue:
 │  Select Material → Select Chapter → Dialogue Screen             │
 ├─────────────────────────────────────────────────────────────────┤
 │  Dialogue Modes: Socratic, Clarify, Challenge, Teach, Quiz      │
-│  LLM Providers:  Gemini (with caching), Anthropic Claude        │
+│  LLM Provider:   Gemini (with caching)                          │
 │  Voice:          Whisper input, TTS output                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 **Setup:**
-1. Place PDF in `reader/extracted/<material-id>/source.pdf`
+1. Place PDF in `reader/sources/<material-id>/source.pdf`
 2. Register in `reader/content_registry.yaml` with chapter page ranges
 3. Run `knos read`
 

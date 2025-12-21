@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A Knowledge Operating System: spaced-repetition drilling + LLM-powered reading companion for self-study. Two core systems:
 
 - **Reviewer**: Leitner-box spaced repetition. Cards are markdown files with fenced code blocks revealed line-by-line. 100% accuracy advances the box; any failure resets to box 0.
-- **Reader**: LLM-powered reading companion for seminar-style dialogue with textbook content.
+- **Reader**: LLM-powered reading companion modeled on St. John's College (Annapolis/Santa Fe) seminars—the LLM acts as a tutor and fellow inquirer, not a lecturer.
 
 ## Commands
 
@@ -46,7 +46,7 @@ knos/                     # Unified CLI package
     └── widgets/          # Reusable TUI components
 
 reader/                   # LLM reading companion (separate package)
-├── llm.py                # LLM providers (Gemini, Anthropic)
+├── llm.py                # LLM provider (Gemini)
 ├── content.py            # PDF extraction, chapter loading
 ├── prompts.py            # Jinja2 prompt template loader
 ├── session.py            # Dialogue session state
@@ -120,11 +120,11 @@ uv sync              # Install dependencies
 uv run knos          # Run with dependencies
 ```
 
-Key: `textual`, `rich`, `typer`, `anthropic`, `google-genai`, `pymupdf`, `faster-whisper`, `kokoro`
+Key: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `faster-whisper`, `kokoro`
 
 ## Development Notes
 
 - Engine code tracked in git: `knos/`, `reader/`
-- User content gitignored: `solutions/`, `plan/` state files, `reader/extracted/`
+- User content gitignored: `solutions/`, `plan/` state files, `reader/sources/`
 - The CLI entry point is `knos/cli.py` → `knos.cli:main`
 - TUI built on Textual; CLI tools use Rich
