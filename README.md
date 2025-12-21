@@ -50,14 +50,15 @@ Three classics from Project Gutenberg are bundled and work out of the box:
 <details>
 <summary><strong>Example: Discussing Aristotle's Nicomachean Ethics</strong></summary>
 
-<video src="docs/media/Aristotle-Reader.mp4" controls width="600"></video>
+<video src="https://github.com/user-attachments/assets/af95aa25-b736-4930-b359-58511d21f574" controls width="600"></video>
+
 
 </details>
 
 <details>
 <summary><strong>Example: Opening question for Don Quixote</strong></summary>
 
-<video src="docs/media/DonQuixote-Reader.mp4" controls width="600"></video>
+<video src="https://github.com/user-attachments/assets/e16ac913-b0a3-41b5-85b4-beb6520e5c4e" controls width="600"></video>
 
 </details>
 
