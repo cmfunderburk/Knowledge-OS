@@ -1,6 +1,4 @@
 """Text-to-speech module using Kokoro for high-quality local neural TTS."""
-import ctypes
-import importlib.util
 import os
 import re
 import threading
@@ -14,10 +12,32 @@ import sounddevice as sd
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+_cuda_available: bool | None = None
 
-# Preload NVIDIA libraries from Python packages before importing PyTorch/Kokoro
+
+def _check_cuda_available() -> bool:
+    """Check if CUDA is available for PyTorch."""
+    global _cuda_available
+    if _cuda_available is not None:
+        return _cuda_available
+
+    try:
+        import torch
+        _cuda_available = torch.cuda.is_available()
+    except ImportError:
+        _cuda_available = False
+
+    return _cuda_available
+
+
 def _preload_nvidia_libraries():
     """Preload NVIDIA libraries so PyTorch can find them."""
+    if not _check_cuda_available():
+        return
+
+    import ctypes
+    import importlib.util
+
     libs_to_load = [
         ("nvidia.nccl.lib", "libnccl.so.2"),
         ("nvidia.cublas.lib", "libcublas.so.12"),
@@ -32,7 +52,7 @@ def _preload_nvidia_libraries():
                 if os.path.exists(lib_path):
                     ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
         except Exception:
-            pass  # Library not found, will fall back to system libraries
+            pass
 
 
 _preload_nvidia_libraries()

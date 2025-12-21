@@ -4,9 +4,29 @@ import queue
 import threading
 from typing import Callable
 
-# Preload NVIDIA libraries from Python packages before importing CUDA-dependent modules
+_cuda_available: bool | None = None
+
+
+def _check_cuda_available() -> bool:
+    """Check if CUDA is available for faster-whisper."""
+    global _cuda_available
+    if _cuda_available is not None:
+        return _cuda_available
+
+    try:
+        import torch
+        _cuda_available = torch.cuda.is_available()
+    except ImportError:
+        _cuda_available = False
+
+    return _cuda_available
+
+
 def _preload_cuda_libraries():
     """Preload NVIDIA libraries so ctranslate2/faster-whisper can find them."""
+    if not _check_cuda_available():
+        return
+
     import ctypes
     import importlib.util
 
@@ -24,7 +44,8 @@ def _preload_cuda_libraries():
                 if os.path.exists(lib_path):
                     ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
         except Exception:
-            pass  # Library not found, will fall back to system CUDA
+            pass
+
 
 _preload_cuda_libraries()
 
@@ -33,14 +54,14 @@ import sounddevice as sd
 
 
 class WhisperTranscriber:
-    """Local Whisper transcription using faster-whisper with GPU acceleration."""
+    """Local Whisper transcription using faster-whisper with GPU/CPU support."""
 
     def __init__(
         self,
         model_size: str = "base",
         language: str = "en",
-        device: str = "cuda",
-        compute_type: str = "float16",
+        device: str | None = None,
+        compute_type: str | None = None,
     ):
         """
         Initialize the transcriber.
@@ -48,13 +69,23 @@ class WhisperTranscriber:
         Args:
             model_size: Whisper model size (tiny, base, small, medium, large-v3)
             language: Language code for transcription
-            device: "cuda" for GPU, "cpu" for CPU
-            compute_type: "float16" for GPU, "int8" for CPU
+            device: "cuda" for GPU, "cpu" for CPU, or None for auto-detect
+            compute_type: "float16" for GPU, "int8" for CPU, or None for auto
         """
         self.model_size = model_size
         self.language = language
-        self.device = device
-        self.compute_type = compute_type
+
+        # Auto-detect device and compute type
+        if device is None:
+            self.device = "cuda" if _check_cuda_available() else "cpu"
+        else:
+            self.device = device
+
+        if compute_type is None:
+            self.compute_type = "float16" if self.device == "cuda" else "int8"
+        else:
+            self.compute_type = compute_type
+
         self._model = None
 
     @property
