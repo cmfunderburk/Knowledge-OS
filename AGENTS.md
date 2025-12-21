@@ -22,7 +22,7 @@ The atomic unit is the **drill target**: a fenced code block revealed line-by-li
 # Primary interfaces (unified CLI)
 uv run knos              # TUI dashboard (default)
 uv run knos drill        # Drill due cards TUI
-uv run knos read         # Reading companion TUI (LLM dialogue)
+uv run knos read         # Reading companion TUI (St. John's-style dialogue)
 uv run knos today        # CLI daily orientation
 uv run knos progress     # Generate PROGRESS.md
 
@@ -60,9 +60,9 @@ uv run python3 -m reviewer.reviewer --summary      # Mastery status
 
 ┌─────────────────────────────────────────────────────────┐
 │                  Reader (./read)                        │
-│       Material Selection · Chapter · Dialogue           │
+│    St. John's-style seminar dialogue with LLM tutor     │
 ├─────────────────────────────────────────────────────────┤
-│  reader/llm.py      — LLM providers (Gemini, Anthropic) │
+│  reader/llm.py      — LLM provider (Gemini)             │
 │  reader/content.py  — PDF extraction, chapter loading   │
 │  reader/prompts.py  — Jinja2 prompt templates           │
 ├─────────────────────────────────────────────────────────┤
@@ -155,7 +155,7 @@ Copy `reader/content_registry.yaml.example` to get started.
 Configure API keys for the reading companion:
 
 ```yaml
-provider: gemini  # or anthropic
+provider: gemini
 gemini:
   api_key: "your-api-key"
   model: "gemini-2.0-flash"
@@ -172,7 +172,7 @@ uv sync              # Install dependencies
 uv run ./study       # Run with dependencies
 ```
 
-Key dependencies: `textual`, `rich`, `readchar`, `anthropic`, `google-genai`, `pymupdf`, `jinja2`, `pyyaml`.
+Key dependencies: `textual`, `rich`, `readchar`, `google-genai`, `pymupdf`, `jinja2`, `pyyaml`.
 
 ## Design Constraints
 

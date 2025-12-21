@@ -69,7 +69,7 @@ LLM-powered reading companion with structured dialogue:
 │  Select Material → Select Chapter → Dialogue Screen             │
 ├─────────────────────────────────────────────────────────────────┤
 │  Dialogue Modes: Socratic, Clarify, Challenge, Teach, Quiz      │
-│  LLM Providers:  Gemini (with caching), Anthropic Claude        │
+│  LLM Provider:   Gemini (with caching)                          │
 │  Voice:          Whisper input, TTS output                      │
 └─────────────────────────────────────────────────────────────────┘
 ```

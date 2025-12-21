@@ -2,22 +2,13 @@
 # Copy this to config.yaml and fill in your API keys.
 
 llm:
-  # Provider: gemini | anthropic
   provider: "gemini"
 
-  # Gemini configuration (default - free tier available)
   gemini:
     api_key: "your-google-api-key-here"
     # Or use environment variable:
     # api_key_env: "GOOGLE_API_KEY"
     model: "gemini-2.5-flash"  # or gemini-2.0-flash, gemini-2.5-pro
-
-  # Anthropic configuration
-  # anthropic:
-  #   api_key: "your-anthropic-api-key-here"
-  #   # Or use environment variable:
-  #   # api_key_env: "ANTHROPIC_API_KEY"
-  #   model: "claude-sonnet-4-20250514"
 
 # Voice input configuration (Ctrl+R in dialogue)
 # Auto-detects GPU/CPU; use smaller model on CPU for speed
