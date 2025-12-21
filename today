@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run python3
 """
 Daily study dashboard - CLI version.
 
@@ -16,6 +16,10 @@ from reviewer.core import (
     get_overall_progress,
     collect_focus_files,
 )
+
+# Import from reader module
+from reader.config import load_registry
+from reader.session import list_sessions, SESSIONS_DIR
 
 # ANSI Colors
 BOLD = '\033[1m'
@@ -83,11 +87,63 @@ def print_reviewer_status():
 def print_card_summary():
     focus_files = collect_focus_files()
     count = len(focus_files)
-    
+
     if count > 0:
         print(f"{BOLD}Reviewer Library:{RESET}")
         print(f"  {DIM}Focus cards: {count}{RESET}")
         print()
+
+
+def print_reader_status():
+    print(f"{BOLD}Reader:{RESET}")
+
+    try:
+        # Count registered materials
+        registry = load_registry()
+        materials = registry.get("materials", {})
+        material_count = len(materials)
+
+        # Find all sessions across all materials
+        all_sessions = []
+        if SESSIONS_DIR.exists():
+            for material_dir in SESSIONS_DIR.iterdir():
+                if material_dir.is_dir():
+                    material_id = material_dir.name
+                    sessions = list_sessions(material_id)
+                    for chapter_num, session in sessions.items():
+                        # Get material title if available
+                        material_info = materials.get(material_id, {})
+                        title = material_info.get("title", material_id)
+                        all_sessions.append((session, title))
+
+        if not all_sessions:
+            print(f"  {DIM}No reading sessions yet{RESET}")
+            print(f"  {DIM}Materials: {material_count} registered{RESET}")
+        else:
+            # Find most recent session
+            all_sessions.sort(key=lambda x: x[0].last_updated, reverse=True)
+            last_session, last_title = all_sessions[0]
+
+            # Format the time ago
+            now = datetime.datetime.now()
+            delta = now - last_session.last_updated
+            if delta.days == 0:
+                time_ago = "today"
+            elif delta.days == 1:
+                time_ago = "yesterday"
+            else:
+                time_ago = f"{delta.days} days ago"
+
+            # Truncate title if too long
+            display_title = last_title if len(last_title) <= 30 else last_title[:27] + "..."
+
+            print(f"  Last session: {display_title}, Ch {last_session.chapter_num} ({time_ago})")
+            print(f"  {DIM}In progress: {len(all_sessions)} chapter(s) · Materials: {material_count}{RESET}")
+
+    except Exception as e:
+        print(f"  {DIM}(error reading reader data: {e}){RESET}")
+
+    print()
 
 
 def print_next_task():
@@ -110,6 +166,7 @@ def print_quick_commands():
     print(f"{BOLD}Quick Commands:{RESET}")
     print(f"  {GREEN}./study{RESET}                  # Launch TUI (recommended)")
     print(f"  {GREEN}./drill{RESET}                  # Drill due cards (Textual TUI)")
+    print(f"  {GREEN}./read{RESET}                   # Reading companion (dialogue)")
     print(f"  {DIM}./study --progress{RESET}       # Generate progress report")
     print()
 
@@ -118,6 +175,7 @@ def main():
     print_header()
     print_domain()
     print_reviewer_status()
+    print_reader_status()
     print_card_summary()
     print_next_task()
     print_quick_commands()

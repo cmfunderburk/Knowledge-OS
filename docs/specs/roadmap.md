@@ -2,7 +2,7 @@
 
 A roadmap for the TUI-based study system, documenting current capabilities and future enhancement ideas.
 
-**Last updated**: 2025-12-19
+**Last updated**: 2025-12-20
 
 > **Note:** This system was designed for PhD-level self-study across multiple domains. The examples reference specific textbooks (Tao, CLRS, etc.) as illustration—adapt to your own curriculum.
 
@@ -77,6 +77,46 @@ The **LLM-powered reading companion** provides structured dialogue with textbook
 - Voice input via Whisper (local or API)
 - Text-to-speech for LLM responses
 - Jinja2 prompt templates for each dialogue mode
+
+---
+
+## Roadmap: Infrastructure
+
+### Unified CLI Entry Point
+**Status:** Planned | **Effort:** Low-Medium
+
+Replace the multiple script files (`./today`, `./read`, `./study`, `./drill`) with a single CLI entry point using subcommands:
+
+```bash
+knos today      # Dashboard
+knos study      # Launch TUI
+knos drill      # Drill due cards
+knos read       # Reading companion
+knos read --extract <material-id>  # Extract chapters
+```
+
+**Benefits:**
+- Single entry point instead of 4+ scripts in project root
+- Cleaner project structure
+- Discoverable commands via `knos --help`
+- Consistent invocation pattern
+- Easier to extend with new commands
+
+**Implementation:**
+1. Create `knos/cli.py` with Click or Typer
+2. Define subcommands that dispatch to existing functionality
+3. Register as console script in `pyproject.toml`:
+   ```toml
+   [project.scripts]
+   knos = "knos.cli:main"
+   ```
+4. Remove standalone scripts from project root
+5. Update docs and help text
+
+**Open Questions:**
+- Name: `knos`, `kos`, `study`, or something else?
+- Should legacy `./study` etc. remain as symlinks during transition?
+- Group related commands? e.g., `knos reader extract` vs `knos read --extract`
 
 ---
 
