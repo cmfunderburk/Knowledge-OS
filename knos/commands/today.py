@@ -1,25 +1,9 @@
-#!/usr/bin/env -S uv run python3
 """
-Daily study dashboard - CLI version.
+CLI dashboard - shows today's study plan.
 
-Shows today's domain, reviewer status, and next task.
-This is the CLI equivalent of the TUI dashboard.
+Displays domain, reviewer status, reader status, and next task.
 """
 import datetime
-from pathlib import Path
-
-# Import from shared data layer
-from reviewer.core import (
-    get_todays_domain,
-    get_next_task,
-    get_reviewer_summary,
-    get_overall_progress,
-    collect_focus_files,
-)
-
-# Import from reader module
-from reader.config import load_registry
-from reader.session import list_sessions, SESSIONS_DIR
 
 # ANSI Colors
 BOLD = '\033[1m'
@@ -30,7 +14,28 @@ DIM = '\033[2m'
 RESET = '\033[0m'
 
 
-def print_header():
+def run_today() -> None:
+    """Print CLI dashboard."""
+    from reviewer.core import (
+        get_todays_domain,
+        get_next_task,
+        get_reviewer_summary,
+        get_overall_progress,
+        collect_focus_files,
+    )
+    from reader.config import load_registry
+    from reader.session import list_sessions, SESSIONS_DIR
+
+    _print_header()
+    _print_domain(get_todays_domain)
+    _print_reviewer_status(get_reviewer_summary)
+    _print_reader_status(load_registry, list_sessions, SESSIONS_DIR)
+    _print_card_summary(collect_focus_files)
+    _print_next_task(get_overall_progress, get_next_task)
+    _print_quick_commands()
+
+
+def _print_header() -> None:
     date_str = datetime.date.today().strftime("%A, %B %d, %Y")
     print(f"{BOLD}╔════════════════════════════════════════╗{RESET}")
     print(f"{BOLD}║           TODAY'S STUDY PLAN           ║{RESET}")
@@ -39,9 +44,8 @@ def print_header():
     print()
 
 
-def print_domain():
+def _print_domain(get_todays_domain) -> None:
     domain, override = get_todays_domain()
-    
     if override:
         print(f"{BOLD}Current Phase:{RESET} {YELLOW}{domain}{RESET}")
         print(f"{DIM}{override}{RESET}")
@@ -50,18 +54,16 @@ def print_domain():
     print()
 
 
-def print_reviewer_status():
+def _print_reviewer_status(get_reviewer_summary) -> None:
     print(f"{BOLD}Reviewer:{RESET}")
-    
     try:
         summary = get_reviewer_summary()
-        
         box_zero = summary["box_zero"]
         overdue = summary["overdue"]
         due_now = summary["due_now"]
         never_practiced = summary["never_practiced"]
         total_due = box_zero + overdue + due_now
-        
+
         if box_zero > 0:
             print(f"  {YELLOW}Box 0 (failed): {box_zero} cards{RESET}")
         if overdue > 0:
@@ -72,46 +74,29 @@ def print_reviewer_status():
             print(f"  {GREEN}All caught up!{RESET}")
         if never_practiced > 0:
             print(f"  {DIM}Never practiced: {never_practiced} cards{RESET}")
-        
+
         if summary["last_practiced"]:
-            # Show just the date portion
             last_date = summary["last_practiced"][:10]
             print(f"  {DIM}Last practiced: {last_date}{RESET}")
-            
     except Exception as e:
         print(f"  {DIM}(error reading reviewer data: {e}){RESET}")
-    
     print()
 
 
-def print_card_summary():
-    focus_files = collect_focus_files()
-    count = len(focus_files)
-
-    if count > 0:
-        print(f"{BOLD}Reviewer Library:{RESET}")
-        print(f"  {DIM}Focus cards: {count}{RESET}")
-        print()
-
-
-def print_reader_status():
+def _print_reader_status(load_registry, list_sessions, sessions_dir) -> None:
     print(f"{BOLD}Reader:{RESET}")
-
     try:
-        # Count registered materials
         registry = load_registry()
         materials = registry.get("materials", {})
         material_count = len(materials)
 
-        # Find all sessions across all materials
         all_sessions = []
-        if SESSIONS_DIR.exists():
-            for material_dir in SESSIONS_DIR.iterdir():
+        if sessions_dir.exists():
+            for material_dir in sessions_dir.iterdir():
                 if material_dir.is_dir():
                     material_id = material_dir.name
                     sessions = list_sessions(material_id)
                     for chapter_num, session in sessions.items():
-                        # Get material title if available
                         material_info = materials.get(material_id, {})
                         title = material_info.get("title", material_id)
                         all_sessions.append((session, title))
@@ -120,11 +105,9 @@ def print_reader_status():
             print(f"  {DIM}No reading sessions yet{RESET}")
             print(f"  {DIM}Materials: {material_count} registered{RESET}")
         else:
-            # Find most recent session
             all_sessions.sort(key=lambda x: x[0].last_updated, reverse=True)
             last_session, last_title = all_sessions[0]
 
-            # Format the time ago
             now = datetime.datetime.now()
             delta = now - last_session.last_updated
             if delta.days == 0:
@@ -134,52 +117,41 @@ def print_reader_status():
             else:
                 time_ago = f"{delta.days} days ago"
 
-            # Truncate title if too long
             display_title = last_title if len(last_title) <= 30 else last_title[:27] + "..."
-
             print(f"  Last session: {display_title}, Ch {last_session.chapter_num} ({time_ago})")
             print(f"  {DIM}In progress: {len(all_sessions)} chapter(s) · Materials: {material_count}{RESET}")
-
     except Exception as e:
         print(f"  {DIM}(error reading reader data: {e}){RESET}")
-
     print()
 
 
-def print_next_task():
+def _print_card_summary(collect_focus_files) -> None:
+    focus_files = collect_focus_files()
+    count = len(focus_files)
+    if count > 0:
+        print(f"{BOLD}Reviewer Library:{RESET}")
+        print(f"  {DIM}Focus cards: {count}{RESET}")
+        print()
+
+
+def _print_next_task(get_overall_progress, get_next_task) -> None:
     done, total = get_overall_progress()
     if total == 0:
         return
 
     print(f"{BOLD}Phase 0 Progress:{RESET} {done}/{total} tasks complete")
-
     next_task = get_next_task()
     if next_task:
         print(f"  {CYAN}Next:{RESET}  {next_task}")
     else:
         print(f"  {GREEN}All Phase 0 tasks complete!{RESET}")
-
     print()
 
 
-def print_quick_commands():
+def _print_quick_commands() -> None:
     print(f"{BOLD}Quick Commands:{RESET}")
-    print(f"  {GREEN}./study{RESET}                  # Launch TUI (recommended)")
-    print(f"  {GREEN}./drill{RESET}                  # Drill due cards (Textual TUI)")
-    print(f"  {GREEN}./read{RESET}                   # Reading companion (dialogue)")
-    print(f"  {DIM}./study --progress{RESET}       # Generate progress report")
+    print(f"  {GREEN}knos{RESET}                     # Launch TUI (recommended)")
+    print(f"  {GREEN}knos drill{RESET}               # Drill due cards")
+    print(f"  {GREEN}knos read{RESET}                # Reading companion")
+    print(f"  {DIM}knos progress{RESET}            # Generate progress report")
     print()
-
-
-def main():
-    print_header()
-    print_domain()
-    print_reviewer_status()
-    print_reader_status()
-    print_card_summary()
-    print_next_task()
-    print_quick_commands()
-
-
-if __name__ == "__main__":
-    main()
