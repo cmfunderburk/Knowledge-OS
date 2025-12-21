@@ -6,7 +6,7 @@ from textual.containers import Container, Vertical
 from textual.binding import Binding
 
 from reader.config import load_registry
-from reader.content import list_extracted_chapters
+from reader.content import list_all_content, get_source_path
 
 
 class MaterialItem(ListItem):
@@ -20,13 +20,17 @@ class MaterialItem(ListItem):
     def compose(self) -> ComposeResult:
         title = self.info.get("title", self.material_id)
         author = self.info.get("author", "Unknown")
-        chapters = len(self.info.get("structure", {}).get("chapters", []))
-        extracted = len(list_extracted_chapters(self.material_id))
 
-        status = "ready" if extracted == chapters else f"{extracted}/{chapters} extracted"
+        # Get chapter count from actual source (works for both PDF and EPUB)
+        chapters, _ = list_all_content(self.material_id)
+        chapter_count = len(chapters)
+
+        # Check if source file exists
+        source_exists = get_source_path(self.material_id).exists()
+        status = "ready" if source_exists and chapter_count > 0 else "missing"
 
         yield Label(f"[bold]{title}[/bold]")
-        yield Label(f"  {author} · {chapters} chapters · {status}", classes="material-meta")
+        yield Label(f"  {author} · {chapter_count} chapters · {status}", classes="material-meta")
 
 
 class SelectMaterialScreen(Screen):
@@ -73,12 +77,15 @@ class SelectMaterialScreen(Screen):
             material_id = list_view.highlighted_child.material_id
             info = list_view.highlighted_child.info
 
-            # Check if extracted
-            chapters = len(info.get("structure", {}).get("chapters", []))
-            extracted = len(list_extracted_chapters(material_id))
+            # Check if source exists and has chapters
+            source_path = get_source_path(material_id)
+            if not source_path.exists():
+                self.notify(f"Source not found: {source_path}", title="Missing source")
+                return
 
-            if extracted < chapters:
-                self.notify(f"Place PDF at reader/extracted/{material_id}/source.pdf", title="PDF not found")
+            chapters, _ = list_all_content(material_id)
+            if not chapters:
+                self.notify("No chapters found in source", title="Empty source")
                 return
 
             from .select_chapter import SelectChapterScreen

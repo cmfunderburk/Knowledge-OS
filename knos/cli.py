@@ -26,7 +26,7 @@ read_app = typer.Typer(
     help="""Reading companion - seminar-style dialogue with texts.
 
 Setup:
-  1. Place PDF in reader/extracted/<material-id>/source.pdf
+  1. Place PDF in reader/sources/<material-id>/source.pdf
   2. Register in reader/content_registry.yaml with chapter page ranges
   3. Run: knos read → select material → select chapter
 
@@ -38,7 +38,7 @@ Example registry entry:
     my-book:
       title: "Book Title"
       author: "Author Name"
-      source: "reader/extracted/my-book/source.pdf"
+      source: "reader/sources/my-book/source.pdf"
       structure:
         chapters:
           - { num: 1, title: "Introduction", pages: [1, 20] }

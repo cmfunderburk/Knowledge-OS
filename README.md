@@ -35,7 +35,7 @@ cp reader/content_registry.yaml.example reader/content_registry.yaml
 # Register your PDFs (see below)
 ```
 
-The example registry includes free [OpenStax](https://openstax.org/) textbooks. Download any PDF, place it in `reader/extracted/<material-id>/source.pdf`, and start a session.
+The example registry includes free [OpenStax](https://openstax.org/) textbooks and bundled classics from Project Gutenberg. Download a PDF, place it in `reader/sources/<material-id>/source.pdf`, and start a session. The classics work out of the box.
 
 ## The Reader
 

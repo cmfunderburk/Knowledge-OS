@@ -10,7 +10,7 @@ materials:
   psychology-2e:
     title: "Psychology 2e"
     author: "OpenStax"
-    source: "reader/extracted/psychology-2e/source.pdf"
+    source: "reader/sources/psychology-2e/source.pdf"
     structure:
       type: "chapters"
       chapters:
@@ -36,7 +36,7 @@ materials:
   economics-3e:
     title: "Principles of Economics 3e"
     author: "OpenStax"
-    source: "reader/extracted/economics-3e/source.pdf"
+    source: "reader/sources/economics-3e/source.pdf"
     structure:
       type: "chapters"
       chapters:
@@ -51,10 +51,43 @@ materials:
         - { num: 9, title: "Monopoly", pages: [245, 274] }
         - { num: 10, title: "Monopolistic Competition and Oligopoly", pages: [275, 300] }
 
+# === Bundled Classics (EPUB) ===
+# These are included with the repo in reader/classics/.
+# EPUBs don't need chapter definitions - structure is extracted automatically.
+
+  # Aristotle's Nicomachean Ethics (F.H. Peters translation)
+  # https://www.gutenberg.org/ebooks/8438
+  nicomachean-ethics:
+    title: "Nicomachean Ethics"
+    author: "Aristotle"
+    source: "reader/classics/nicomachean-ethics.epub"
+
+  # Don Quixote (John Ormsby translation)
+  # https://www.gutenberg.org/ebooks/996
+  don-quixote:
+    title: "Don Quixote"
+    author: "Miguel de Cervantes"
+    source: "reader/classics/don-quixote.epub"
+
+  # The Brothers Karamazov (Constance Garnett translation)
+  # https://www.gutenberg.org/ebooks/28054
+  brothers-karamazov:
+    title: "The Brothers Karamazov"
+    author: "Fyodor Dostoevsky"
+    source: "reader/classics/brothers-karamazov.epub"
+
 # Setup:
-# 1. Place PDF in reader/extracted/<material-id>/source.pdf
-# 2. Add entry above with title, author, source path, and chapter page ranges
+#
+# Bundled classics (reader/classics/) work out of the box - just copy entries above.
+#
+# To add your own materials:
+#
+# For PDFs:
+# 1. Place PDF at reader/sources/<material-id>/source.pdf
+# 2. Add entry with chapter page ranges (1-indexed PDF pages)
 # 3. Verify with: knos read list
 #
-# Page numbers are 1-indexed PDF pages, not book page numbers.
-# Text is extracted on-demand from page ranges during reading.
+# For EPUBs:
+# 1. Place EPUB at reader/sources/<material-id>/source.epub
+# 2. Add entry with title/author only (structure extracted automatically)
+# 3. Verify with: knos read list

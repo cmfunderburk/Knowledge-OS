@@ -66,7 +66,7 @@ uv run python3 -m reviewer.reviewer --summary      # Mastery status
 │  reader/content.py  — PDF extraction, chapter loading   │
 │  reader/prompts.py  — Jinja2 prompt templates           │
 ├─────────────────────────────────────────────────────────┤
-│  reader/extracted/  — Pre-extracted chapter .md files   │
+│  reader/sources/    — User-provided PDFs for reading    │
 │  reader/content_registry.yaml — Material definitions    │
 └─────────────────────────────────────────────────────────┘
 ```

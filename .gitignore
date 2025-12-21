@@ -16,10 +16,12 @@ PROGRESS.md
 # ===== Reader User Data =====
 reader/config.yaml
 reader/content_registry.yaml
-reader/extracted/
+reader/sources/
 reader/sessions/
 reader/drafts/
 reader/docs/
+
+# Bundled classics are tracked (reader/classics/)
 
 # ===== Reviewer State =====
 knos/reviewer/history.jsonl

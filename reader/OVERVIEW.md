@@ -78,7 +78,7 @@ materials:
         - { num: 2, title: "Chapter Two", pages: [46, 89] }
 ```
 
-Place the PDF at `reader/extracted/<material-id>/source.pdf`.
+Place the PDF at `reader/sources/<material-id>/source.pdf`.
 
 ---
 

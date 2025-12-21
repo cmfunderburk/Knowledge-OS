@@ -125,6 +125,6 @@ Key: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `faster-whisper`, `k
 ## Development Notes
 
 - Engine code tracked in git: `knos/`, `reader/`
-- User content gitignored: `solutions/`, `plan/` state files, `reader/extracted/`
+- User content gitignored: `solutions/`, `plan/` state files, `reader/sources/`
 - The CLI entry point is `knos/cli.py` → `knos.cli:main`
 - TUI built on Textual; CLI tools use Rich

@@ -18,7 +18,7 @@ import pymupdf4llm
 from reader.config import get_material, READER_DIR
 
 
-EXTRACTED_DIR = READER_DIR / "extracted"
+SOURCES_DIR = READER_DIR / "sources"
 
 # Pages with more than this many images use fallback extraction
 MAX_IMAGES_PER_PAGE = 20
@@ -65,6 +65,23 @@ def format_content_id(content_id: ContentId) -> str:
         return f"Appendix {content_id}"
 
 
+def get_source_path(material_id: str) -> Path:
+    """
+    Get the full path to the source file for a material.
+
+    Uses the source field from the registry.
+
+    Args:
+        material_id: The material identifier
+
+    Returns:
+        Path to the source file (PDF or EPUB)
+    """
+    material = get_material(material_id)
+    # Source paths in registry are relative to repo root
+    return READER_DIR.parent / material["source"]
+
+
 def get_source_format(material_id: str) -> str:
     """
     Return 'pdf' or 'epub' based on source file extension.
@@ -75,9 +92,8 @@ def get_source_format(material_id: str) -> str:
     Returns:
         'pdf' or 'epub'
     """
-    material = get_material(material_id)
-    source = material["source"]
-    return "pdf" if source.lower().endswith(".pdf") else "epub"
+    source_path = get_source_path(material_id)
+    return "pdf" if source_path.suffix.lower() == ".pdf" else "epub"
 
 
 def get_chapter_pdf(material_id: str, content_id: ContentId) -> bytes:
@@ -94,12 +110,10 @@ def get_chapter_pdf(material_id: str, content_id: ContentId) -> bytes:
     Raises:
         ValueError: If source PDF not found or content not found
     """
-    source_path = EXTRACTED_DIR / material_id / "source.pdf"
+    source_path = get_source_path(material_id)
 
     if not source_path.exists():
-        raise ValueError(
-            f"Source PDF not found. Place PDF at reader/extracted/{material_id}/source.pdf"
-        )
+        raise ValueError(f"Source PDF not found: {source_path}")
 
     content_info = get_content_info(material_id, content_id)
     if not content_info:
@@ -199,34 +213,35 @@ def extract_pages(source_path: Path, page_range: list[int]) -> str:
 
 def load_chapter(material_id: str, chapter_num: int) -> str:
     """
-    Load a pre-extracted chapter (EPUB only).
+    Load chapter content from EPUB (on-demand extraction).
 
     Args:
         material_id: The material identifier
         chapter_num: The chapter number
 
     Returns:
-        The chapter content as a string
+        The chapter content as clean text
 
     Raises:
-        ValueError: If the chapter hasn't been extracted
+        ValueError: If EPUB or chapter not found
     """
-    path = EXTRACTED_DIR / material_id / f"ch{chapter_num:02d}.md"
+    from reader.epub import extract_chapter_by_num
 
-    if not path.exists():
-        raise ValueError(
-            f"Chapter not found. Verify chapter exists in content_registry.yaml"
-        )
+    epub_path = get_source_path(material_id)
 
-    return path.read_text()
+    if not epub_path.exists():
+        raise ValueError(f"EPUB not found: {epub_path}")
+
+    title, text = extract_chapter_by_num(epub_path, chapter_num)
+    return text
 
 
 def get_chapter_text(material_id: str, content_id: ContentId) -> str:
     """
-    Get content as text for any format.
+    Get content as text for any format (on-demand extraction).
 
-    For EPUBs: Returns pre-extracted markdown text (chapters only)
-    For PDFs: Extracts text from the PDF page range on-demand
+    For EPUBs: Extracts chapter from EPUB structure
+    For PDFs: Extracts text from the PDF page range
 
     Args:
         material_id: The material identifier
@@ -247,12 +262,10 @@ def get_chapter_text(material_id: str, content_id: ContentId) -> str:
             raise ValueError("EPUB appendices not yet supported")
     else:
         # PDF: extract text on-demand
-        source_path = EXTRACTED_DIR / material_id / "source.pdf"
+        source_path = get_source_path(material_id)
 
         if not source_path.exists():
-            raise ValueError(
-                f"Source PDF not found. Place PDF at reader/extracted/{material_id}/source.pdf"
-            )
+            raise ValueError(f"Source PDF not found: {source_path}")
 
         content_info = get_content_info(material_id, content_id)
         if not content_info:
@@ -265,50 +278,46 @@ def list_extracted_chapters(material_id: str) -> list[int]:
     """
     List which chapters are available for a material.
 
-    For PDFs: All chapters if source.pdf exists
-    For EPUBs: Chapters with extracted .md files
+    For PDFs: All chapters from registry if source exists
+    For EPUBs: All chapters from EPUB structure if source exists
 
     Returns:
         List of chapter numbers that are available
     """
-    material_dir = EXTRACTED_DIR / material_id
-    if not material_dir.exists():
+    source_path = get_source_path(material_id)
+    if not source_path.exists():
         return []
 
-    # PDF: if source.pdf exists, all chapters are available
-    if (material_dir / "source.pdf").exists():
+    # PDF: all chapters from registry
+    if source_path.suffix.lower() == ".pdf":
         material = get_material(material_id)
         chapters = material.get("structure", {}).get("chapters", [])
         return sorted(c["num"] for c in chapters)
 
-    # EPUB: check for extracted .md files
-    chapters = []
-    for path in material_dir.glob("ch*.md"):
-        try:
-            num = int(path.stem[2:])
-            chapters.append(num)
-        except ValueError:
-            continue
+    # EPUB: get chapters from EPUB structure
+    if source_path.suffix.lower() == ".epub":
+        from reader.epub import list_chapters
+        return [num for num, title in list_chapters(source_path)]
 
-    return sorted(chapters)
+    return []
 
 
 def list_extracted_appendices(material_id: str) -> list[str]:
     """
     List which appendices are available for a material.
 
-    For PDFs: All appendices if source.pdf exists
+    For PDFs: All appendices if source exists
     For EPUBs: Not yet supported
 
     Returns:
         List of appendix IDs (e.g., ["A", "B", "C"])
     """
-    material_dir = EXTRACTED_DIR / material_id
-    if not material_dir.exists():
+    source_path = get_source_path(material_id)
+    if not source_path.exists():
         return []
 
-    # PDF: if source.pdf exists, all appendices are available
-    if (material_dir / "source.pdf").exists():
+    # PDF: all appendices from registry
+    if source_path.suffix.lower() == ".pdf":
         material = get_material(material_id)
         appendices = material.get("structure", {}).get("appendices", [])
         return [a["id"] for a in appendices]
@@ -321,23 +330,30 @@ def list_all_content(material_id: str) -> tuple[list[dict], list[dict]]:
     """
     List all available content (chapters and appendices) for a material.
 
+    Uses the source path from the registry to find the file.
+
     Returns:
         Tuple of (chapters, appendices) where each is a list of dicts
         with 'num'/'id' and 'title' keys
     """
-    material = get_material(material_id)
-    structure = material.get("structure", {})
+    source_path = get_source_path(material_id)
 
-    material_dir = EXTRACTED_DIR / material_id
-    has_source = material_dir.exists() and (material_dir / "source.pdf").exists()
+    if not source_path.exists():
+        return [], []
 
-    if has_source:
+    # PDF: use registry structure
+    if source_path.suffix.lower() == ".pdf":
+        material = get_material(material_id)
+        structure = material.get("structure", {})
         chapters = structure.get("chapters", [])
         appendices = structure.get("appendices", [])
-    else:
-        # EPUB: only chapters with extracted files
-        available_nums = list_extracted_chapters(material_id)
-        chapters = [c for c in structure.get("chapters", []) if c["num"] in available_nums]
-        appendices = []
+        return chapters, appendices
 
-    return chapters, appendices
+    # EPUB: get structure from EPUB itself
+    if source_path.suffix.lower() == ".epub":
+        from reader.epub import list_chapters
+        chapters = [{"num": num, "title": title} for num, title in list_chapters(source_path)]
+        return chapters, []
+
+    # Unknown format
+    return [], []
