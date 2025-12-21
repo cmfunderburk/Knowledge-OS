@@ -48,8 +48,78 @@ def strip_markdown_for_speech(text: str) -> str:
 
     Strips formatting while preserving readable content.
     """
+    # Remove mode injection tags [MODE: xyz] entirely
+    text = re.sub(r"\[MODE:\s*[^\]]+\]", "", text)
+
     # Remove code blocks entirely (they don't speak well)
     text = re.sub(r"```[\s\S]*?```", " (code block) ", text)
+
+    # Handle LaTeX display math $$...$$ - say "equation" for complex math
+    text = re.sub(r"\$\$[\s\S]*?\$\$", " (equation) ", text)
+
+    # Handle LaTeX inline math $...$ - extract content without dollar signs
+    # For simple cases like $x$ just say "x", for complex say the content
+    text = re.sub(r"\$([^$]+)\$", r"\1", text)
+
+    # Clean up common LaTeX commands (after removing $ delimiters)
+    text = re.sub(r"\\[a-zA-Z]+\{([^}]*)\}", r"\1", text)  # \command{content} -> content
+    text = re.sub(r"\\[a-zA-Z]+", "", text)  # Remove remaining \commands
+    text = re.sub(r"[\\{}^_]", " ", text)  # Remove LaTeX special chars
+
+    # Handle Lean4 syntax - common Unicode math symbols
+    lean_replacements = [
+        (r"∀", "for all"),
+        (r"∃", "there exists"),
+        (r"→", "implies"),
+        (r"←", "from"),
+        (r"↔", "if and only if"),
+        (r"λ", "lambda"),
+        (r"Λ", "lambda"),
+        (r"∧", "and"),
+        (r"∨", "or"),
+        (r"¬", "not"),
+        (r"≠", "not equal to"),
+        (r"≤", "less than or equal to"),
+        (r"≥", "greater than or equal to"),
+        (r"∈", "in"),
+        (r"∉", "not in"),
+        (r"⊆", "subset of"),
+        (r"⊂", "proper subset of"),
+        (r"∪", "union"),
+        (r"∩", "intersection"),
+        (r"∅", "empty set"),
+        (r"⟨", ""),  # angle brackets - just remove
+        (r"⟩", ""),
+        (r"⊢", "proves"),
+        (r"⊨", "models"),
+        (r"≡", "equivalent to"),
+        (r"∘", "composed with"),
+        (r"×", "times"),
+        (r"α", "alpha"),
+        (r"β", "beta"),
+        (r"γ", "gamma"),
+        (r"δ", "delta"),
+        (r"ε", "epsilon"),
+        (r"ζ", "zeta"),
+        (r"η", "eta"),
+        (r"θ", "theta"),
+        (r"ι", "iota"),
+        (r"κ", "kappa"),
+        (r"μ", "mu"),
+        (r"ν", "nu"),
+        (r"ξ", "xi"),
+        (r"π", "pi"),
+        (r"ρ", "rho"),
+        (r"σ", "sigma"),
+        (r"τ", "tau"),
+        (r"υ", "upsilon"),
+        (r"φ", "phi"),
+        (r"χ", "chi"),
+        (r"ψ", "psi"),
+        (r"ω", "omega"),
+    ]
+    for symbol, replacement in lean_replacements:
+        text = text.replace(symbol, f" {replacement} ")
 
     # Remove inline code but keep content
     text = re.sub(r"`([^`]+)`", r"\1", text)

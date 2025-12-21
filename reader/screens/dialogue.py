@@ -339,15 +339,30 @@ class DialogueScreen(Screen):
         else:
             chat_log.write("")
 
+        # Detect if last session was just opened and closed without real conversation
+        last_session_empty = False
         if is_resumed:
-            # Resumed session - ask about direction (ephemeral, not saved to transcript)
-            opening_prompt = (
-                f"I'm returning to continue our discussion of {content_label}: "
-                f"{self.chapter_title} from {book_title}. "
-                f"We've had {existing_session.exchange_count} exchanges so far. "
-                f"Based on our previous conversation, what direction would you suggest "
-                f"we go from here, or what might be worth revisiting?"
-            )
+            last_session_empty = self._was_last_session_empty()
+
+        if is_resumed:
+            if last_session_empty:
+                # User opened session previously but left without engaging
+                opening_prompt = (
+                    f"I'm returning to {content_label}: {self.chapter_title} from {book_title}. "
+                    f"Note: I opened this session before but got distracted and left without "
+                    f"actually engaging with the material. This is effectively a fresh start. "
+                    f"Can you help orient me to what this section covers and suggest "
+                    f"how we might approach it together?"
+                )
+            else:
+                # Resumed session with real prior conversation
+                opening_prompt = (
+                    f"I'm returning to continue our discussion of {content_label}: "
+                    f"{self.chapter_title} from {book_title}. "
+                    f"We've had {existing_session.exchange_count} exchanges so far. "
+                    f"Based on our previous conversation, what direction would you suggest "
+                    f"we go from here, or what might be worth revisiting?"
+                )
         else:
             # New session - introduce the material
             opening_prompt = (
@@ -463,6 +478,34 @@ class DialogueScreen(Screen):
             self.total_output_tokens = self.session.total_output_tokens
             self.cache_size = self.session.cache_tokens
 
+    def _was_last_session_empty(self) -> bool:
+        """
+        Check if the last session was just opened and closed without real engagement.
+
+        Returns True if all user messages in the transcript are system-generated
+        opening prompts (not actual user input).
+        """
+        user_messages = [msg["content"] for msg in self.messages if msg["role"] == "user"]
+
+        if not user_messages:
+            return True
+
+        # If any user message is not an opening prompt, real conversation happened
+        for content in user_messages:
+            if not self._is_opening_prompt(content):
+                return False
+
+        return True
+
+    def _is_opening_prompt(self, content: str) -> bool:
+        """Check if a message is a system-generated opening prompt."""
+        opening_patterns = [
+            "Hello! I'm beginning to read",
+            "I'm returning to continue our discussion",
+            "I'm returning to",  # Catches the "distracted" variant too
+        ]
+        return any(content.startswith(pattern) for pattern in opening_patterns)
+
     def _display_transcript(self) -> None:
         """Display the session transcript in the chat log."""
         chat_log = self.query_one("#chat-log", RichLog)
@@ -474,15 +517,28 @@ class DialogueScreen(Screen):
         chat_log.write("[dim]── Previous conversation ──[/dim]")
         chat_log.write("")
 
+        # Track whether to skip the next assistant message (response to hidden prompt)
+        skip_next_assistant = False
+
         for msg in transcript:
             role = msg["role"]
             content = msg["content"]
             mode = msg.get("mode", "socratic")
 
             if role == "user":
+                # Hide system-generated opening prompts
+                if self._is_opening_prompt(content):
+                    skip_next_assistant = True
+                    continue
+
                 chat_log.write("[bold yellow]You[/bold yellow]")
                 chat_log.write(f"  {content}")
             else:
+                # Skip LLM responses to hidden opening prompts
+                if skip_next_assistant:
+                    skip_next_assistant = False
+                    continue
+
                 mode_color = MODE_COLORS.get(mode, "cyan")
                 chat_log.write(f"[bold {mode_color}]Reader[/bold {mode_color}] [{mode_color}][{mode}][/{mode_color}]")
                 chat_log.write(Markdown(content.strip()))

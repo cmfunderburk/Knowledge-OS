@@ -3,6 +3,7 @@ LLM provider abstraction for the reader module.
 """
 import os
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
@@ -39,6 +40,23 @@ class LLMProvider(ABC):
             ChatResponse with text and token counts
         """
         pass
+
+    def stream_chat(
+        self, messages: list[dict], system: str | None = None
+    ) -> Iterator[str]:
+        """
+        Stream messages and yield text chunks.
+
+        Args:
+            messages: List of {"role": "user"|"assistant", "content": "..."}
+            system: Optional system prompt
+
+        Yields:
+            Text chunks as they arrive
+        """
+        # Default implementation: just yield the full response
+        response = self.chat(messages, system)
+        yield response.text
 
 
 class GeminiProvider(LLMProvider):
@@ -164,6 +182,42 @@ class GeminiProvider(LLMProvider):
             output_tokens=output_tokens,
             cached_tokens=cached_tokens,
         )
+
+    def stream_chat(
+        self, messages: list[dict], system: str | None = None
+    ) -> Iterator[str]:
+        """Stream messages and yield text chunks."""
+        from google.genai import types
+
+        # Convert messages to Gemini Content format
+        contents = []
+        for msg in messages:
+            role = "model" if msg["role"] == "assistant" else "user"
+            contents.append(
+                types.Content(
+                    role=role,
+                    parts=[types.Part.from_text(text=msg["content"])]
+                )
+            )
+
+        # Build generation config (same logic as chat)
+        if self._cache_name:
+            gen_config = types.GenerateContentConfig(
+                cached_content=self._cache_name,
+            )
+        else:
+            gen_config = types.GenerateContentConfig(
+                system_instruction=system,
+            )
+
+        # Use streaming API
+        for chunk in self.client.models.generate_content_stream(
+            model=self.model,
+            contents=contents,
+            config=gen_config,
+        ):
+            if chunk.text:
+                yield chunk.text
 
 
 def get_provider(config: dict[str, Any] | None = None) -> LLMProvider:
