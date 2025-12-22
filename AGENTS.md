@@ -31,11 +31,10 @@ uv run knos read list              # List registered materials
 uv run knos read clear <id> [ch]   # Clear session data
 uv run knos read test              # Verify LLM configuration
 
-# Direct reviewer access
-uv run python3 -m reviewer.reviewer --focus        # All cards, random order
-uv run python3 -m reviewer.reviewer --due          # Show due cards
-uv run python3 -m reviewer.reviewer --drill-due    # Drill due only
-uv run python3 -m reviewer.reviewer --summary      # Mastery status
+# Reviewer query modes (for scripting)
+uv run python3 -m knos.reviewer.reviewer --due          # Show due cards
+uv run python3 -m knos.reviewer.reviewer --due-json     # JSON for scripts
+uv run python3 -m knos.reviewer.reviewer --summary      # Mastery status
 ```
 
 ## Architecture
@@ -169,10 +168,11 @@ Copy `reader/content_registry.yaml.example` to get started.
 Configure API keys for the reading companion:
 
 ```yaml
-provider: gemini
-gemini:
-  api_key: "your-api-key"
-  model: "gemini-2.0-flash"
+llm:
+  provider: "gemini"
+  gemini:
+    api_key: "your-api-key"
+    model: "gemini-2.5-flash"
 ```
 
 Copy `reader/config.yaml.example` to get started.
