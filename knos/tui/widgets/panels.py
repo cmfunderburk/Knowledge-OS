@@ -1,5 +1,14 @@
 """
 Panel widgets for the unified dashboard.
+
+Each panel is a self-contained Textual widget that renders a Rich Panel
+with specific study information:
+
+- TodayPanel: Current study domain and next task from todo.md
+- ProgressPanel: Sprint progress bars from study_config.yaml
+- StatusPanel: Reviewer summary (box 0, overdue, due now, never practiced)
+- DrillListPanel: Navigable list of cards ready to drill
+- ReaderPanel: Registered reading materials with session counts
 """
 from datetime import datetime
 from rich.console import RenderableType
@@ -171,8 +180,13 @@ class StatusPanel(Widget):
 
 
 class DrillListPanel(Widget):
-    """Shows list of cards ready to drill with selection."""
-    
+    """Navigable list of cards ready to drill.
+
+    Displays up to 8 cards from the drill queue with their box level and
+    due status. The currently selected card is highlighted; selection is
+    controlled by the parent screen via update_selection().
+    """
+
     DEFAULT_CSS = """
     DrillListPanel {
         height: auto;
@@ -180,7 +194,7 @@ class DrillListPanel(Widget):
         padding: 0 1;
     }
     """
-    
+
     def __init__(self, drill_queue: list, selected_idx: int = 0, id: str = None):
         super().__init__(id=id)
         self.drill_queue = drill_queue
