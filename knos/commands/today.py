@@ -23,8 +23,8 @@ def run_today() -> None:
         get_overall_progress,
         collect_focus_files,
     )
-    from reader.config import load_registry
-    from reader.session import list_sessions, SESSIONS_DIR
+    from knos.reader.config import load_registry
+    from knos.reader.session import list_sessions, SESSIONS_DIR
 
     _print_header()
     _print_domain(get_todays_domain())

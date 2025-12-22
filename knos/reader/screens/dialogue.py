@@ -9,11 +9,11 @@ from textual.widgets.option_list import Option
 from textual.containers import Container, Vertical, Horizontal
 from textual.binding import Binding
 
-from reader.content import ContentId, get_source_format, get_chapter_pdf, load_chapter, format_content_id, get_article_text, get_article_pdf
-from reader.config import get_material_type
-from reader.llm import get_provider
-from reader.prompts import build_cache_prompt, get_mode_instruction, MODES
-from reader.session import (
+from knos.reader.content import ContentId, get_source_format, get_chapter_pdf, load_chapter, format_content_id, get_article_text, get_article_pdf
+from knos.reader.config import get_material_type
+from knos.reader.llm import get_provider
+from knos.reader.prompts import build_cache_prompt, get_mode_instruction, MODES
+from knos.reader.session import (
     Session,
     create_session,
     load_session,
@@ -21,7 +21,7 @@ from reader.session import (
     save_metadata,
     append_message,
 )
-from reader.config import load_config
+from knos.reader.config import load_config
 
 # Mode colors for visual differentiation
 MODE_COLORS = {
@@ -163,6 +163,14 @@ class DialogueScreen(Screen):
         self._tts_enabled = self._tts_config.get("enabled", True)
         self._speaking = False
 
+        # Session config
+        self._session_config = self._load_session_config()
+
+        # Cache timer state
+        self._cache_created_at: datetime | None = None
+        self._cache_duration_minutes: int = self._session_config.get("duration_minutes", 30)
+        self._cache_timer_interval = None
+
     def _load_voice_config(self) -> dict:
         """Load voice configuration from config.yaml."""
         try:
@@ -176,6 +184,14 @@ class DialogueScreen(Screen):
         try:
             config = load_config()
             return config.get("tts", {})
+        except Exception:
+            return {}
+
+    def _load_session_config(self) -> dict:
+        """Load session configuration from config.yaml."""
+        try:
+            config = load_config()
+            return config.get("session", {})
         except Exception:
             return {}
 
@@ -198,6 +214,7 @@ class DialogueScreen(Screen):
                 mode_color = MODE_COLORS.get(self.mode, "cyan")
                 mode_desc = MODE_INFO.get(self.mode, "")
                 yield Label(f"[{mode_color}]{self.mode}[/{mode_color}] [dim]{mode_desc}[/dim]", id="mode-indicator")
+                yield Label("", id="cache-timer")
                 yield Label("[dim]0 tokens[/dim]", id="token-counter")
 
             # Chat history
@@ -249,11 +266,15 @@ class DialogueScreen(Screen):
             )
 
         try:
+            # Get configured duration (default 30 minutes)
+            duration_minutes = self._session_config.get("duration_minutes", 30)
+            ttl_seconds = duration_minutes * 60
+
             cache_name = self.provider.create_cache(
                 system_prompt=system_prompt,
                 chapter_content=self.chapter_content,
                 chapter_pdf=self.chapter_pdf,
-                ttl_seconds=900,
+                ttl_seconds=ttl_seconds,
             )
             if cache_name:
                 self.using_cache = True
@@ -370,6 +391,10 @@ class DialogueScreen(Screen):
         if not cache_success:
             chat_log.write("[red]Session setup failed. Cannot proceed.[/red]")
             return
+
+        # Start cache expiration timer (only if using actual cache, not system prompt fallback)
+        if self.using_cache:
+            self._start_cache_timer()
 
         # Clear loading messages and prepare display
         chat_log.clear()
@@ -738,7 +763,7 @@ class DialogueScreen(Screen):
             self._speaking = True
 
             def do_speak():
-                from reader.tts import speak
+                from knos.reader.tts import speak
                 speed = self._tts_config.get("speed", 1.0)
                 speak(text, voice=voice, speed=speed, strip_markdown=True)
 
@@ -778,6 +803,46 @@ class DialogueScreen(Screen):
         token_label = self.query_one("#token-counter", Label)
         token_label.update(f"[dim]{display}[/dim]")
 
+    def _start_cache_timer(self) -> None:
+        """Start the cache expiration timer."""
+        self._cache_created_at = datetime.now()
+        self._update_cache_timer()
+        # Update every 30 seconds
+        self._cache_timer_interval = self.set_interval(30, self._update_cache_timer)
+
+    def _update_cache_timer(self) -> None:
+        """Update the cache timer display."""
+        if not self._cache_created_at:
+            return
+
+        elapsed = datetime.now() - self._cache_created_at
+        remaining_seconds = (self._cache_duration_minutes * 60) - elapsed.total_seconds()
+
+        timer_label = self.query_one("#cache-timer", Label)
+
+        if remaining_seconds <= 0:
+            # Cache expired
+            timer_label.update("[red bold]cache expired[/red bold]")
+            self._handle_cache_expired()
+        elif remaining_seconds <= 300:  # 5 minutes warning
+            mins = int(remaining_seconds // 60)
+            secs = int(remaining_seconds % 60)
+            timer_label.update(f"[yellow]{mins}:{secs:02d} left[/yellow]")
+        else:
+            mins = int(remaining_seconds // 60)
+            timer_label.update(f"[dim]{mins}m left[/dim]")
+
+    def _handle_cache_expired(self) -> None:
+        """Handle cache expiration - disable input and notify user."""
+        if self._cache_timer_interval:
+            self._cache_timer_interval.stop()
+            self._cache_timer_interval = None
+
+        input_widget = self.query_one("#chat-input", Input)
+        input_widget.disabled = True
+        input_widget.placeholder = "Session expired - press Escape to restart"
+        self.notify("Cache expired. Exit and re-enter to continue.", severity="warning")
+
     def action_select_mode(self) -> None:
         """Open mode selection modal."""
         self.app.push_screen(ModeSelectModal(self.mode), self.on_mode_selected)
@@ -810,7 +875,7 @@ class DialogueScreen(Screen):
 
         if self._recording:
             # Stop recording early
-            from reader.voice import stop_recording
+            from knos.reader.voice import stop_recording
             stop_recording()
             return
 
@@ -837,7 +902,7 @@ class DialogueScreen(Screen):
 
         try:
             # Import voice module (lazy to avoid import errors if deps missing)
-            from reader.voice import record_and_transcribe
+            from knos.reader.voice import record_and_transcribe
 
             # Run blocking recording in thread pool
             def do_record():
@@ -882,7 +947,7 @@ class DialogueScreen(Screen):
         # If currently speaking, stop
         if self._speaking:
             try:
-                from reader.tts import stop_speaking
+                from knos.reader.tts import stop_speaking
                 stop_speaking()
             except ImportError:
                 pass
@@ -921,10 +986,15 @@ class DialogueScreen(Screen):
         # Stop any TTS playback
         if self._speaking:
             try:
-                from reader.tts import stop_speaking
+                from knos.reader.tts import stop_speaking
                 stop_speaking()
             except ImportError:
                 pass
+
+        # Stop cache timer
+        if self._cache_timer_interval:
+            self._cache_timer_interval.stop()
+            self._cache_timer_interval = None
 
         # Clean up cache
         if self.provider:

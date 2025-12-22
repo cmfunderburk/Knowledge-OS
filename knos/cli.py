@@ -130,6 +130,17 @@ def read_test() -> None:
     run_test_llm()
 
 
+@read_app.command("export")
+def read_export(
+    material_id: str = typer.Argument(..., help="Material ID to export"),
+    content: Optional[str] = typer.Argument(None, help="Chapter number (e.g., '1') or appendix ID (e.g., 'A')"),
+    output: Optional[str] = typer.Option(None, "-o", "--output", help="Output file (default: stdout)"),
+) -> None:
+    """Export a session transcript to markdown."""
+    from knos.commands.read import run_export
+    run_export(material_id, content, output)
+
+
 def main() -> None:
     """Entry point for the CLI."""
     app()

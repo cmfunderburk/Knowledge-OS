@@ -5,8 +5,8 @@ from textual.widgets import Header, Footer, Label, ListItem, ListView
 from textual.containers import Container
 from textual.binding import Binding
 
-from reader.content import ContentId, list_all_content
-from reader.session import list_sessions, Session
+from knos.reader.content import ContentId, list_all_content
+from knos.reader.session import list_sessions, Session
 
 
 class ContentItem(ListItem):

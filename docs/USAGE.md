@@ -18,7 +18,7 @@ knos read            # Reading companion
 | **[docs/manual/workflow.md](manual/workflow.md)** | **Process**: Reading prompts & Study workflow |
 | **[docs/specs/roadmap.md](specs/roadmap.md)** | **Future**: Enhancement plans |
 | **[AGENTS.md](../AGENTS.md)** | **AI**: Context for coding assistants |
-| **[reader/OVERVIEW.md](../reader/OVERVIEW.md)** | **Reader**: Seminar-style LLM dialogue companion |
+| **[knos/reader/OVERVIEW.md](../knos/reader/OVERVIEW.md)** | **Reader**: Seminar-style LLM dialogue companion |
 
 ## Commands Reference
 
@@ -34,8 +34,8 @@ knos read            # Reading companion
 ### Reader CLI
 
 **Setup:**
-1. Place PDF in `reader/sources/<material-id>/source.pdf`
-2. Register in `reader/content_registry.yaml` with chapter page ranges
+1. Place PDF in `knos/reader/sources/<material-id>/source.pdf`
+2. Register in `knos/reader/content_registry.yaml` with chapter page ranges
 3. Run: `knos read` → select material → select chapter
 
 Registration can be done manually or with AI tools (e.g. Claude Code to extract TOC).
@@ -45,6 +45,7 @@ Registration can be done manually or with AI tools (e.g. Claude Code to extract 
 | `knos read` | Launch TUI (material → chapter → dialogue) |
 | `knos read list` | List registered materials |
 | `knos read clear <id> [chapter]` | Clear session data |
+| `knos read export <id> [chapter] [-o file]` | Export session to markdown |
 | `knos read test` | Verify LLM configuration |
 | `knos read --help` | Show setup instructions |
 

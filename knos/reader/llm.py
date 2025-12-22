@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
-from reader.config import load_config
+from knos.reader.config import load_config
 
 
 @dataclass
@@ -83,7 +83,7 @@ class GeminiProvider(LLMProvider):
             system_prompt: System instruction for the dialogue mode.
             chapter_content: The chapter text for EPUBs (mutually exclusive with chapter_pdf)
             chapter_pdf: The chapter PDF bytes for PDFs (mutually exclusive with chapter_content)
-            ttl_seconds: Cache TTL in seconds (default 15 minutes)
+            ttl_seconds: Cache TTL in seconds (default 30 minutes)
 
         Returns:
             Cache name for reference, or None if content too small

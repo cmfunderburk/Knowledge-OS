@@ -1,3 +1,11 @@
+"""
+RevealBlock widget for line-by-line code drilling.
+
+The core interactive component of drill sessions. Each code block from a
+solution card becomes a RevealBlock that hides lines until the user marks
+them correct (y) or incorrect (n). Lines are displayed with syntax
+highlighting once revealed, with checkmarks or X marks indicating success.
+"""
 from rich.console import RenderableType
 from rich.syntax import Syntax
 from rich.text import Text
@@ -8,9 +16,18 @@ from textual.reactive import reactive
 
 from knos.reviewer.core import CodeBlock, BlockResult
 
+
 class RevealBlock(Widget):
-    """
-    A widget that displays a code block and allows line-by-line revealing.
+    """Interactive widget for line-by-line code recall.
+
+    Displays a code block with lines initially hidden. The current target
+    line shows a length hint (▓ characters). As users mark lines, they are
+    revealed with syntax highlighting and a success/failure marker.
+
+    State:
+        current_line: Index of the line being tested (reactive)
+        line_results: List of bool results for revealed lines
+        complete: True when all lines have been revealed
     """
     
     DEFAULT_CSS = """

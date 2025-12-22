@@ -1,56 +1,54 @@
-"""Voice input module using faster-whisper for local transcription."""
-import os
+"""Voice input module using faster-whisper for local transcription.
+
+Requires optional voice dependencies: uv sync --extra voice
+"""
+from __future__ import annotations
+
 import queue
 import threading
 from typing import Callable
 
-_cuda_available: bool | None = None
+# Preload NVIDIA libraries (must happen before importing torch/faster-whisper)
+from knos.reader.cuda_utils import is_cuda_available  # noqa: E402
+
+# Check if voice dependencies are available
+_voice_available: bool | None = None
 
 
-def _check_cuda_available() -> bool:
-    """Check if CUDA is available for faster-whisper."""
-    global _cuda_available
-    if _cuda_available is not None:
-        return _cuda_available
+def is_voice_available() -> bool:
+    """Check if voice input dependencies are installed."""
+    global _voice_available
+    if _voice_available is not None:
+        return _voice_available
 
     try:
-        import torch
-        _cuda_available = torch.cuda.is_available()
+        import sounddevice  # noqa: F401
+        import numpy  # noqa: F401
+        import faster_whisper  # noqa: F401
+        _voice_available = True
     except ImportError:
-        _cuda_available = False
+        _voice_available = False
 
-    return _cuda_available
+    return _voice_available
 
-
-def _preload_cuda_libraries():
-    """Preload NVIDIA libraries so ctranslate2/faster-whisper can find them."""
-    if not _check_cuda_available():
-        return
-
-    import ctypes
-    import importlib.util
-
-    libs_to_load = [
-        ("nvidia.cublas.lib", "libcublas.so.12"),
-        ("nvidia.cublas.lib", "libcublasLt.so.12"),
-        ("nvidia.cudnn.lib", "libcudnn.so.9"),
-    ]
-
-    for module_name, lib_name in libs_to_load:
-        try:
-            spec = importlib.util.find_spec(module_name)
-            if spec and spec.submodule_search_locations:
-                lib_path = os.path.join(spec.submodule_search_locations[0], lib_name)
-                if os.path.exists(lib_path):
-                    ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
-        except Exception:
-            pass
+# Lazy imports for optional dependencies
+np = None
+sd = None
 
 
-_preload_cuda_libraries()
-
-import numpy as np
-import sounddevice as sd
+def _ensure_voice_deps():
+    """Import voice dependencies, raising ImportError if not available."""
+    global np, sd
+    if np is None:
+        if not is_voice_available():
+            raise ImportError(
+                "Voice input requires optional dependencies. "
+                "Install with: uv sync --extra voice"
+            )
+        import numpy
+        import sounddevice
+        np = numpy
+        sd = sounddevice
 
 
 class WhisperTranscriber:
@@ -72,12 +70,13 @@ class WhisperTranscriber:
             device: "cuda" for GPU, "cpu" for CPU, or None for auto-detect
             compute_type: "float16" for GPU, "int8" for CPU, or None for auto
         """
+        _ensure_voice_deps()
         self.model_size = model_size
         self.language = language
 
         # Auto-detect device and compute type
         if device is None:
-            self.device = "cuda" if _check_cuda_available() else "cpu"
+            self.device = "cuda" if is_cuda_available() else "cpu"
         else:
             self.device = device
 
@@ -153,6 +152,7 @@ class VoiceRecorder:
             silence_duration: Seconds of silence before stopping
             max_duration: Maximum recording duration in seconds
         """
+        _ensure_voice_deps()
         self.sample_rate = sample_rate
         self.channels = channels
         self.silence_threshold = silence_threshold

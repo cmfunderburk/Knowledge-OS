@@ -1,3 +1,11 @@
+"""
+Dashboard screen: the main command center for KnOS.
+
+Displays study status panels (today's domain, sprint progress, reviewer
+status, reader materials) and a navigable drill queue. Provides keyboard
+shortcuts to drill cards, browse solutions, open the reader, and view
+progress reports.
+"""
 from datetime import datetime
 from pathlib import Path
 from textual.app import ComposeResult
@@ -14,7 +22,16 @@ from .progress_modal import ProgressModal, SyllabusModal
 
 
 class DashboardScreen(Screen):
-    """The unified command center dashboard."""
+    """Unified command center displaying study status and drill queue.
+
+    Layout:
+        - Top row: TodayPanel, ProgressPanel, ReaderPanel (side by side)
+        - Middle: StatusPanel (full width reviewer summary)
+        - Bottom: DrillListPanel (navigable list of due cards)
+
+    Key bindings let users drill selected/all cards, browse solutions,
+    open the reader, view progress reports, and export to PROGRESS.md.
+    """
     
     BINDINGS = [
         Binding("d", "drill_all", "Drill All"),
@@ -114,7 +131,7 @@ class DashboardScreen(Screen):
 
     def action_read(self) -> None:
         """Open reader."""
-        from reader.screens import SelectMaterialScreen
+        from knos.reader.screens import SelectMaterialScreen
         self.app.push_screen(SelectMaterialScreen())
 
     def action_progress_preview(self) -> None:

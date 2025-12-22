@@ -1,3 +1,11 @@
+"""
+Drill screen: line-by-line code recall practice.
+
+Parses a solution markdown file and presents each fenced code block as a
+RevealBlock widget. The user marks each line as known (y) or unknown (n),
+building a score. Perfect scores advance the card's Leitner box; any
+failure resets to box 0.
+"""
 from pathlib import Path
 from textual.app import ComposeResult
 from textual.screen import Screen
@@ -8,8 +16,18 @@ from textual.binding import Binding
 from knos.reviewer.core import parse_markdown, SessionResult, update_schedule, append_history
 from knos.tui.widgets.reveal_block import RevealBlock
 
+
 class DrillScreen(Screen):
-    """Screen for drilling a specific solution."""
+    """Interactive drill session for a single solution card.
+
+    Displays the card's prose interleaved with RevealBlock widgets for each
+    code block. Users press y/n to mark lines correct/incorrect, or s to
+    skip remaining lines in the current block.
+
+    On session completion, updates schedule.json (advancing or resetting
+    the Leitner box) and appends results to history.jsonl. If more cards
+    remain in the queue, pressing Enter advances to the next card.
+    """
 
     BINDINGS = [
         Binding("y", "answer_yes", "Knew it"),

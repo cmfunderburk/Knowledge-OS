@@ -7,9 +7,9 @@ from textual.widgets import Header, Footer, Label, ListItem, ListView, Static
 from textual.containers import Container
 from textual.binding import Binding
 
-from reader.config import load_registry
-from reader.content import ContentId, format_content_id
-from reader.session import list_sessions, Session, SESSIONS_DIR
+from knos.reader.config import load_registry
+from knos.reader.content import ContentId, format_content_id
+from knos.reader.session import list_sessions, Session, SESSIONS_DIR
 
 
 class SessionItem(ListItem):

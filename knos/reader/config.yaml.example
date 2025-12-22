@@ -23,6 +23,12 @@ voice:
   silence_threshold: 0.01  # RMS threshold for silence
   silence_duration: 10.0   # Seconds of silence before stopping
 
+# Session configuration
+session:
+  # Cache duration in minutes (how long the reading session stays active)
+  # The LLM context cache expires after this time, requiring re-upload of content
+  duration_minutes: 30
+
 # Text-to-speech configuration (Ctrl+T to toggle in dialogue)
 # Set enabled: false on machines without GPU (CPU TTS may stutter)
 tts:

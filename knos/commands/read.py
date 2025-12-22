@@ -23,8 +23,8 @@ def run_read_tui() -> None:
 
 def run_list() -> None:
     """List all registered materials."""
-    from reader.config import load_registry, get_material_type
-    from reader.content import list_all_content
+    from knos.reader.config import load_registry, get_material_type
+    from knos.reader.content import list_all_content
 
     registry = load_registry()
     if not registry.get("materials"):
@@ -57,7 +57,7 @@ def run_clear(material_id: str, content: Optional[str] = None) -> None:
         material_id: Material ID or 'ALL' to clear everything
         content: Chapter number (e.g., '1') or appendix ID (e.g., 'A')
     """
-    from reader.session import SESSIONS_DIR as sessions_root, _content_id_to_prefix
+    from knos.reader.session import SESSIONS_DIR as sessions_root, _content_id_to_prefix
 
     if material_id.upper() == "ALL":
         # Clear everything
@@ -110,7 +110,7 @@ def run_clear(material_id: str, content: Optional[str] = None) -> None:
 
 def run_test_llm() -> None:
     """Test LLM provider configuration."""
-    from reader.llm import get_provider
+    from knos.reader.llm import get_provider
 
     print("Testing LLM provider...")
     try:
@@ -130,3 +130,88 @@ def run_test_llm() -> None:
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
+
+
+def run_export(material_id: str, content: Optional[str] = None, output: Optional[str] = None) -> None:
+    """Export a session transcript to markdown.
+
+    Args:
+        material_id: Material ID to export
+        content: Chapter number (e.g., '1'), appendix ID (e.g., 'A'), or None for articles
+        output: Output file path (default: stdout)
+    """
+    from knos.reader.config import load_registry, get_material_type
+    from knos.reader.session import load_session, load_transcript
+
+    registry = load_registry()
+    materials = registry.get("materials", {})
+
+    if material_id not in materials:
+        print(f"Error: Material '{material_id}' not found in registry")
+        sys.exit(1)
+
+    info = materials[material_id]
+    title = info.get("title", material_id)
+    author = info.get("author", "Unknown")
+    material_type = get_material_type(material_id)
+
+    # Determine content ID
+    if material_type == "article":
+        content_id: int | str | None = None
+    elif content is not None:
+        try:
+            content_id = int(content)
+        except ValueError:
+            content_id = content.upper()
+    else:
+        print("Error: Chapter or appendix required for non-article materials")
+        print("Usage: knos read export <material-id> <chapter>")
+        sys.exit(1)
+
+    # Load session and transcript
+    session = load_session(material_id, content_id)
+    if not session:
+        print(f"Error: No session found for {material_id}" + (f" chapter {content}" if content else ""))
+        sys.exit(1)
+
+    transcript = load_transcript(material_id, content_id)
+    if not transcript:
+        print(f"Error: Empty transcript for {material_id}" + (f" chapter {content}" if content else ""))
+        sys.exit(1)
+
+    # Build markdown
+    lines = []
+    lines.append(f"# {title}")
+    if session.chapter_title and session.chapter_title != title:
+        lines.append(f"## {session.chapter_title}")
+    lines.append(f"*{author}*")
+    lines.append("")
+    lines.append(f"*Session started: {session.started.strftime('%Y-%m-%d %H:%M')}*")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+
+    for msg in transcript:
+        role = msg.get("role", "unknown")
+        content_text = msg.get("content", "")
+        mode = msg.get("mode", "")
+
+        if role == "user":
+            lines.append("**Reader:**")
+        else:
+            mode_label = f" *({mode})*" if mode else ""
+            lines.append(f"**Tutor{mode_label}:**")
+
+        lines.append("")
+        lines.append(content_text)
+        lines.append("")
+
+    markdown = "\n".join(lines)
+
+    # Output
+    if output:
+        from pathlib import Path
+        Path(output).write_text(markdown)
+        print(f"Exported to: {output}")
+    else:
+        print(markdown)
