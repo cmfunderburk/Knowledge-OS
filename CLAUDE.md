@@ -24,10 +24,10 @@ uv run knos read list              # List registered materials
 uv run knos read clear <id> [ch]   # Clear session data
 uv run knos read test              # Verify LLM configuration
 
-# Direct reviewer access (legacy)
-uv run python3 -m reviewer.reviewer --focus        # All cards
-uv run python3 -m reviewer.reviewer --due          # Due cards only
-uv run python3 -m reviewer.reviewer --summary      # Mastery status
+# Reviewer query modes (for scripting)
+uv run python3 -m knos.reviewer.reviewer --due          # Due cards list
+uv run python3 -m knos.reviewer.reviewer --due-json     # JSON for scripts
+uv run python3 -m knos.reviewer.reviewer --summary      # Mastery status
 ```
 
 ## Architecture
@@ -39,7 +39,7 @@ knos/                     # Unified CLI package
 │   ├── today.py, study.py, drill.py, read.py, progress.py
 ├── reviewer/
 │   ├── core.py           # Business logic: parsing, Leitner scheduling, state
-│   └── reviewer.py       # Legacy CLI interface
+│   └── reviewer.py       # Query-only CLI (--due, --due-json, --summary)
 └── tui/
     ├── app.py            # Textual app entry points
     ├── screens/          # TUI screens: dashboard, drill, drill_queue, browse
@@ -50,6 +50,8 @@ reader/                   # LLM reading companion (separate package)
 ├── content.py            # PDF/EPUB extraction, chapter/article loading
 ├── prompts.py            # Jinja2 prompt template loader
 ├── session.py            # Dialogue session state
+├── types.py              # Shared type definitions (ContentId)
+├── cuda_utils.py         # CUDA detection and library preloading
 ├── voice.py              # Voice input (faster-whisper)
 ├── tts.py                # Text-to-speech (Kokoro)
 ├── screens/              # Reader TUI screens

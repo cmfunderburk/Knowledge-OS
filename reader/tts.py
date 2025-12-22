@@ -2,7 +2,6 @@
 
 Requires optional voice dependencies: uv sync --extra voice
 """
-import os
 import re
 import threading
 import warnings
@@ -11,6 +10,9 @@ from typing import Callable
 # Suppress warnings from ML libraries
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+# Preload NVIDIA libraries (must happen before importing torch/kokoro)
+from reader.cuda_utils import is_cuda_available  # noqa: E402
 
 # Check if TTS dependencies are available
 _tts_available: bool | None = None
@@ -51,51 +53,6 @@ def _ensure_tts_deps():
         import sounddevice
         np = numpy
         sd = sounddevice
-
-_cuda_available: bool | None = None
-
-
-def _check_cuda_available() -> bool:
-    """Check if CUDA is available for PyTorch."""
-    global _cuda_available
-    if _cuda_available is not None:
-        return _cuda_available
-
-    try:
-        import torch
-        _cuda_available = torch.cuda.is_available()
-    except ImportError:
-        _cuda_available = False
-
-    return _cuda_available
-
-
-def _preload_nvidia_libraries():
-    """Preload NVIDIA libraries so PyTorch can find them."""
-    if not _check_cuda_available():
-        return
-
-    import ctypes
-    import importlib.util
-
-    libs_to_load = [
-        ("nvidia.nccl.lib", "libnccl.so.2"),
-        ("nvidia.cublas.lib", "libcublas.so.12"),
-        ("nvidia.cudnn.lib", "libcudnn.so.9"),
-    ]
-
-    for module_name, lib_name in libs_to_load:
-        try:
-            spec = importlib.util.find_spec(module_name)
-            if spec and spec.submodule_search_locations:
-                lib_path = os.path.join(spec.submodule_search_locations[0], lib_name)
-                if os.path.exists(lib_path):
-                    ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
-        except Exception:
-            pass
-
-
-_preload_nvidia_libraries()
 
 # Default voice (high quality American female)
 # Full list: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md

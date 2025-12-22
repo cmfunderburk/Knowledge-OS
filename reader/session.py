@@ -10,10 +10,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 import json
-from typing import TypeAlias
 
-# Content identifier: integer for chapters, string for appendices, None for articles
-ContentId: TypeAlias = int | str | None
+from reader.types import ContentId
 
 # Base directory for sessions
 SESSIONS_DIR = Path(__file__).parent / "sessions"

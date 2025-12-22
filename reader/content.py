@@ -10,21 +10,18 @@ Falls back to raw pymupdf extraction for pages with many images
 (e.g., figure-heavy pages with embedded sprites).
 """
 from pathlib import Path
-from typing import TypeAlias
 
 import pymupdf
 import pymupdf4llm
 
 from reader.config import get_material, get_material_type, READER_DIR
+from reader.types import ContentId
 
 
 SOURCES_DIR = READER_DIR / "sources"
 
 # Pages with more than this many images use fallback extraction
 MAX_IMAGES_PER_PAGE = 20
-
-# Content identifier: integer for chapters, string for appendices, None for articles
-ContentId: TypeAlias = int | str | None
 
 
 def get_content_info(material_id: str, content_id: ContentId) -> dict | None:

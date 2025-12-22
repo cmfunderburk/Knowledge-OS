@@ -2,10 +2,12 @@
 
 Requires optional voice dependencies: uv sync --extra voice
 """
-import os
 import queue
 import threading
 from typing import Callable
+
+# Preload NVIDIA libraries (must happen before importing torch/faster-whisper)
+from reader.cuda_utils import is_cuda_available  # noqa: E402
 
 # Check if voice dependencies are available
 _voice_available: bool | None = None
@@ -26,52 +28,6 @@ def is_voice_available() -> bool:
         _voice_available = False
 
     return _voice_available
-
-
-_cuda_available: bool | None = None
-
-
-def _check_cuda_available() -> bool:
-    """Check if CUDA is available for faster-whisper."""
-    global _cuda_available
-    if _cuda_available is not None:
-        return _cuda_available
-
-    try:
-        import torch
-        _cuda_available = torch.cuda.is_available()
-    except ImportError:
-        _cuda_available = False
-
-    return _cuda_available
-
-
-def _preload_cuda_libraries():
-    """Preload NVIDIA libraries so ctranslate2/faster-whisper can find them."""
-    if not _check_cuda_available():
-        return
-
-    import ctypes
-    import importlib.util
-
-    libs_to_load = [
-        ("nvidia.cublas.lib", "libcublas.so.12"),
-        ("nvidia.cublas.lib", "libcublasLt.so.12"),
-        ("nvidia.cudnn.lib", "libcudnn.so.9"),
-    ]
-
-    for module_name, lib_name in libs_to_load:
-        try:
-            spec = importlib.util.find_spec(module_name)
-            if spec and spec.submodule_search_locations:
-                lib_path = os.path.join(spec.submodule_search_locations[0], lib_name)
-                if os.path.exists(lib_path):
-                    ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
-        except Exception:
-            pass
-
-
-_preload_cuda_libraries()
 
 # Lazy imports for optional dependencies
 np = None
@@ -118,7 +74,7 @@ class WhisperTranscriber:
 
         # Auto-detect device and compute type
         if device is None:
-            self.device = "cuda" if _check_cuda_available() else "cpu"
+            self.device = "cuda" if is_cuda_available() else "cpu"
         else:
             self.device = device
 
