@@ -22,6 +22,7 @@ uv run knos progress     # Generate PROGRESS.md
 # Reader subcommands
 uv run knos read list              # List registered materials
 uv run knos read clear <id> [ch]   # Clear session data
+uv run knos read export <id> [ch]  # Export session to markdown
 uv run knos read test              # Verify LLM configuration
 
 # Reviewer query modes (for scripting)

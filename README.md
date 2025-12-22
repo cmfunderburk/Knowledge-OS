@@ -21,21 +21,24 @@ The dialogue is the core. Card generation is there when you identify concepts wo
 ## Quick Start
 
 ```bash
-uv sync              # Install dependencies
-uv run knos read     # Start the Reader (requires LLM API key)
+uv sync                  # Install core dependencies
+uv sync --extra voice    # Optional: include voice input/TTS (requires PyTorch)
+uv run knos read         # Start the Reader (requires LLM API key)
 ```
+
+Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and Windows.
 
 To set up the Reader:
 
 ```bash
-cp reader/config.yaml.example reader/config.yaml
+cp knos/reader/config.yaml.example knos/reader/config.yaml
 # Edit with your Gemini API key
 
-cp reader/content_registry.yaml.example reader/content_registry.yaml
+cp knos/reader/content_registry.yaml.example knos/reader/content_registry.yaml
 # Register your PDFs (see below)
 ```
 
-The example registry includes free [OpenStax](https://openstax.org/) textbooks, bundled classics from Project Gutenberg, and foundational articles (the Transformer paper, Einstein 1905). Download a PDF, place it in `reader/sources/<material-id>/source.pdf`, and start a session. The classics and articles work out of the box.
+The example registry includes free [OpenStax](https://openstax.org/) textbooks, bundled classics from Project Gutenberg, and foundational articles (the Transformer paper, Einstein 1905). Download a PDF, place it in `knos/reader/sources/<material-id>/source.pdf`, and start a session. The classics and articles work out of the box.
 
 ## The Reader
 
@@ -52,7 +55,7 @@ Two foundational articles are also bundled:
 - **Attention Is All You Need** — Vaswani et al. (the Transformer paper)
 - **On a Heuristic Point of View Concerning the Production and Transformation of Light** — Einstein (1905 photoelectric effect paper)
 
-To enable the bundled articles, copy their entries from `reader/content_registry.yaml.example` to your `reader/content_registry.yaml`. Articles skip chapter selection and open directly into dialogue.
+To enable the bundled articles, copy their entries from `knos/reader/content_registry.yaml.example` to your `knos/reader/content_registry.yaml`. Articles skip chapter selection and open directly into dialogue.
 
 <details>
 <summary><strong>Example: Discussing Aristotle's Nicomachean Ethics</strong></summary>
@@ -99,7 +102,7 @@ uv run knos drill    # Drill due cards
 uv run knos          # TUI dashboard (shows what's due)
 ```
 
-Cards generated from Reader sessions go to `reader/drafts/` for review before entering the drill system.
+Cards generated from Reader sessions go to `knos/reader/drafts/` for review before entering the drill system.
 
 ## CLI Reference
 
@@ -112,6 +115,7 @@ knos progress     Generate PROGRESS.md
 
 knos read list              List registered materials
 knos read clear <id> [ch]   Clear session data
+knos read export <id> [ch]  Export session to markdown (-o file.md)
 knos read test              Test LLM configuration
 ```
 
@@ -120,11 +124,11 @@ knos read test              Test LLM configuration
 ### Reader Setup
 
 ```bash
-cp reader/config.yaml.example reader/config.yaml
-cp reader/content_registry.yaml.example reader/content_registry.yaml
+cp knos/reader/config.yaml.example knos/reader/config.yaml
+cp knos/reader/content_registry.yaml.example knos/reader/content_registry.yaml
 ```
 
-Edit `reader/config.yaml` with your Gemini API key. Edit `reader/content_registry.yaml` to register PDFs with chapter page ranges.
+Edit `knos/reader/config.yaml` with your Gemini API key. Edit `knos/reader/content_registry.yaml` to register PDFs with chapter page ranges.
 
 ### Study Configuration (optional)
 
@@ -141,7 +145,7 @@ Create markdown files in `solutions/focus/`. Every fenced code block becomes a d
 
 ## Documentation
 
-- [reader/OVERVIEW.md](reader/OVERVIEW.md) — Reader module design and pedagogy
+- [knos/reader/OVERVIEW.md](knos/reader/OVERVIEW.md) — Reader module design and pedagogy
 - [docs/USAGE.md](docs/USAGE.md) — Command reference
 - [solutions/examples/README.md](solutions/examples/README.md) — Card format guide
 - [AGENTS.md](AGENTS.md) — Technical documentation for AI assistants
