@@ -14,14 +14,14 @@ plan/*
 PROGRESS.md
 
 # ===== Reader User Data =====
-reader/config.yaml
-reader/content_registry.yaml
-reader/sources/
-reader/sessions/
-reader/drafts/
-reader/docs/
+knos/reader/config.yaml
+knos/reader/content_registry.yaml
+knos/reader/sources/
+knos/reader/sessions/
+knos/reader/drafts/
+knos/reader/docs/
 
-# Bundled classics are tracked (reader/classics/)
+# Bundled classics are tracked (knos/reader/classics/)
 
 # ===== Reviewer State =====
 knos/reviewer/history.jsonl

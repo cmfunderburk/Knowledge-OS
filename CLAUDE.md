@@ -33,31 +33,30 @@ uv run python3 -m knos.reviewer.reviewer --summary      # Mastery status
 ## Architecture
 
 ```
-knos/                     # Unified CLI package
+knos/                     # Unified package
 ├── cli.py                # Typer CLI entry point (knos command)
 ├── commands/             # CLI command implementations
-│   ├── today.py, study.py, drill.py, read.py, progress.py
+│   └── today.py, study.py, drill.py, read.py, progress.py
 ├── reviewer/
 │   ├── core.py           # Business logic: parsing, Leitner scheduling, state
 │   └── reviewer.py       # Query-only CLI (--due, --due-json, --summary)
-└── tui/
-    ├── app.py            # Textual app entry points
-    ├── screens/          # TUI screens: dashboard, drill, drill_queue, browse
-    └── widgets/          # Reusable TUI components
-
-reader/                   # LLM reading companion (separate package)
-├── llm.py                # LLM provider (Gemini)
-├── content.py            # PDF/EPUB extraction, chapter/article loading
-├── prompts.py            # Jinja2 prompt template loader
-├── session.py            # Dialogue session state
-├── types.py              # Shared type definitions (ContentId)
-├── cuda_utils.py         # CUDA detection and library preloading
-├── voice.py              # Voice input (faster-whisper)
-├── tts.py                # Text-to-speech (Kokoro)
-├── screens/              # Reader TUI screens
-├── prompts/              # Dialogue mode prompts (base.md, socratic.md, etc.)
-├── classics/             # Bundled classics (Aristotle, Cervantes, Dostoevsky)
-└── articles/             # Bundled articles (single-unit PDFs, no chapters)
+├── tui/
+│   ├── app.py            # Textual app entry points
+│   ├── screens/          # TUI screens: dashboard, drill, drill_queue, browse
+│   └── widgets/          # Reusable TUI components
+└── reader/               # LLM reading companion
+    ├── llm.py            # LLM provider (Gemini)
+    ├── content.py        # PDF/EPUB extraction, chapter/article loading
+    ├── prompts.py        # Jinja2 prompt template loader
+    ├── session.py        # Dialogue session state
+    ├── types.py          # Shared type definitions (ContentId)
+    ├── cuda_utils.py     # CUDA detection and library preloading
+    ├── voice.py          # Voice input (faster-whisper)
+    ├── tts.py            # Text-to-speech (Kokoro)
+    ├── screens/          # Reader TUI screens
+    ├── prompts/          # Dialogue mode prompts (base.md, socratic.md, etc.)
+    ├── classics/         # Bundled classics (Aristotle, Cervantes, Dostoevsky)
+    └── articles/         # Bundled articles (single-unit PDFs, no chapters)
 
 solutions/                # Drill cards (user content, gitignored)
 ├── focus/                # Active cards for drilling
@@ -72,7 +71,7 @@ plan/                     # Study configuration (gitignored except examples)
 ### Key Design Patterns
 
 - **Filesystem as database**: All state in markdown + JSON. No external services.
-- **Separation of content and engine**: Engine (`knos/`, `reader/`) is versioned; content (`solutions/`, `plan/` state) is gitignored.
+- **Separation of content and engine**: Engine (`knos/`) is versioned; content (`solutions/`, `plan/` state) is gitignored.
 - **Leitner intervals**: Box 0=1hr, Box 1=4hr, Box 2+=1d→3d→7d→14d→30d
 
 ### Core Data Flow
@@ -111,8 +110,8 @@ def algorithm():
 |------|---------|
 | `plan/study_config.yaml` | Domain rotation, current phase, priority shifts |
 | `plan/schedule.json` | Leitner box state (auto-managed) |
-| `reader/config.yaml` | LLM API keys and model selection |
-| `reader/content_registry.yaml` | PDF/EPUB/article registration (classics in `reader/classics/`, articles in `reader/articles/`) |
+| `knos/reader/config.yaml` | LLM API keys and model selection |
+| `knos/reader/content_registry.yaml` | PDF/EPUB/article registration (classics in `knos/reader/classics/`, articles in `knos/reader/articles/`) |
 
 Copy `.example` versions to get started.
 
@@ -132,7 +131,7 @@ Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and
 
 ## Development Notes
 
-- Engine code tracked in git: `knos/`, `reader/`, `reader/classics/`, `reader/articles/`
-- User content gitignored: `solutions/`, `plan/` state files, `reader/sources/`
+- Engine code tracked in git: `knos/` (includes `knos/reader/classics/`, `knos/reader/articles/`)
+- User content gitignored: `solutions/`, `plan/` state files, `knos/reader/sources/`
 - The CLI entry point is `knos/cli.py` → `knos.cli:main`
 - TUI built on Textual; CLI tools use Rich

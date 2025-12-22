@@ -14,8 +14,8 @@ from pathlib import Path
 import pymupdf
 import pymupdf4llm
 
-from reader.config import get_material, get_material_type, READER_DIR
-from reader.types import ContentId
+from knos.reader.config import get_material, get_material_type, READER_DIR
+from knos.reader.types import ContentId
 
 
 SOURCES_DIR = READER_DIR / "sources"
@@ -222,7 +222,7 @@ def load_chapter(material_id: str, chapter_num: int) -> str:
     Raises:
         ValueError: If EPUB or chapter not found
     """
-    from reader.epub import extract_chapter_by_num
+    from knos.reader.epub import extract_chapter_by_num
 
     epub_path = get_source_path(material_id)
 
@@ -296,7 +296,7 @@ def get_article_text(material_id: str) -> str:
         raise ValueError("Use get_article_pdf() for PDF articles")
 
     # EPUB: extract all text
-    from reader.epub import extract_all_text
+    from knos.reader.epub import extract_all_text
     return extract_all_text(source_path)
 
 
@@ -344,7 +344,7 @@ def list_extracted_chapters(material_id: str) -> list[int]:
 
     # EPUB: get chapters from EPUB structure
     if source_path.suffix.lower() == ".epub":
-        from reader.epub import list_chapters
+        from knos.reader.epub import list_chapters
         return [num for num, title in list_chapters(source_path)]
 
     return []
@@ -404,7 +404,7 @@ def list_all_content(material_id: str) -> tuple[list[dict], list[dict]]:
 
     # EPUB: get structure from EPUB itself
     if source_path.suffix.lower() == ".epub":
-        from reader.epub import list_chapters
+        from knos.reader.epub import list_chapters
         chapters = [{"num": num, "title": title} for num, title in list_chapters(source_path)]
         return chapters, []
 

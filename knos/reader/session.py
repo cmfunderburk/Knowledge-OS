@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 import json
 
-from reader.types import ContentId
+from knos.reader.types import ContentId
 
 # Base directory for sessions
 SESSIONS_DIR = Path(__file__).parent / "sessions"

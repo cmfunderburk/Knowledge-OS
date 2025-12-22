@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # Preload NVIDIA libraries (must happen before importing torch/kokoro)
-from reader.cuda_utils import is_cuda_available  # noqa: E402
+from knos.reader.cuda_utils import is_cuda_available  # noqa: E402
 
 # Check if TTS dependencies are available
 _tts_available: bool | None = None

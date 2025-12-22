@@ -23,8 +23,8 @@ def run_read_tui() -> None:
 
 def run_list() -> None:
     """List all registered materials."""
-    from reader.config import load_registry, get_material_type
-    from reader.content import list_all_content
+    from knos.reader.config import load_registry, get_material_type
+    from knos.reader.content import list_all_content
 
     registry = load_registry()
     if not registry.get("materials"):
@@ -57,7 +57,7 @@ def run_clear(material_id: str, content: Optional[str] = None) -> None:
         material_id: Material ID or 'ALL' to clear everything
         content: Chapter number (e.g., '1') or appendix ID (e.g., 'A')
     """
-    from reader.session import SESSIONS_DIR as sessions_root, _content_id_to_prefix
+    from knos.reader.session import SESSIONS_DIR as sessions_root, _content_id_to_prefix
 
     if material_id.upper() == "ALL":
         # Clear everything
@@ -110,7 +110,7 @@ def run_clear(material_id: str, content: Optional[str] = None) -> None:
 
 def run_test_llm() -> None:
     """Test LLM provider configuration."""
-    from reader.llm import get_provider
+    from knos.reader.llm import get_provider
 
     print("Testing LLM provider...")
     try:

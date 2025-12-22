@@ -7,7 +7,7 @@ import threading
 from typing import Callable
 
 # Preload NVIDIA libraries (must happen before importing torch/faster-whisper)
-from reader.cuda_utils import is_cuda_available  # noqa: E402
+from knos.reader.cuda_utils import is_cuda_available  # noqa: E402
 
 # Check if voice dependencies are available
 _voice_available: bool | None = None

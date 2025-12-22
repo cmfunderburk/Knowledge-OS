@@ -9,11 +9,11 @@ from textual.widgets.option_list import Option
 from textual.containers import Container, Vertical, Horizontal
 from textual.binding import Binding
 
-from reader.content import ContentId, get_source_format, get_chapter_pdf, load_chapter, format_content_id, get_article_text, get_article_pdf
-from reader.config import get_material_type
-from reader.llm import get_provider
-from reader.prompts import build_cache_prompt, get_mode_instruction, MODES
-from reader.session import (
+from knos.reader.content import ContentId, get_source_format, get_chapter_pdf, load_chapter, format_content_id, get_article_text, get_article_pdf
+from knos.reader.config import get_material_type
+from knos.reader.llm import get_provider
+from knos.reader.prompts import build_cache_prompt, get_mode_instruction, MODES
+from knos.reader.session import (
     Session,
     create_session,
     load_session,
@@ -21,7 +21,7 @@ from reader.session import (
     save_metadata,
     append_message,
 )
-from reader.config import load_config
+from knos.reader.config import load_config
 
 # Mode colors for visual differentiation
 MODE_COLORS = {
@@ -738,7 +738,7 @@ class DialogueScreen(Screen):
             self._speaking = True
 
             def do_speak():
-                from reader.tts import speak
+                from knos.reader.tts import speak
                 speed = self._tts_config.get("speed", 1.0)
                 speak(text, voice=voice, speed=speed, strip_markdown=True)
 
@@ -810,7 +810,7 @@ class DialogueScreen(Screen):
 
         if self._recording:
             # Stop recording early
-            from reader.voice import stop_recording
+            from knos.reader.voice import stop_recording
             stop_recording()
             return
 
@@ -837,7 +837,7 @@ class DialogueScreen(Screen):
 
         try:
             # Import voice module (lazy to avoid import errors if deps missing)
-            from reader.voice import record_and_transcribe
+            from knos.reader.voice import record_and_transcribe
 
             # Run blocking recording in thread pool
             def do_record():
@@ -882,7 +882,7 @@ class DialogueScreen(Screen):
         # If currently speaking, stop
         if self._speaking:
             try:
-                from reader.tts import stop_speaking
+                from knos.reader.tts import stop_speaking
                 stop_speaking()
             except ImportError:
                 pass
@@ -921,7 +921,7 @@ class DialogueScreen(Screen):
         # Stop any TTS playback
         if self._speaking:
             try:
-                from reader.tts import stop_speaking
+                from knos.reader.tts import stop_speaking
                 stop_speaking()
             except ImportError:
                 pass

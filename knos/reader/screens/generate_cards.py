@@ -9,10 +9,10 @@ from textual.widgets import Header, Footer, Label, RichLog, Static
 from textual.containers import Container
 from textual.binding import Binding
 
-from reader.content import ContentId, get_chapter_text, format_content_id
-from reader.session import Session, load_transcript, _content_id_to_prefix
-from reader.llm import get_provider
-from reader.prompts import load_prompt
+from knos.reader.content import ContentId, get_chapter_text, format_content_id
+from knos.reader.session import Session, load_transcript, _content_id_to_prefix
+from knos.reader.llm import get_provider
+from knos.reader.prompts import load_prompt
 
 # Output directory for card drafts
 DRAFTS_DIR = Path(__file__).parent.parent / "drafts"

@@ -5,8 +5,8 @@ from textual.widgets import Header, Footer, Static, ListItem, ListView, Label
 from textual.containers import Container, Vertical
 from textual.binding import Binding
 
-from reader.config import load_registry, get_material_type
-from reader.content import list_all_content, get_source_path
+from knos.reader.config import load_registry, get_material_type
+from knos.reader.content import list_all_content, get_source_path
 
 
 class MaterialItem(ListItem):

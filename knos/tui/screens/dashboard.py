@@ -114,7 +114,7 @@ class DashboardScreen(Screen):
 
     def action_read(self) -> None:
         """Open reader."""
-        from reader.screens import SelectMaterialScreen
+        from knos.reader.screens import SelectMaterialScreen
         self.app.push_screen(SelectMaterialScreen())
 
     def action_progress_preview(self) -> None:

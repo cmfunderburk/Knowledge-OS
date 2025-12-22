@@ -38,7 +38,7 @@ class ReaderApp(App):
     ]
 
     def on_mount(self) -> None:
-        from reader.screens import SelectMaterialScreen
+        from knos.reader.screens import SelectMaterialScreen
         self.push_screen(SelectMaterialScreen())
 
 

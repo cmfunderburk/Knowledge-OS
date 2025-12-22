@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
-from reader.config import load_config
+from knos.reader.config import load_config
 
 
 @dataclass

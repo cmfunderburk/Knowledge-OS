@@ -288,8 +288,8 @@ class ReaderPanel(Widget):
     """
 
     def render(self) -> RenderableType:
-        from reader.config import load_registry
-        from reader.session import list_sessions
+        from knos.reader.config import load_registry
+        from knos.reader.session import list_sessions
 
         try:
             registry = load_registry()
