@@ -30,6 +30,8 @@ knos/reader/classics/*
 knos/reader/articles/*
 !knos/reader/articles/attention.pdf
 !knos/reader/articles/einstein-photoelectric.pdf
+!knos/reader/articles/mendel-plant-hybridization.pdf
+!knos/reader/articles/james-emotion.pdf
 
 # ===== Reviewer State =====
 knos/reviewer/history.jsonl

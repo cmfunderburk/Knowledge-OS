@@ -98,6 +98,23 @@ materials:
     structure:
       type: article
 
+  # Experiments on Plant Hybridization (1866)
+  # https://www.mendelweb.org/Mendel.html
+  mendel-plant-hybridization:
+    title: "Experiments on Plant Hybridization"
+    author: "Gregor Mendel"
+    source: "reader/articles/mendel-plant-hybridization.pdf"
+    structure:
+      type: article
+
+  # What is an Emotion? (1884)
+  james-emotion:
+    title: "What is an Emotion?"
+    author: "William James"
+    source: "reader/articles/james-emotion.pdf"
+    structure:
+      type: article
+
 # Setup:
 #
 # Bundled classics (reader/classics/) work out of the box - just copy entries above.
