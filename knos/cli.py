@@ -3,6 +3,7 @@ Knowledge OS - Unified CLI entry point.
 
 Usage:
     knos              # Launch study TUI (default)
+    knos init         # Initialize config files
     knos today        # Print CLI dashboard
     knos study        # Launch study TUI
     knos drill        # Launch drill TUI
@@ -26,9 +27,10 @@ read_app = typer.Typer(
     help="""Reading companion - seminar-style dialogue with texts.
 
 Setup:
-  1. Place PDF in reader/sources/<material-id>/source.pdf
-  2. Register in reader/content_registry.yaml with chapter page ranges
-  3. Run: knos read → select material → select chapter
+  1. Run: knos init (creates config files)
+  2. Place PDF in knos/reader/sources/<material-id>/source.pdf
+  3. Register in config/content.yaml with chapter page ranges
+  4. Run: knos read → select material → select chapter
 
 Registration can be done manually or with AI tools (e.g. Claude Code).
 Chapter page numbers are 1-indexed PDF pages, not book page numbers.
@@ -38,7 +40,7 @@ Example registry entry:
     my-book:
       title: "Book Title"
       author: "Author Name"
-      source: "reader/sources/my-book/source.pdf"
+      source: "knos/reader/sources/my-book/source.pdf"
       structure:
         chapters:
           - { num: 1, title: "Introduction", pages: [1, 20] }
@@ -94,6 +96,15 @@ def progress() -> None:
     """Generate PROGRESS.md report."""
     from knos.commands.progress import run_progress
     run_progress()
+
+
+@app.command()
+def init(
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite existing config files"),
+) -> None:
+    """Initialize configuration files."""
+    from knos.commands.init import run_init
+    run_init(force=force)
 
 
 # --- Reader subcommands ---

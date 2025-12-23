@@ -8,14 +8,15 @@ Textbooks/
 extra/
 docs/knowledge-os-manifesto.md
 
-# Plan directory (personal state files, keep examples)
+# ===== Config directory (user config, keep examples) =====
+config/*
+!config/*.example
+
+# Plan directory (state files only, no config)
 plan/*
-!plan/*.example
 PROGRESS.md
 
 # ===== Reader User Data =====
-knos/reader/config.yaml
-knos/reader/content_registry.yaml
 knos/reader/sources/
 knos/reader/sessions/
 knos/reader/drafts/

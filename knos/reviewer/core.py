@@ -23,10 +23,11 @@ REPO_ROOT = BASE_DIR.parent.parent  # repo root (up from knos/reviewer/ to knos/
 SOLUTIONS_ROOT = REPO_ROOT / "solutions"
 FOCUS_DIR = SOLUTIONS_ROOT / "focus"
 PLAN_DIR = REPO_ROOT / "plan"
+CONFIG_DIR = REPO_ROOT / "config"
 SCHEDULE_PATH = PLAN_DIR / "schedule.json"
 HISTORY_PATH = PLAN_DIR / "history.jsonl"
 TODO_FILE = PLAN_DIR / "todo.md"
-STUDY_CONFIG_PATH = PLAN_DIR / "study_config.yaml"
+STUDY_CONFIG_PATH = CONFIG_DIR / "study.yaml"
 PRIORITY_SHIFT_PATH = PLAN_DIR / "priority_shift.md"
 
 # Default domain rotation (used if no config file)

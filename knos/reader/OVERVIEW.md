@@ -49,18 +49,20 @@ Cards go to `reader/drafts/` for review before entering the drill system.
 
 ## Setup
 
-### LLM Configuration
+Run `uv run knos init` to create config files interactively, or copy them manually.
+
+### LLM Configuration (`config/reader.yaml`)
 
 ```bash
-cp reader/config.yaml.example reader/config.yaml
+cp config/reader.yaml.example config/reader.yaml
 ```
 
 Edit with your Gemini API key.
 
-### Registering Materials
+### Registering Materials (`config/content.yaml`)
 
 ```bash
-cp reader/content_registry.yaml.example reader/content_registry.yaml
+cp config/content.yaml.example config/content.yaml
 ```
 
 Add entries for your PDFs with chapter page ranges:
@@ -70,7 +72,7 @@ materials:
   my-textbook:
     title: "Introduction to Subject"
     author: "Author Name"
-    source: "path/to/source.pdf"
+    source: "knos/reader/sources/my-textbook/source.pdf"
     structure:
       type: chapters
       chapters:
@@ -78,7 +80,7 @@ materials:
         - { num: 2, title: "Chapter Two", pages: [46, 89] }
 ```
 
-Place the PDF at `reader/sources/<material-id>/source.pdf`.
+Place the PDF at `knos/reader/sources/<material-id>/source.pdf`.
 
 ---
 
@@ -97,10 +99,14 @@ Place the PDF at `reader/sources/<material-id>/source.pdf`.
 ## File Structure
 
 ```
-reader/
-  config.yaml              # LLM API keys (gitignored)
-  content_registry.yaml    # Registered materials
+config/
+  reader.yaml              # LLM API keys (gitignored)
+  content.yaml             # Registered materials (gitignored)
+
+knos/reader/
   sessions/                # Dialogue transcripts (gitignored)
   drafts/                  # Generated cards awaiting review
   prompts/                 # Dialogue mode prompts
+  classics/                # Bundled classics (Aristotle, Cervantes, Dostoevsky)
+  sources/                 # User-provided PDFs/EPUBs (gitignored)
 ```

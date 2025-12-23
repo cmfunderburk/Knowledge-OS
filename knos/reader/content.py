@@ -14,11 +14,11 @@ from pathlib import Path
 import pymupdf
 import pymupdf4llm
 
-from knos.reader.config import get_material, get_material_type, READER_DIR
+from knos.reader.config import get_material, get_material_type, READER_DIR, REPO_ROOT
 from knos.reader.types import ContentId
 
 
-SOURCES_DIR = READER_DIR / "sources"
+SOURCES_DIR = READER_DIR / "sources"  # For backwards compatibility
 
 # Pages with more than this many images use fallback extraction
 MAX_IMAGES_PER_PAGE = 20
@@ -76,7 +76,7 @@ def get_source_path(material_id: str) -> Path:
     """
     material = get_material(material_id)
     # Source paths in registry are relative to repo root
-    return READER_DIR.parent / material["source"]
+    return REPO_ROOT / material["source"]
 
 
 def get_source_format(material_id: str) -> str:

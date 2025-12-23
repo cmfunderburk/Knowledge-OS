@@ -7,8 +7,10 @@ from typing import Any
 import yaml
 
 READER_DIR = Path(__file__).parent
-REGISTRY_PATH = READER_DIR / "content_registry.yaml"
-CONFIG_PATH = READER_DIR / "config.yaml"
+REPO_ROOT = READER_DIR.parent.parent  # repo root (up from knos/reader/ to knos/ to root)
+CONFIG_DIR = REPO_ROOT / "config"
+REGISTRY_PATH = CONFIG_DIR / "content.yaml"
+CONFIG_PATH = CONFIG_DIR / "reader.yaml"
 
 
 def load_registry() -> dict[str, Any]:
