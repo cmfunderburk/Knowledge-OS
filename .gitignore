@@ -32,6 +32,7 @@ knos/reader/articles/*
 !knos/reader/articles/einstein-photoelectric.pdf
 !knos/reader/articles/mendel-plant-hybridization.pdf
 !knos/reader/articles/james-emotion.pdf
+!knos/reader/articles/wittgenstein-logical-form.pdf
 
 # ===== Reviewer State =====
 knos/reviewer/history.jsonl

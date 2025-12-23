@@ -115,6 +115,14 @@ materials:
     structure:
       type: article
 
+  # Some Remarks on Logical Form (1929)
+  wittgenstein-logical-form:
+    title: "Some Remarks on Logical Form"
+    author: "Ludwig Wittgenstein"
+    source: "reader/articles/wittgenstein-logical-form.pdf"
+    structure:
+      type: article
+
 # Setup:
 #
 # Bundled classics (reader/classics/) work out of the box - just copy entries above.
