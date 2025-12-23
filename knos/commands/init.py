@@ -10,6 +10,27 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CONFIG_DIR = REPO_ROOT / "config"
 
 
+def _check_voice_extras() -> tuple[bool, bool]:
+    """Check if voice input and TTS dependencies are installed.
+
+    Returns:
+        (voice_available, tts_available)
+    """
+    try:
+        from knos.reader.voice import is_voice_available
+        voice = is_voice_available()
+    except ImportError:
+        voice = False
+
+    try:
+        from knos.reader.tts import is_tts_available
+        tts = is_tts_available()
+    except ImportError:
+        tts = False
+
+    return voice, tts
+
+
 def run_init(force: bool = False) -> None:
     """Copy example configs and prompt for API key."""
     console = Console()
@@ -39,9 +60,31 @@ def run_init(force: bool = False) -> None:
         else:
             console.print(f"[yellow]Warning: {example} not found[/]")
 
-    # Prompt for API key if reader.yaml was created
+    # Configure reader.yaml if it was created
     reader_yaml = CONFIG_DIR / "reader.yaml"
     if created_reader and reader_yaml.exists():
+        with open(reader_yaml) as f:
+            config = yaml.safe_load(f)
+
+        modified = False
+
+        # Check for voice extras and disable if not installed
+        voice_available, tts_available = _check_voice_extras()
+
+        if not voice_available and config.get("voice", {}).get("enabled", False):
+            config["voice"]["enabled"] = False
+            modified = True
+            console.print("[dim]Voice input disabled (extras not installed)[/]")
+
+        if not tts_available and config.get("tts", {}).get("enabled", False):
+            config["tts"]["enabled"] = False
+            modified = True
+            console.print("[dim]TTS disabled (extras not installed)[/]")
+
+        if not voice_available or not tts_available:
+            console.print("[dim]Run 'uv sync --extra voice' to enable voice features[/]")
+
+        # Prompt for API key
         console.print()
         api_key = Prompt.ask(
             "[bold]Enter your Google API key[/] (or press Enter to skip)",
@@ -49,12 +92,14 @@ def run_init(force: bool = False) -> None:
             show_default=False,
         )
         if api_key:
-            with open(reader_yaml) as f:
-                config = yaml.safe_load(f)
             config["llm"]["gemini"]["api_key"] = api_key
+            modified = True
+            console.print("[green]API key saved to config/reader.yaml[/]")
+
+        # Write config if modified
+        if modified:
             with open(reader_yaml, "w") as f:
                 yaml.dump(config, f, default_flow_style=False, sort_keys=False)
-            console.print("[green]API key saved to config/reader.yaml[/]")
 
     console.print("\n[bold]Setup complete![/]")
     console.print("Run [cyan]uv run knos read test[/] to verify LLM configuration.")

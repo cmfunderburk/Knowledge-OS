@@ -5,7 +5,7 @@ Each panel is a self-contained Textual widget that renders a Rich Panel
 with specific study information:
 
 - TodayPanel: Current study domain and next task from todo.md
-- ProgressPanel: Sprint progress bars from study_config.yaml
+- ProgressPanel: Sprint progress bars from config/study.yaml
 - StatusPanel: Reviewer summary (box 0, overdue, due now, never practiced)
 - DrillListPanel: Navigable list of cards ready to drill
 - ReaderPanel: Registered reading materials with session counts
