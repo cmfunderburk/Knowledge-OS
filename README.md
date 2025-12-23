@@ -50,10 +50,12 @@ Three classics from Project Gutenberg are bundled and work out of the box:
 - **Don Quixote** — Cervantes (John Ormsby translation)
 - **The Brothers Karamazov** — Dostoevsky (Constance Garnett translation)
 
-Two foundational articles are also bundled:
+Four foundational articles are also bundled:
 
 - **Attention Is All You Need** — Vaswani et al. (the Transformer paper)
 - **On a Heuristic Point of View Concerning the Production and Transformation of Light** — Einstein (1905 photoelectric effect paper)
+- **Experiments on Plant Hybridization** — Mendel (1866, the foundation of genetics)
+- **What is an Emotion?** — William James (1884, the James-Lange theory)
 
 To enable the bundled articles, copy their entries from `knos/reader/content_registry.yaml.example` to your `knos/reader/content_registry.yaml`. Articles skip chapter selection and open directly into dialogue.
 

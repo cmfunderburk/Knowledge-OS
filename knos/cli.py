@@ -107,10 +107,22 @@ def read_main(ctx: typer.Context) -> None:
 
 
 @read_app.command("list")
-def read_list() -> None:
+def read_list(
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
+) -> None:
     """List registered materials."""
     from knos.commands.read import run_list
-    run_list()
+    run_list(json_output=json_output)
+
+
+@read_app.command("info")
+def read_info(
+    material_id: str = typer.Argument(..., help="Material ID to get info for"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
+) -> None:
+    """Show detailed info about a material."""
+    from knos.commands.read import run_info
+    run_info(material_id, json_output=json_output)
 
 
 @read_app.command("clear")

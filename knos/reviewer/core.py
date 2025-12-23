@@ -125,6 +125,36 @@ class CodeBlock:
     start_pos: int
     end_pos: int
     is_target: bool  # False if preceded by <!-- INFO -->
+    block_type: str = "code"  # "code" or "slots"
+
+
+@dataclass
+class SlotLine:
+    """A parsed line from a slots block."""
+    raw: str           # Original line text
+    prompt: str        # Text before ::
+    answer: str | None # Text after :: (None if header/context)
+    is_drillable: bool # True if has :: delimiter
+
+
+def parse_slot_line(line: str) -> SlotLine:
+    """Parse a single line from a slots block."""
+    if "::" in line:
+        parts = line.split("::", 1)
+        return SlotLine(
+            raw=line,
+            prompt=parts[0].strip(),
+            answer=parts[1].strip(),
+            is_drillable=True
+        )
+    else:
+        # Header or context line - not drilled
+        return SlotLine(
+            raw=line,
+            prompt=line.strip(),
+            answer=None,
+            is_drillable=False
+        )
 
 
 @dataclass
@@ -173,6 +203,7 @@ def parse_markdown(text: str) -> ParsedMarkdown:
     Extract fenced code blocks from markdown text.
 
     Blocks preceded by <!-- INFO --> (within 50 chars) are marked as non-targets.
+    Blocks with language "slots" are parsed as slot-recall format.
     Returns ParsedMarkdown with all blocks and filtered target_blocks.
     """
     blocks = []
@@ -188,6 +219,9 @@ def parse_markdown(text: str) -> ParsedMarkdown:
         prefix = text[prefix_start:start_pos]
         is_target = INFO_MARKER not in prefix
 
+        # Determine block type
+        block_type = "slots" if language == "slots" else "code"
+
         # Split content into lines for line-by-line reveal
         lines = content.split('\n') if content else []
 
@@ -197,7 +231,8 @@ def parse_markdown(text: str) -> ParsedMarkdown:
             lines=lines,
             start_pos=start_pos,
             end_pos=end_pos,
-            is_target=is_target
+            is_target=is_target,
+            block_type=block_type
         ))
 
     target_blocks = [b for b in blocks if b.is_target]
@@ -236,8 +271,15 @@ def save_schedule(schedule: dict):
     with open(SCHEDULE_PATH, 'w') as f:
         json.dump(schedule, f, indent=2)
 
-def update_schedule(solution_path: Path, score: float):
-    """Update schedule after session completion using Leitner box system."""
+def update_schedule(solution_path: Path, score: float, advance_threshold: float = 100.0):
+    """Update schedule after session completion using Leitner box system.
+
+    Args:
+        solution_path: Path to the solution file.
+        score: Percentage score (0-100).
+        advance_threshold: Minimum score to advance box. Default 100.0 for code blocks,
+            can be lowered (e.g., 80.0) for slots/concept cards.
+    """
     schedule = load_schedule()
     key = get_solution_key(solution_path)
     now = datetime.now()
@@ -245,11 +287,11 @@ def update_schedule(solution_path: Path, score: float):
     current = schedule.get(key, {})
     old_box = current.get("box", 0)
 
-    if score >= 100.0:
-        # Perfect: advance to next box (capped at MAX_BOX)
+    if score >= advance_threshold:
+        # Met threshold: advance to next box (capped at MAX_BOX)
         new_box = min(old_box + 1, MAX_BOX)
     else:
-        # Imperfect: reset to box 0
+        # Below threshold: reset to box 0
         new_box = 0
 
     # Calculate next due datetime

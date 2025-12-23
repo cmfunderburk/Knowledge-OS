@@ -21,14 +21,37 @@ def run_read_tui() -> None:
         sys.exit(1)
 
 
-def run_list() -> None:
+def run_list(json_output: bool = False) -> None:
     """List all registered materials."""
+    import json
     from knos.reader.config import load_registry, get_material_type
     from knos.reader.content import list_all_content
 
     registry = load_registry()
     if not registry.get("materials"):
-        print("No materials registered. Add materials to reader/content_registry.yaml")
+        if json_output:
+            print(json.dumps({"materials": []}))
+        else:
+            print("No materials registered. Add materials to reader/content_registry.yaml")
+        return
+
+    if json_output:
+        materials = []
+        for material_id, info in registry["materials"].items():
+            material_type = get_material_type(material_id)
+            entry = {
+                "id": material_id,
+                "title": info.get("title", material_id),
+                "author": info.get("author", "Unknown"),
+                "type": material_type,
+                "source": info.get("source", ""),
+            }
+            if material_type != "article":
+                chapters, appendices = list_all_content(material_id)
+                entry["chapter_count"] = len(chapters)
+                entry["appendix_count"] = len(appendices)
+            materials.append(entry)
+        print(json.dumps({"materials": materials}, indent=2))
         return
 
     print("\nRegistered Materials:\n")
@@ -48,6 +71,66 @@ def run_list() -> None:
             chapter_count = len(chapters)
             print(f"    {chapter_count} chapters")
         print()
+
+
+def run_info(material_id: str, json_output: bool = False) -> None:
+    """Show detailed info about a material."""
+    import json
+    from knos.reader.config import load_registry, get_material_type
+    from knos.reader.content import list_all_content, get_source_path
+
+    registry = load_registry()
+    materials = registry.get("materials", {})
+
+    if material_id not in materials:
+        if json_output:
+            print(json.dumps({"error": f"Material '{material_id}' not found"}))
+        else:
+            print(f"Error: Material '{material_id}' not found in registry")
+        sys.exit(1)
+
+    info = materials[material_id]
+    material_type = get_material_type(material_id)
+    source_path = get_source_path(material_id)
+    source_exists = source_path.exists()
+
+    if json_output:
+        result = {
+            "id": material_id,
+            "title": info.get("title", material_id),
+            "author": info.get("author", "Unknown"),
+            "type": material_type,
+            "source": info.get("source", ""),
+            "source_exists": source_exists,
+        }
+        if material_type != "article":
+            chapters, appendices = list_all_content(material_id)
+            result["chapters"] = chapters
+            result["appendices"] = appendices
+        print(json.dumps(result, indent=2))
+        return
+
+    # Human-readable output
+    title = info.get("title", material_id)
+    author = info.get("author", "Unknown")
+
+    print(f"\n{title}")
+    print(f"  Author: {author}")
+    print(f"  ID: {material_id}")
+    print(f"  Type: {material_type}")
+    print(f"  Source: {info.get('source', 'N/A')}")
+    print(f"  Source exists: {'Yes' if source_exists else 'No'}")
+
+    if material_type != "article":
+        chapters, appendices = list_all_content(material_id)
+        print(f"\n  Chapters ({len(chapters)}):")
+        for ch in chapters:
+            print(f"    {ch['num']}. {ch['title']}")
+        if appendices:
+            print(f"\n  Appendices ({len(appendices)}):")
+            for app in appendices:
+                print(f"    {app['id']}. {app['title']}")
+    print()
 
 
 def run_clear(material_id: str, content: Optional[str] = None) -> None:

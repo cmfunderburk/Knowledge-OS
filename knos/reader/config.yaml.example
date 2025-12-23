@@ -8,7 +8,7 @@ llm:
     api_key: "your-google-api-key-here"
     # Or use environment variable:
     # api_key_env: "GOOGLE_API_KEY"
-    model: "gemini-2.5-flash"  # or gemini-2.0-flash, gemini-2.5-pro
+    model: "gemini-3-flash-preview"  # or gemini-2.5-flash, gemini-3-pro-preview
 
 # Voice input configuration (Ctrl+R in dialogue)
 # Auto-detects GPU/CPU; use smaller model on CPU for speed
@@ -38,3 +38,9 @@ tts:
   voice: "af_heart"
   # Speed multiplier: 0.5 = half speed, 1.0 = normal, 1.5 = 50% faster, 2.0 = double
   speed: 1.0
+  # Chunking settings for longer text (improves prosody quality)
+  # Short text (<short_text_threshold chars) uses simple pass-through
+  # Longer text is split into sentence chunks for better quality
+  short_text_threshold: 200  # chars; below this, skip chunking
+  target_chunk_size: 350     # chars; target size for sentence grouping
+  max_chunk_size: 500        # chars; hard limit before forcing chunk break

@@ -2,6 +2,7 @@
 
 Requires optional voice dependencies: uv sync --extra voice
 """
+import queue
 import re
 import threading
 import warnings
@@ -57,6 +58,102 @@ def _ensure_tts_deps():
 # Default voice (high quality American female)
 # Full list: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
 DEFAULT_VOICE = "af_heart"
+
+# Default chunking settings (can be overridden via config)
+DEFAULT_SHORT_TEXT_THRESHOLD = 200  # chars; below this, skip chunking
+DEFAULT_TARGET_CHUNK_SIZE = 350     # chars; target size for sentence grouping
+DEFAULT_MAX_CHUNK_SIZE = 500        # chars; hard limit before forcing chunk break
+
+# Minimum sentence length - shorter segments get merged with previous
+MIN_SENTENCE_LENGTH = 15
+
+
+def segment_sentences(text: str) -> list[str]:
+    """
+    Segment text into sentences using pysbd.
+
+    Handles abbreviations, decimals, and common edge cases better than regex.
+    Very short segments are merged back into the previous sentence.
+
+    Args:
+        text: Text to segment
+
+    Returns:
+        List of sentences
+    """
+    try:
+        import pysbd
+    except ImportError:
+        # Fallback to simple regex if pysbd not available
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        return [s.strip() for s in sentences if s.strip()]
+
+    seg = pysbd.Segmenter(language="en", clean=False)
+    raw_sentences = seg.segment(text)
+
+    # Merge very short segments with previous sentence
+    merged = []
+    for sentence in raw_sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+
+        if merged and len(sentence) < MIN_SENTENCE_LENGTH:
+            # Merge with previous
+            merged[-1] = merged[-1] + " " + sentence
+        else:
+            merged.append(sentence)
+
+    return merged
+
+
+def chunk_sentences(
+    sentences: list[str],
+    target_size: int = DEFAULT_TARGET_CHUNK_SIZE,
+    max_size: int = DEFAULT_MAX_CHUNK_SIZE,
+) -> list[str]:
+    """
+    Group sentences into chunks targeting a character budget.
+
+    This allows the TTS model to plan prosody across related sentences
+    while keeping chunks small enough for good quality.
+
+    Args:
+        sentences: List of sentences to group
+        target_size: Target chunk size in characters (~350 = 2-3 sentences)
+        max_size: Maximum chunk size before forcing a break
+
+    Returns:
+        List of text chunks (each may contain multiple sentences)
+    """
+    if not sentences:
+        return []
+
+    chunks = []
+    current: list[str] = []
+    current_len = 0
+
+    for sentence in sentences:
+        sentence_len = len(sentence)
+
+        # If adding this sentence would exceed max, flush current chunk
+        if current and current_len + sentence_len + 1 > max_size:
+            chunks.append(" ".join(current))
+            current = [sentence]
+            current_len = sentence_len
+        # If we've reached target and sentence is substantial, start new chunk
+        elif current and current_len >= target_size and sentence_len > MIN_SENTENCE_LENGTH:
+            chunks.append(" ".join(current))
+            current = [sentence]
+            current_len = sentence_len
+        else:
+            current.append(sentence)
+            current_len += sentence_len + (1 if current_len > 0 else 0)  # +1 for space
+
+    if current:
+        chunks.append(" ".join(current))
+
+    return chunks
 
 
 def strip_markdown_for_speech(text: str) -> str:
@@ -278,6 +375,119 @@ class KokoroTTS:
         """Stop speaking immediately."""
         self._stop_requested = True
 
+    def speak_queued(
+        self,
+        text: str,
+        on_start: Callable[[], None] | None = None,
+        on_done: Callable[[], None] | None = None,
+        target_chunk_size: int = DEFAULT_TARGET_CHUNK_SIZE,
+        max_chunk_size: int = DEFAULT_MAX_CHUNK_SIZE,
+    ) -> None:
+        """
+        Speak text using chunked synthesis with audio buffering.
+
+        Text is segmented into sentences, then grouped into chunks targeting
+        a character budget. Uses a producer-consumer pattern where chunks are
+        synthesized ahead of playback, yielding better prosody while avoiding gaps.
+
+        Args:
+            text: Text to speak (will be segmented and chunked)
+            on_start: Callback when speech starts
+            on_done: Callback when speech ends
+            target_chunk_size: Target chunk size in chars (~350 = 2-3 sentences)
+            max_chunk_size: Maximum chunk size before forcing break
+        """
+        with self._lock:
+            if self._speaking:
+                return
+            self._speaking = True
+            self._stop_requested = False
+
+        sentences = segment_sentences(text)
+        chunks = chunk_sentences(sentences, target_chunk_size, max_chunk_size)
+        if not chunks:
+            with self._lock:
+                self._speaking = False
+            if on_done:
+                on_done()
+            return
+
+        audio_queue: queue.Queue[np.ndarray | None] = queue.Queue(maxsize=3)
+        producer_done = threading.Event()
+
+        def produce():
+            """Synthesize chunks and push audio to queue."""
+            try:
+                for chunk in chunks:
+                    if self._stop_requested:
+                        break
+                    for _, _, audio in self.pipeline(chunk, voice=self.voice, speed=self.speed):
+                        if self._stop_requested:
+                            break
+                        audio_queue.put(audio.cpu().numpy())
+            finally:
+                audio_queue.put(None)  # Sentinel to signal completion
+                producer_done.set()
+
+        def consume():
+            """Pull audio chunks from queue and play continuously."""
+            stream = None
+            started = False
+            try:
+                while True:
+                    try:
+                        # Use timeout to allow checking stop flag
+                        chunk = audio_queue.get(timeout=0.1)
+                    except queue.Empty:
+                        if self._stop_requested or producer_done.is_set():
+                            # Check one more time for remaining items
+                            try:
+                                chunk = audio_queue.get_nowait()
+                            except queue.Empty:
+                                break
+                        continue
+
+                    if chunk is None or self._stop_requested:
+                        break
+
+                    # Open stream on first chunk
+                    if stream is None:
+                        stream = sd.OutputStream(
+                            samplerate=self.SAMPLE_RATE,
+                            channels=1,
+                            dtype="float32",
+                        )
+                        stream.start()
+                        started = True
+                        if on_start:
+                            on_start()
+
+                    stream.write(chunk)
+
+            finally:
+                if stream is not None:
+                    stream.stop()
+                    stream.close()
+                # If we never started, still call on_start for consistency
+                if not started and on_start:
+                    on_start()
+
+        producer = threading.Thread(target=produce, daemon=True)
+        consumer = threading.Thread(target=consume, daemon=True)
+
+        producer.start()
+        consumer.start()
+
+        producer.join()
+        consumer.join()
+
+        with self._lock:
+            self._speaking = False
+            self._stop_requested = False
+
+        if on_done:
+            on_done()
+
 
 # Global speaker instance
 _speaker: KokoroTTS | None = None
@@ -309,9 +519,16 @@ def speak(
     on_start: Callable[[], None] | None = None,
     on_done: Callable[[], None] | None = None,
     strip_markdown: bool = True,
+    short_text_threshold: int = DEFAULT_SHORT_TEXT_THRESHOLD,
+    target_chunk_size: int = DEFAULT_TARGET_CHUNK_SIZE,
+    max_chunk_size: int = DEFAULT_MAX_CHUNK_SIZE,
 ) -> None:
     """
     Speak text using Kokoro TTS.
+
+    Automatically uses chunked synthesis with audio buffering for longer text
+    to improve prosody quality, while using simple pass-through for short text
+    to minimize overhead.
 
     Args:
         text: Text to speak
@@ -320,11 +537,26 @@ def speak(
         on_start: Callback when speech starts
         on_done: Callback when speech ends
         strip_markdown: Strip markdown formatting for natural speech
+        short_text_threshold: Texts shorter than this use simple pass-through
+        target_chunk_size: Target chunk size in chars for sentence grouping
+        max_chunk_size: Maximum chunk size before forcing break
     """
     if strip_markdown:
         text = strip_markdown_for_speech(text)
+
     speaker = get_speaker(voice=voice, speed=speed)
-    speaker.speak(text, on_start=on_start, on_done=on_done)
+
+    # Use queued chunked synthesis for longer text
+    if len(text) > short_text_threshold:
+        speaker.speak_queued(
+            text,
+            on_start=on_start,
+            on_done=on_done,
+            target_chunk_size=target_chunk_size,
+            max_chunk_size=max_chunk_size,
+        )
+    else:
+        speaker.speak(text, on_start=on_start, on_done=on_done)
 
 
 def stop_speaking() -> None:
