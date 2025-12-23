@@ -21,7 +21,15 @@ knos/reader/sessions/
 knos/reader/drafts/
 knos/reader/docs/
 
-# Bundled classics are tracked (knos/reader/classics/)
+# Bundled content directories (ignore all, then allowlist specific files)
+knos/reader/classics/*
+!knos/reader/classics/don-quixote.epub
+!knos/reader/classics/nicomachean-ethics.epub
+!knos/reader/classics/brothers-karamazov.epub
+
+knos/reader/articles/*
+!knos/reader/articles/attention.pdf
+!knos/reader/articles/einstein-photoelectric.pdf
 
 # ===== Reviewer State =====
 knos/reviewer/history.jsonl
