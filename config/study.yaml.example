@@ -1,7 +1,7 @@
 # Study Configuration
-# Copy to study_config.yaml and customize for your study plan.
+# Run `uv run knos init` to create your config, or copy this to study.yaml.
 #
-# This file configures the ./study dashboard display.
+# This file configures the dashboard display.
 # All fields are optional - sensible defaults are used if omitted.
 
 # =============================================================================

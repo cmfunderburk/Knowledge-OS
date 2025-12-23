@@ -12,6 +12,9 @@ A Knowledge Operating System: spaced-repetition drilling + LLM-powered reading c
 ## Commands
 
 ```bash
+# Setup
+uv run knos init         # Initialize config files (interactive)
+
 # Primary interfaces
 uv run knos              # TUI dashboard (default)
 uv run knos drill        # Drill due cards TUI
@@ -37,10 +40,15 @@ uv run python3 -m knos.reviewer.reviewer --summary      # Mastery status
 ## Architecture
 
 ```
+config/                   # User configuration (gitignored except .example)
+├── study.yaml            # Domain rotation, phases, priority shifts
+├── reader.yaml           # LLM API keys, voice/TTS settings
+└── content.yaml          # PDF/EPUB/article registration
+
 knos/                     # Unified package
 ├── cli.py                # Typer CLI entry point (knos command)
 ├── commands/             # CLI command implementations
-│   └── today.py, study.py, drill.py, read.py, progress.py
+│   └── today.py, study.py, drill.py, read.py, progress.py, init.py
 ├── reviewer/
 │   ├── core.py           # Business logic: parsing, Leitner scheduling, state
 │   └── reviewer.py       # Query-only CLI (--due, --due-json, --summary)
@@ -66,9 +74,8 @@ solutions/                # Drill cards (user content, gitignored)
 ├── focus/                # Active cards for drilling
 └── examples/             # Sample cards demonstrating format
 
-plan/                     # Study configuration (gitignored except examples)
+plan/                     # Study state (gitignored)
 ├── schedule.json         # Leitner box state
-├── study_config.yaml     # Domain rotation, phases, priority shifts
 └── todo.md               # Sprint tasks
 ```
 
@@ -139,14 +146,14 @@ Process step 2 :: Append predicted token to context
 
 ## Configuration Files
 
+Run `uv run knos init` to create config files interactively, or copy `.example` versions manually.
+
 | File | Purpose |
 |------|---------|
-| `plan/study_config.yaml` | Domain rotation, current phase, priority shifts |
+| `config/study.yaml` | Domain rotation, current phase, priority shifts |
+| `config/reader.yaml` | LLM API keys, voice/TTS settings |
+| `config/content.yaml` | PDF/EPUB/article registration |
 | `plan/schedule.json` | Leitner box state (auto-managed) |
-| `knos/reader/config.yaml` | LLM API keys and model selection |
-| `knos/reader/content_registry.yaml` | PDF/EPUB/article registration (classics in `knos/reader/classics/`, articles in `knos/reader/articles/`) |
-
-Copy `.example` versions to get started.
 
 ## Common Tasks
 
@@ -160,12 +167,12 @@ Copy `.example` versions to get started.
 
 2. Open PDF and note chapter page ranges (1-indexed PDF pages, not book page numbers)
 
-3. Add entry to `knos/reader/content_registry.yaml`:
+3. Add entry to `config/content.yaml`:
    ```yaml
    material-id:
      title: "Book Title"
      author: "Author Name"
-     source: "reader/sources/material-id/source.pdf"
+     source: "knos/reader/sources/material-id/source.pdf"
      structure:
        type: chapters
        chapters:
@@ -182,12 +189,12 @@ Copy `.example` versions to get started.
    cp /path/to/book.epub knos/reader/sources/<material-id>/source.epub
    ```
 
-2. Add entry to `knos/reader/content_registry.yaml` (no structure needed—extracted from EPUB TOC):
+2. Add entry to `config/content.yaml` (no structure needed—extracted from EPUB TOC):
    ```yaml
    material-id:
      title: "Book Title"
      author: "Author Name"
-     source: "reader/sources/material-id/source.epub"
+     source: "knos/reader/sources/material-id/source.epub"
    ```
 
 3. Verify: `uv run knos read list`
@@ -199,12 +206,12 @@ Copy `.example` versions to get started.
    cp /path/to/paper.pdf knos/reader/articles/<name>.pdf
    ```
 
-2. Add entry to `knos/reader/content_registry.yaml`:
+2. Add entry to `config/content.yaml`:
    ```yaml
    article-name:
      title: "Paper Title"
      author: "Author et al."
-     source: "reader/articles/article-name.pdf"
+     source: "knos/reader/articles/article-name.pdf"
      structure:
        type: article
    ```
@@ -257,7 +264,7 @@ Or delete the entry entirely—it will be recreated on next drill.
 material-id:
   title: "string"           # Display title
   author: "string"          # Display author
-  source: "reader/sources/material-id/source.pdf"  # Path relative to knos/
+  source: "knos/reader/sources/material-id/source.pdf"  # Path relative to repo root
   structure:
     type: chapters
     chapters:
@@ -271,7 +278,7 @@ material-id:
 material-id:
   title: "string"
   author: "string"
-  source: "reader/sources/material-id/source.epub"
+  source: "knos/reader/sources/material-id/source.epub"
   # No structure block—chapters extracted from EPUB TOC automatically
 ```
 
@@ -280,7 +287,7 @@ material-id:
 material-id:
   title: "string"
   author: "string"
-  source: "reader/articles/name.pdf"
+  source: "knos/reader/articles/name.pdf"
   structure:
     type: article  # Entire PDF treated as one reading session
 ```
@@ -315,7 +322,7 @@ Box intervals: 0=1hr, 1=4hr, 2=1d, 3=3d, 4=7d, 5=14d, 6=30d, 7=90d
 - **Check EPUB structure**: For EPUBs, ensure file is valid and has TOC
 
 ### LLM test fails in reader
-- **Check config**: Ensure `knos/reader/config.yaml` exists (copy from `.example`)
+- **Check config**: Run `uv run knos init` or ensure `config/reader.yaml` exists
 - **Check API key**: Verify `GOOGLE_API_KEY` env var or key in config
 - **Test directly**: `uv run knos read test`
 
@@ -340,6 +347,6 @@ Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and
 ## Development Notes
 
 - Engine code tracked in git: `knos/` (includes `knos/reader/classics/`, `knos/reader/articles/`)
-- User content gitignored: `solutions/`, `plan/` state files, `knos/reader/sources/`
+- User content gitignored: `solutions/`, `config/` (except `.example`), `plan/` state files, `knos/reader/sources/`
 - The CLI entry point is `knos/cli.py` → `knos.cli:main`
 - TUI built on Textual; CLI tools use Rich

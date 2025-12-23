@@ -1,8 +1,8 @@
 # Content Registry
-# Register materials for the reading companion (./read).
-# Copy to content_registry.yaml and customize.
+# Run `uv run knos init` to create your config, or copy this to content.yaml.
 #
 # Page numbers are PDF page numbers (1-indexed), not book page numbers.
+# Source paths are relative to the repository root.
 
 materials:
   # OpenStax Psychology 2e (CC BY 4.0)
@@ -10,7 +10,7 @@ materials:
   psychology-2e:
     title: "Psychology 2e"
     author: "OpenStax"
-    source: "reader/sources/psychology-2e/source.pdf"
+    source: "knos/reader/sources/psychology-2e/source.pdf"
     structure:
       type: "chapters"
       chapters:
@@ -36,7 +36,7 @@ materials:
   economics-3e:
     title: "Principles of Economics 3e"
     author: "OpenStax"
-    source: "reader/sources/economics-3e/source.pdf"
+    source: "knos/reader/sources/economics-3e/source.pdf"
     structure:
       type: "chapters"
       chapters:
@@ -52,7 +52,7 @@ materials:
         - { num: 10, title: "Monopolistic Competition and Oligopoly", pages: [275, 300] }
 
 # === Bundled Classics (EPUB) ===
-# These are included with the repo in reader/classics/.
+# These are included with the repo in knos/reader/classics/.
 # EPUBs don't need chapter definitions - structure is extracted automatically.
 
   # Aristotle's Nicomachean Ethics (F.H. Peters translation)
@@ -60,32 +60,32 @@ materials:
   nicomachean-ethics:
     title: "Nicomachean Ethics"
     author: "Aristotle"
-    source: "reader/classics/nicomachean-ethics.epub"
+    source: "knos/reader/classics/nicomachean-ethics.epub"
 
   # Don Quixote (John Ormsby translation)
   # https://www.gutenberg.org/ebooks/996
   don-quixote:
     title: "Don Quixote"
     author: "Miguel de Cervantes"
-    source: "reader/classics/don-quixote.epub"
+    source: "knos/reader/classics/don-quixote.epub"
 
   # The Brothers Karamazov (Constance Garnett translation)
   # https://www.gutenberg.org/ebooks/28054
   brothers-karamazov:
     title: "The Brothers Karamazov"
     author: "Fyodor Dostoevsky"
-    source: "reader/classics/brothers-karamazov.epub"
+    source: "knos/reader/classics/brothers-karamazov.epub"
 
 # === Articles ===
 # Articles are single-unit content (no chapters). Use type: article.
-# Bundled articles go in reader/articles/, user articles in reader/sources/.
+# Bundled articles go in knos/reader/articles/, user articles in knos/reader/sources/.
 
   # Attention Is All You Need (Transformer paper)
   # https://arxiv.org/abs/1706.03762
   attention:
     title: "Attention Is All You Need"
     author: "Vaswani et al."
-    source: "reader/articles/attention.pdf"
+    source: "knos/reader/articles/attention.pdf"
     structure:
       type: article
 
@@ -94,7 +94,7 @@ materials:
   einstein-photoelectric:
     title: "On a Heuristic Point of View Concerning the Production and Transformation of Light"
     author: "Albert Einstein"
-    source: "reader/articles/einstein-photoelectric.pdf"
+    source: "knos/reader/articles/einstein-photoelectric.pdf"
     structure:
       type: article
 
@@ -103,7 +103,7 @@ materials:
   mendel-plant-hybridization:
     title: "Experiments on Plant Hybridization"
     author: "Gregor Mendel"
-    source: "reader/articles/mendel-plant-hybridization.pdf"
+    source: "knos/reader/articles/mendel-plant-hybridization.pdf"
     structure:
       type: article
 
@@ -111,7 +111,7 @@ materials:
   james-emotion:
     title: "What is an Emotion?"
     author: "William James"
-    source: "reader/articles/james-emotion.pdf"
+    source: "knos/reader/articles/james-emotion.pdf"
     structure:
       type: article
 
@@ -119,27 +119,27 @@ materials:
   wittgenstein-logical-form:
     title: "Some Remarks on Logical Form"
     author: "Ludwig Wittgenstein"
-    source: "reader/articles/wittgenstein-logical-form.pdf"
+    source: "knos/reader/articles/wittgenstein-logical-form.pdf"
     structure:
       type: article
 
 # Setup:
 #
-# Bundled classics (reader/classics/) work out of the box - just copy entries above.
+# Bundled classics (knos/reader/classics/) work out of the box - just copy entries above.
 #
 # To add your own materials:
 #
 # For PDFs (books with chapters):
-# 1. Place PDF at reader/sources/<material-id>/source.pdf
+# 1. Place PDF at knos/reader/sources/<material-id>/source.pdf
 # 2. Add entry with chapter page ranges (1-indexed PDF pages)
-# 3. Verify with: knos read list
+# 3. Verify with: uv run knos read list
 #
 # For EPUBs:
-# 1. Place EPUB at reader/sources/<material-id>/source.epub
+# 1. Place EPUB at knos/reader/sources/<material-id>/source.epub
 # 2. Add entry with title/author only (structure extracted automatically)
-# 3. Verify with: knos read list
+# 3. Verify with: uv run knos read list
 #
 # For Articles (PDFs without chapters):
-# 1. Place PDF at reader/articles/<name>.pdf (bundled) or reader/sources/<name>.pdf
+# 1. Place PDF at knos/reader/articles/<name>.pdf (bundled) or knos/reader/sources/<name>.pdf
 # 2. Add entry with structure.type: article
-# 3. Verify with: knos read list
+# 3. Verify with: uv run knos read list

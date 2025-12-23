@@ -1,5 +1,5 @@
 # Reader Configuration
-# Copy this to config.yaml and fill in your API keys.
+# Run `uv run knos init` to create your config, or copy this to reader.yaml.
 
 llm:
   provider: "gemini"
