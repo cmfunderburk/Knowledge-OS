@@ -51,7 +51,7 @@ DEFAULT_PHASES = [
 
 def load_study_config() -> dict:
     """
-    Load study configuration from study_config.yaml.
+    Load study configuration from config/study.yaml.
 
     Returns empty dict if file doesn't exist (defaults will be used).
     """
@@ -600,7 +600,7 @@ def get_todays_domain() -> tuple[str, str | None]:
     """
     Get today's scheduled domain.
 
-    Checks for active priority shift first (from study_config.yaml).
+    Checks for active priority shift first (from config/study.yaml).
     If current phase is incomplete, returns phase as the domain with a note
     about what the scheduled domain would be.
 

@@ -32,7 +32,7 @@ def run_list(json_output: bool = False) -> None:
         if json_output:
             print(json.dumps({"materials": []}))
         else:
-            print("No materials registered. Add materials to reader/content_registry.yaml")
+            print("No materials registered. Run 'knos init' or add materials to config/content.yaml")
         return
 
     if json_output:
