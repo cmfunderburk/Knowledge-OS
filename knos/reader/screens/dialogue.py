@@ -759,13 +759,24 @@ class DialogueScreen(Screen):
 
         try:
             voice = self._tts_config.get("voice", "af_heart")
+            speed = self._tts_config.get("speed", 1.0)
+            short_text_threshold = self._tts_config.get("short_text_threshold", 200)
+            target_chunk_size = self._tts_config.get("target_chunk_size", 350)
+            max_chunk_size = self._tts_config.get("max_chunk_size", 500)
 
             self._speaking = True
 
             def do_speak():
                 from knos.reader.tts import speak
-                speed = self._tts_config.get("speed", 1.0)
-                speak(text, voice=voice, speed=speed, strip_markdown=True)
+                speak(
+                    text,
+                    voice=voice,
+                    speed=speed,
+                    strip_markdown=True,
+                    short_text_threshold=short_text_threshold,
+                    target_chunk_size=target_chunk_size,
+                    max_chunk_size=max_chunk_size,
+                )
 
             await asyncio.to_thread(do_speak)
 
