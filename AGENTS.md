@@ -19,6 +19,9 @@ The atomic unit is the **drill target**: a fenced code block revealed line-by-li
 ## Commands
 
 ```bash
+# Setup
+uv run knos init         # Initialize config files (interactive)
+
 # Primary interfaces (unified CLI)
 uv run knos              # TUI dashboard (default)
 uv run knos drill        # Drill due cards TUI
@@ -53,8 +56,9 @@ uv run python3 -m knos.reviewer.reviewer --summary      # Mastery status
                         │
 ┌───────────────────────▼─────────────────────────────────┐
 │                    Filesystem                           │
-│   solutions/              history.jsonl                 │
-│   plan/                   (schedule, config, todo)      │
+│   config/             — User config (reader, content)   │
+│   solutions/          — Drill cards                     │
+│   plan/               — Schedule state, history         │
 └─────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────┐
@@ -67,19 +71,20 @@ uv run python3 -m knos.reviewer.reviewer --summary      # Mastery status
 ├─────────────────────────────────────────────────────────┤
 │  reader/classics/   — Bundled classics (Project Guten.) │
 │  reader/sources/    — User-provided PDFs/EPUBs          │
-│  reader/content_registry.yaml — Material definitions    │
+│  config/content.yaml — Material definitions             │
 └─────────────────────────────────────────────────────────┘
 ```
 
 **Key files:**
 - `knos/cli.py` — Typer CLI entry point
+- `knos/commands/init.py` — Config initialization command
 - `knos/reviewer/core.py` — Business logic: parsing, Leitner scheduling, progress tracking
 - `knos/reviewer/reviewer.py` — Legacy CLI interface for drilling
 - `knos/tui/app.py` — Textual app entry points (StudyApp, DrillApp, ReaderApp)
 - `knos/tui/screens/` — TUI screens: dashboard.py, drill.py, drill_queue.py, browse.py
-- `reader/screens/` — Reader TUI: select_material.py, select_chapter.py, dialogue.py
-- `reader/prompts/` — Dialogue mode prompts: base.md, socratic.md, clarify.md, challenge.md
-- `reader/classics/` — Bundled classics (Aristotle, Cervantes, Dostoevsky)
+- `knos/reader/screens/` — Reader TUI: select_material.py, select_chapter.py, dialogue.py
+- `knos/reader/prompts/` — Dialogue mode prompts: base.md, socratic.md, clarify.md, challenge.md
+- `knos/reader/classics/` — Bundled classics (Aristotle, Cervantes, Dostoevsky)
 
 ## Card Format
 
@@ -113,7 +118,9 @@ See `solutions/examples/` for sample cards.
 
 ## Configuration
 
-### Study Schedule (`plan/study_config.yaml`)
+Run `uv run knos init` to create config files interactively, or copy `.example` files from `config/`.
+
+### Study Schedule (`config/study.yaml`)
 
 Configure domain rotation, phases, and priority shifts:
 
@@ -132,11 +139,9 @@ priority_shift:
   name: "Focus Sprint"
 ```
 
-Copy `plan/study_config.yaml.example` to get started.
+### Reader Materials (`config/content.yaml`)
 
-### Reader Materials (`reader/content_registry.yaml`)
-
-Register PDFs/EPUBs for the reading companion. Three classics from Project Gutenberg are bundled in `reader/classics/` and work out of the box:
+Register PDFs/EPUBs for the reading companion. Three classics from Project Gutenberg are bundled in `knos/reader/classics/` and work out of the box:
 
 - Nicomachean Ethics (Aristotle)
 - Don Quixote (Cervantes)
@@ -148,7 +153,7 @@ materials:
   my-textbook:
     title: "Introduction to X"
     author: "Author Name"
-    source: "path/to/textbook.pdf"
+    source: "knos/reader/sources/my-textbook/source.pdf"
     structure:
       type: "chapters"
       chapters:
@@ -158,12 +163,10 @@ materials:
   nicomachean-ethics:
     title: "Nicomachean Ethics"
     author: "Aristotle"
-    source: "reader/classics/nicomachean-ethics.epub"
+    source: "knos/reader/classics/nicomachean-ethics.epub"
 ```
 
-Copy `reader/content_registry.yaml.example` to get started.
-
-### LLM Configuration (`reader/config.yaml`)
+### LLM Configuration (`config/reader.yaml`)
 
 Configure API keys for the reading companion:
 
@@ -174,8 +177,6 @@ llm:
     api_key: "your-api-key"
     model: "gemini-2.5-flash"
 ```
-
-Copy `reader/config.yaml.example` to get started.
 
 ## Dependencies
 

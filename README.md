@@ -23,22 +23,18 @@ The dialogue is the core. Card generation is there when you identify concepts wo
 ```bash
 uv sync                  # Install core dependencies
 uv sync --extra voice    # Optional: include voice input/TTS (requires PyTorch)
-uv run knos read         # Start the Reader (requires LLM API key)
+uv run knos init         # Create config files (prompts for API key)
+uv run knos read         # Start the Reader
 ```
 
 Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and Windows.
 
-To set up the Reader:
+The `init` command creates three config files in `config/`:
+- `study.yaml` — study schedule and phases
+- `reader.yaml` — LLM API key and voice/TTS settings
+- `content.yaml` — registered reading materials
 
-```bash
-cp knos/reader/config.yaml.example knos/reader/config.yaml
-# Edit with your Gemini API key
-
-cp knos/reader/content_registry.yaml.example knos/reader/content_registry.yaml
-# Register your PDFs (see below)
-```
-
-The example registry includes free [OpenStax](https://openstax.org/) textbooks, bundled classics from Project Gutenberg, and foundational articles (the Transformer paper, Einstein 1905). Download a PDF, place it in `knos/reader/sources/<material-id>/source.pdf`, and start a session. The classics and articles work out of the box.
+The example content registry includes free [OpenStax](https://openstax.org/) textbooks, bundled classics from Project Gutenberg, and foundational articles (the Transformer paper, Einstein 1905). Download a PDF, place it in `knos/reader/sources/<material-id>/source.pdf`, and start a session. The classics and articles work out of the box.
 
 ## The Reader
 
@@ -58,7 +54,7 @@ Five foundational articles are also bundled:
 - **What is an Emotion?** — William James (1884, the James-Lange theory)
 - **Some Remarks on Logical Form** — Wittgenstein (1929, his only academic paper)
 
-To enable the bundled articles, copy their entries from `knos/reader/content_registry.yaml.example` to your `knos/reader/content_registry.yaml`. Articles skip chapter selection and open directly into dialogue.
+The bundled articles are included in `config/content.yaml` after running `knos init`. Articles skip chapter selection and open directly into dialogue.
 
 <details>
 <summary><strong>Example: Discussing Aristotle's Nicomachean Ethics</strong></summary>
@@ -111,6 +107,7 @@ Cards generated from Reader sessions go to `knos/reader/drafts/` for review befo
 
 ```
 knos              TUI dashboard (default)
+knos init         Initialize config files
 knos read         Reader TUI
 knos drill        Drill TUI
 knos today        Today's study plan (CLI)
@@ -124,23 +121,19 @@ knos read test              Test LLM configuration
 
 ## Configuration
 
-### Reader Setup
+Run `uv run knos init` to create config files interactively, or copy the `.example` files manually:
 
 ```bash
-cp knos/reader/config.yaml.example knos/reader/config.yaml
-cp knos/reader/content_registry.yaml.example knos/reader/content_registry.yaml
+cp config/reader.yaml.example config/reader.yaml    # LLM API key, voice/TTS
+cp config/content.yaml.example config/content.yaml  # Reading materials
+cp config/study.yaml.example config/study.yaml      # Study schedule (optional)
 ```
 
-Edit `knos/reader/config.yaml` with your Gemini API key. Edit `knos/reader/content_registry.yaml` to register PDFs with chapter page ranges.
-
-### Study Configuration (optional)
-
-```bash
-cp plan/study_config.yaml.example plan/study_config.yaml
-cp plan/schedule.json.example plan/schedule.json
-```
-
-Configure domain rotation (which subjects on which days), curriculum phases, and priority shifts.
+| File | Purpose |
+|------|---------|
+| `config/reader.yaml` | Gemini API key, voice input, TTS settings |
+| `config/content.yaml` | PDF/EPUB registration with chapter page ranges |
+| `config/study.yaml` | Domain rotation, curriculum phases (optional) |
 
 ### Drill Cards
 
