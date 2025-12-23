@@ -150,8 +150,13 @@ class DrillScreen(Screen):
             solution_path=self.solution_path
         )
 
+        # Determine advance threshold based on block types
+        # Cards with slots blocks use 80% threshold; pure code cards use 100%
+        has_slots = any(b.block_type == "slots" for b in self.blocks)
+        advance_threshold = 80.0 if has_slots else 100.0
+
         # Save data
-        update_schedule(self.solution_path, score)
+        update_schedule(self.solution_path, score, advance_threshold)
         append_history(session_result)
 
         # Find next card in queue (skip current one)
@@ -163,10 +168,10 @@ class DrillScreen(Screen):
 
         # Build completion message
         msg = f"Score: {score:.1f}%"
-        if score >= 100:
-            msg += " - PERFECT! Next box."
+        if score >= advance_threshold:
+            msg += " - Passed! Next box."
         else:
-            msg += " - Reset to Box 0."
+            msg += f" - Below {advance_threshold:.0f}%, reset to Box 0."
 
         if self._next_path:
             msg += f"\n\nEnter: next card  |  q: quit"

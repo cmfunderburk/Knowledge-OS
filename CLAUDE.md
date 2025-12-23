@@ -82,9 +82,10 @@ plan/                     # Study configuration (gitignored except examples)
 
 1. `core.py` parses markdown files, extracts fenced code blocks as drill targets
 2. Blocks preceded by `<!-- INFO -->` (within 50 chars) are excluded from drilling
-3. `schedule.json` tracks box level and next_due datetime per card
-4. Perfect score advances box; imperfect resets to box 0
-5. `history.jsonl` logs all session results
+3. Blocks with language `slots` use prompt-answer format (prompts visible, answers hidden)
+4. `schedule.json` tracks box level and next_due datetime per card
+5. Code blocks require 100% to advance; slots blocks require 80%
+6. `history.jsonl` logs all session results
 
 ## Card Format
 
@@ -107,6 +108,34 @@ def algorithm():
 - Every fenced block is a target (unless prefixed with `<!-- INFO -->`)
 - No trailing blank lines inside code blocks
 - One concept per file (2-15 lines per block)
+
+### Slots Format (Conceptual Cards)
+
+For conceptual knowledge (definitions, distinctions, processes), use `slots` blocks instead of code blocks. Slots show prompts during drill while hiding answers.
+
+```markdown
+## Definition
+
+```slots
+Definition :: Output at step t becomes input for step t+1
+Process step 1 :: Predict next token based on context
+Process step 2 :: Append predicted token to context
+```
+```
+
+**Format:**
+- Use `slots` as the block language
+- Each drillable line: `Prompt :: Answer`
+- Lines without `::` are headers (displayed but not drilled)
+- Empty lines and `# Header` lines organize content
+
+**Scoring:**
+- Code blocks require 100% accuracy to advance
+- Slots blocks require 80% accuracy to advance
+
+**When to use each:**
+- **Code blocks**: Executable code, algorithms, formulas you need to reproduce exactly
+- **Slots blocks**: Definitions, distinctions, processes, conceptual relationships
 
 ## Configuration Files
 
