@@ -14,7 +14,7 @@ from textual.widgets import Header, Footer, Static, Label
 from textual.containers import Container, Horizontal, Vertical
 from textual.binding import Binding
 
-from knos.reviewer.core import get_drill_queue, generate_progress_report, REPO_ROOT, PLAN_DIR, get_priority_shift_config
+from knos.reviewer.core import get_drill_queue, generate_progress_report, REPO_ROOT, PLAN_DIR, get_priority_shift_config, is_focus_empty, get_example_cards
 from knos.tui.widgets.panels import TodayPanel, ProgressPanel, StatusPanel, DrillListPanel, ReaderPanel
 from .drill import DrillScreen
 from .browse import BrowseScreen
@@ -52,6 +52,7 @@ class DashboardScreen(Screen):
         super().__init__()
         self.drill_queue = []
         self.selected_idx = 0
+        self.showing_examples = False
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -76,13 +77,20 @@ class DashboardScreen(Screen):
 
     async def refresh_data(self) -> None:
         """Reload all dashboard data."""
-        self.drill_queue = get_drill_queue()
+        # Check if focus directory is empty - show examples if so
+        if is_focus_empty():
+            self.drill_queue = get_example_cards()
+            self.showing_examples = True
+        else:
+            self.drill_queue = get_drill_queue()
+            self.showing_examples = False
         self.selected_idx = 0
-        
+
         # Update drill list widget
         drill_list = self.query_one("#drill-list", DrillListPanel)
         drill_list.drill_queue = self.drill_queue
         drill_list.selected_idx = self.selected_idx
+        drill_list.showing_examples = self.showing_examples
         drill_list.refresh()
         
         # Refresh all panels

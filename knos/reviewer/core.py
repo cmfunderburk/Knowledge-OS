@@ -22,6 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent  # knos/reviewer/
 REPO_ROOT = BASE_DIR.parent.parent  # repo root (up from knos/reviewer/ to knos/ to root)
 SOLUTIONS_ROOT = REPO_ROOT / "solutions"
 FOCUS_DIR = SOLUTIONS_ROOT / "focus"
+EXAMPLES_DIR = SOLUTIONS_ROOT / "examples"
 PLAN_DIR = REPO_ROOT / "plan"
 CONFIG_DIR = REPO_ROOT / "config"
 SCHEDULE_PATH = PLAN_DIR / "schedule.json"
@@ -351,6 +352,37 @@ def collect_focus_files() -> list[Path]:
         if path.is_file() and os.access(path, os.R_OK):
             files.append(path.resolve())
     return sorted(files, key=lambda p: p.name.lower())
+
+
+def is_focus_empty() -> bool:
+    """Check if solutions/focus/ has no drill cards."""
+    return len(collect_focus_files()) == 0
+
+
+def get_example_cards() -> list[tuple[Path, dict]]:
+    """
+    Get cards from solutions/examples/ for display when focus is empty.
+
+    Returns cards in the same format as get_drill_queue() for compatibility.
+    All example cards are marked as "example" status.
+    """
+    if not EXAMPLES_DIR.exists() or not EXAMPLES_DIR.is_dir():
+        return []
+
+    cards = []
+    for path in EXAMPLES_DIR.rglob("*.md"):
+        # Skip hidden files and README
+        if any(part.startswith(".") for part in path.parts):
+            continue
+        if path.name.lower() == "readme.md":
+            continue
+        if not path.is_file() or not os.access(path, os.R_OK):
+            continue
+
+        meta = {"box": None, "status": "example", "due_info": "example card"}
+        cards.append((path.resolve(), meta))
+
+    return sorted(cards, key=lambda x: x[0].name.lower())
 
 
 def collect_due_focus_files() -> list[Path]:
