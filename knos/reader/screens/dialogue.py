@@ -147,9 +147,8 @@ class DialogueScreen(Screen):
         self.provider = None
         self.session: Session | None = None
 
-        # Token tracking
-        self.total_input_tokens = 0
-        self.total_output_tokens = 0
+        # Token tracking (for display: context window, not cumulative)
+        self.context_window_size = 0  # Last request's total input tokens
         self.cache_size = 0  # Size of cached content (constant per session)
         self.using_cache = False
         self._system_prompt: str | None = None  # For non-cached article mode
@@ -527,10 +526,8 @@ class DialogueScreen(Screen):
                 self.session.last_updated = datetime.now()
                 save_metadata(self.session)
 
-            # Update token display
-            non_cached = chat_response.input_tokens - chat_response.cached_tokens
-            self.total_input_tokens += non_cached
-            self.total_output_tokens += chat_response.output_tokens
+            # Update token display (context window = total input for this request)
+            self.context_window_size = chat_response.input_tokens
             if chat_response.cached_tokens > 0:
                 self.cache_size = chat_response.cached_tokens
             self.update_token_display()
@@ -559,10 +556,9 @@ class DialogueScreen(Screen):
             content = msg["content"]
             self.messages.append({"role": role, "content": content})
 
-        # Restore token counts from session metadata
+        # Restore cache size from session metadata
+        # (context_window_size will be set on next API call)
         if self.session:
-            self.total_input_tokens = self.session.total_input_tokens
-            self.total_output_tokens = self.session.total_output_tokens
             self.cache_size = self.session.cache_tokens
 
     def _was_last_session_empty(self) -> bool:
@@ -703,10 +699,8 @@ class DialogueScreen(Screen):
         """Display LLM response (called from main thread)."""
         chat_log = self.query_one("#chat-log", RichLog)
 
-        # Update token counts
-        non_cached_input = chat_response.input_tokens - chat_response.cached_tokens
-        self.total_input_tokens += non_cached_input
-        self.total_output_tokens += chat_response.output_tokens
+        # Update token display (context window = total input for this request)
+        self.context_window_size = chat_response.input_tokens
         if chat_response.cached_tokens > 0 and self.cache_size == 0:
             self.cache_size = chat_response.cached_tokens
         self.update_token_display()
@@ -735,14 +729,15 @@ class DialogueScreen(Screen):
             },
         )
 
-        # Update session metadata
+        # Update session metadata (cumulative tokens for analytics)
         if self.session:
             self.session.exchange_count += 1
             self.session.mode_distribution[self.mode] = (
                 self.session.mode_distribution.get(self.mode, 0) + 1
             )
-            self.session.total_input_tokens = self.total_input_tokens
-            self.session.total_output_tokens = self.total_output_tokens
+            non_cached = chat_response.input_tokens - chat_response.cached_tokens
+            self.session.total_input_tokens += non_cached
+            self.session.total_output_tokens += chat_response.output_tokens
             self.session.cache_tokens = self.cache_size
             self.session.last_updated = datetime.now()
             save_metadata(self.session)
@@ -810,13 +805,14 @@ class DialogueScreen(Screen):
         def fmt(n: int) -> str:
             return f"{n / 1000:.1f}K" if n >= 1000 else str(n)
 
-        # total_input_tokens is now conversation-only (cache subtracted)
-        conversation = self.total_input_tokens + self.total_output_tokens
-
-        if self.cache_size > 0:
-            display = f"{fmt(conversation)} + {fmt(self.cache_size)} cached"
+        # Show context window size (total input tokens for last request)
+        if self.context_window_size > 0:
+            if self.cache_size > 0:
+                display = f"{fmt(self.context_window_size)} ctx ({fmt(self.cache_size)} cached)"
+            else:
+                display = f"{fmt(self.context_window_size)} ctx"
         else:
-            display = f"{fmt(conversation)}"
+            display = "0 tokens"
 
         token_label = self.query_one("#token-counter", Label)
         token_label.update(f"[dim]{display}[/dim]")

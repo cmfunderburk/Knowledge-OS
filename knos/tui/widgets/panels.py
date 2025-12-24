@@ -185,6 +185,9 @@ class DrillListPanel(Widget):
     Displays up to 8 cards from the drill queue with their box level and
     due status. The currently selected card is highlighted; selection is
     controlled by the parent screen via update_selection().
+
+    When showing_examples=True, displays example cards with a help message
+    directing users to documentation for adding their own cards.
     """
 
     DEFAULT_CSS = """
@@ -195,11 +198,12 @@ class DrillListPanel(Widget):
     }
     """
 
-    def __init__(self, drill_queue: list, selected_idx: int = 0, id: str = None):
+    def __init__(self, drill_queue: list, selected_idx: int = 0, id: str = None, showing_examples: bool = False):
         super().__init__(id=id)
         self.drill_queue = drill_queue
         self.selected_idx = selected_idx
-    
+        self.showing_examples = showing_examples
+
     def render(self) -> RenderableType:
         if not self.drill_queue:
             content = Text("No cards due! All caught up. 🎉", style="green")
@@ -246,6 +250,8 @@ class DrillListPanel(Widget):
                 due_style = "yellow"
             elif meta["status"] == "new":
                 due_style = "dim italic"
+            elif meta["status"] == "example":
+                due_style = "magenta italic"
             else:
                 due_style = "green"
             
@@ -269,14 +275,39 @@ class DrillListPanel(Widget):
         
         # Footer hint
         table.add_row(Text(""), Text(""), Text(""), Text(""))
-        table.add_row(
-            Text(""),
-            Text("↑↓ navigate  │  Enter: drill", style="dim"),
-            Text(""),
-            Text("")
-        )
-        
-        return Panel(table, title=f"READY TO DRILL ({len(self.drill_queue)})", border_style="green")
+        if self.showing_examples:
+            table.add_row(
+                Text(""),
+                Text("↑↓ navigate  │  Enter: drill example", style="dim"),
+                Text(""),
+                Text("")
+            )
+            table.add_row(Text(""), Text(""), Text(""), Text(""))
+            table.add_row(
+                Text(""),
+                Text("Add cards to solutions/focus/", style="dim magenta"),
+                Text(""),
+                Text("")
+            )
+            table.add_row(
+                Text(""),
+                Text("See solutions/examples/README.md", style="dim magenta"),
+                Text(""),
+                Text("")
+            )
+            title = f"EXAMPLE CARDS ({len(self.drill_queue)})"
+            border_style = "magenta"
+        else:
+            table.add_row(
+                Text(""),
+                Text("↑↓ navigate  │  Enter: drill", style="dim"),
+                Text(""),
+                Text("")
+            )
+            title = f"READY TO DRILL ({len(self.drill_queue)})"
+            border_style = "green"
+
+        return Panel(table, title=title, border_style=border_style)
     
     def update_selection(self, new_idx: int):
         """Update selected index and refresh."""

@@ -28,16 +28,44 @@ Cards are Markdown files for a spaced-repetition system. The user reveals fenced
 
 ### Parsing Rules
 
-1. **Drill targets**: Any fenced code block (```python, ```text, ```lean) is drilled
+1. **Drill targets**: Any fenced code block is drilled (code blocks or slots blocks)
 2. **Non-drill blocks**: Prefix with `<!-- INFO -->` within 50 chars of the fence
 3. **Block size**: 2-15 lines ideal, 20 max. No trailing blank lines inside fence
 4. **Atomicity**: One concept per card. If tempted to write "Part 1/Part 2", make two cards
 
+### Block Types
+
+There are two types of drill blocks:
+
+**Code blocks** (`python`, `text`, `lean`) — Line-by-line recall
+- User sees nothing, reveals one line at a time
+- Requires 100% accuracy to advance
+- Best for: executable code, algorithms, formulas, short single-concept definitions
+
+**Slots blocks** (`slots`) — Prompt-answer recall
+- User sees prompts, must recall corresponding answers
+- Requires 80% accuracy to advance
+- Best for: multi-item conceptual cards (3+ related items)
+
+**Decision heuristic**: If the card has 3+ related items to recall (steps, terms, comparisons), use `slots`. For executable code or single definitions, use code blocks.
+
+### Slots Format
+
+```slots
+Prompt text :: Answer text
+Another prompt :: Another answer
+```
+
+- Each drillable line: `Prompt :: Answer`
+- Lines without `::` are headers (displayed but not drilled)
+- Empty lines organize content
+
 ### Language Tags
 
 - `python` — algorithms, data structures, code patterns
-- `text` — definitions, processes, frameworks, principles, distinctions
+- `text` — short definitions, single-concept explanations
 - `lean` — Lean 4 tactics (if applicable)
+- `slots` — multi-item conceptual recall (definitions with properties, processes with steps, distinctions)
 
 ---
 
@@ -79,7 +107,7 @@ def algorithm():
 
 ### Template: Concept
 
-**Use for:** Technical terms, abstract ideas, definitions that need precise recall.
+**Use for:** Technical terms, abstract ideas, definitions with multiple properties to recall.
 
 `````markdown
 # Concept Name
@@ -88,15 +116,18 @@ def algorithm():
 
 ## Definition
 
-```text
-[Formal or semi-formal definition]
-[2-6 lines, symbolic notation where appropriate]
+```slots
+Term :: [precise definition]
+Key property :: [important characteristic]
+Related to :: [connection to other concepts]
 ```
 
 ## Why It Matters
 
 [One sentence connecting to broader context]
 `````
+
+**Note:** For simple single-line definitions, use `text` blocks instead.
 
 ---
 
@@ -115,11 +146,10 @@ def algorithm():
 
 ## Steps
 
-```text
-1. [First step]
-2. [Second step]
-3. [Third step]
-...
+```slots
+Step 1 :: [action or description]
+Step 2 :: [action or description]
+Step 3 :: [action or description]
 ```
 
 ## Key Insight
@@ -140,11 +170,10 @@ def algorithm():
 
 ## The Distinction
 
-```text
-[Concept A]: [defining characteristic]
-[Concept B]: [defining characteristic]
-
-Key difference: [what separates them]
+```slots
+[Concept A] :: [defining characteristic]
+[Concept B] :: [defining characteristic]
+Key difference :: [what separates them]
 ```
 
 ## When It Matters
@@ -169,11 +198,10 @@ Key difference: [what separates them]
 
 ## Structure
 
-```text
-[Component 1]: [brief description]
-[Component 2]: [brief description]
-[Component 3]: [brief description]
-...
+```slots
+[Component 1] :: [brief description]
+[Component 2] :: [brief description]
+[Component 3] :: [brief description]
 ```
 
 ## Application
@@ -196,13 +224,14 @@ Key difference: [what separates them]
 
 ```text
 [The principle in memorable form]
-[Optionally: a second line elaborating]
 ```
 
 ## Rationale
 
 [2-3 sentences on why this principle holds and when it applies]
 `````
+
+**Note:** Principles are typically single statements—use `text` blocks. Use `slots` only if there are multiple related principles to compare.
 
 ---
 
