@@ -2,7 +2,7 @@
 name = "knos"
 version = "0.0.1"
 description = "Spaced-repetition drilling + LLM-powered reading companion for self-study"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.12"
 dependencies = [
     "typer>=0.9.0",
     "rich>=13.0.0",
@@ -23,15 +23,17 @@ dependencies = [
 
 [project.optional-dependencies]
 voice = [
-    # Voice input (faster-whisper) and TTS (kokoro)
+    # Voice input (faster-whisper) and TTS (kokoro, chatterbox)
     "sounddevice>=0.5.0",
     "faster-whisper>=1.0.0",
     "kokoro>=0.9.4",
-    "soundfile>=0.13.1",
+    "chatterbox-tts>=0.1.6",
+    "soundfile>=0.12.1",
     "torch>=2.1",
     "spacy-lookups-data>=1.0.5",
     "en-core-web-sm",
     "pysbd>=0.3.4",
+    "phonemizer-fork>=3.2.0",  # Required by kokoro's misaki; fork has set_data_path patch
 ]
 cuda = [
     "nvidia-nccl-cu12>=2.27.5",
@@ -45,6 +47,15 @@ include = ["knos*"]
 
 [tool.uv]
 package = true
+# Override chatterbox-tts's strict torch/torchaudio pins to allow newer versions
+override-dependencies = [
+    "torch>=2.1",
+    "torchaudio>=2.9",  # Must match torch version
+]
+
+# pkuseg (chatterbox dependency) needs numpy at build time but doesn't declare it
+[tool.uv.extra-build-dependencies]
+pkuseg = ["numpy"]
 
 [tool.uv.sources]
 en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }

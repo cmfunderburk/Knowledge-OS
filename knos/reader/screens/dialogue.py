@@ -1001,13 +1001,19 @@ class DialogueScreen(Screen):
 
     def action_back(self) -> None:
         """Go back to chapter selection."""
-        # Stop any TTS playback
+        # Stop any TTS playback and unload model to free VRAM
         if self._speaking:
             try:
                 from knos.reader.tts import stop_speaking
                 stop_speaking()
             except ImportError:
                 pass
+
+        try:
+            from knos.reader.tts import unload_backend
+            unload_backend()
+        except ImportError:
+            pass
 
         # Stop cache timer
         if self._cache_timer_interval:
