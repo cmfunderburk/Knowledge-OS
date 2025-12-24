@@ -72,7 +72,7 @@ materials:
   my-textbook:
     title: "Introduction to Subject"
     author: "Author Name"
-    source: "knos/reader/sources/my-textbook/source.pdf"
+    source: "knos/reader/books/my-textbook/source.pdf"
     structure:
       type: chapters
       chapters:
@@ -80,7 +80,7 @@ materials:
         - { num: 2, title: "Chapter Two", pages: [46, 89] }
 ```
 
-Place the PDF at `knos/reader/sources/<material-id>/source.pdf`.
+Place the PDF at `knos/reader/books/<material-id>/source.pdf`.
 
 ---
 

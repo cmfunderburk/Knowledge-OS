@@ -161,8 +161,8 @@ Run `uv run knos init` to create config files interactively, or copy `.example` 
 
 1. Create directory and place PDF:
    ```bash
-   mkdir -p knos/reader/sources/<material-id>
-   cp /path/to/book.pdf knos/reader/sources/<material-id>/source.pdf
+   mkdir -p knos/reader/books/<material-id>
+   cp /path/to/book.pdf knos/reader/books/<material-id>/source.pdf
    ```
 
 2. Open PDF and note chapter page ranges (1-indexed PDF pages, not book page numbers)
@@ -172,7 +172,7 @@ Run `uv run knos init` to create config files interactively, or copy `.example` 
    material-id:
      title: "Book Title"
      author: "Author Name"
-     source: "knos/reader/sources/material-id/source.pdf"
+     source: "knos/reader/books/material-id/source.pdf"
      structure:
        type: chapters
        chapters:
@@ -186,7 +186,7 @@ Run `uv run knos init` to create config files interactively, or copy `.example` 
 
 1. Place EPUB file:
    ```bash
-   cp /path/to/book.epub knos/reader/sources/<material-id>/source.epub
+   cp /path/to/book.epub knos/reader/books/<material-id>/source.epub
    ```
 
 2. Add entry to `config/content.yaml` (no structure needed—extracted from EPUB TOC):
@@ -194,7 +194,7 @@ Run `uv run knos init` to create config files interactively, or copy `.example` 
    material-id:
      title: "Book Title"
      author: "Author Name"
-     source: "knos/reader/sources/material-id/source.epub"
+     source: "knos/reader/books/material-id/source.epub"
    ```
 
 3. Verify: `uv run knos read list`
@@ -264,7 +264,7 @@ Or delete the entry entirely—it will be recreated on next drill.
 material-id:
   title: "string"           # Display title
   author: "string"          # Display author
-  source: "knos/reader/sources/material-id/source.pdf"  # Path relative to repo root
+  source: "knos/reader/books/material-id/source.pdf"  # Path relative to repo root
   structure:
     type: chapters
     chapters:
@@ -278,7 +278,7 @@ material-id:
 material-id:
   title: "string"
   author: "string"
-  source: "knos/reader/sources/material-id/source.epub"
+  source: "knos/reader/books/material-id/source.epub"
   # No structure block—chapters extracted from EPUB TOC automatically
 ```
 
@@ -347,6 +347,6 @@ Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and
 ## Development Notes
 
 - Engine code tracked in git: `knos/` (includes `knos/reader/classics/`, `knos/reader/articles/`)
-- User content gitignored: `solutions/`, `config/` (except `.example`), `plan/` state files, `knos/reader/sources/`
+- User content gitignored: `solutions/`, `config/` (except `.example`), `plan/` state files, `knos/reader/books/`
 - The CLI entry point is `knos/cli.py` → `knos.cli:main`
 - TUI built on Textual; CLI tools use Rich

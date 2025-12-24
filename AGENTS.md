@@ -70,7 +70,7 @@ uv run python3 -m knos.reviewer.reviewer --summary      # Mastery status
 │  reader/prompts.py  — Jinja2 prompt templates           │
 ├─────────────────────────────────────────────────────────┤
 │  reader/classics/   — Bundled classics (Project Guten.) │
-│  reader/sources/    — User-provided PDFs/EPUBs          │
+│  reader/books/    — User-provided PDFs/EPUBs          │
 │  config/content.yaml — Material definitions             │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -153,7 +153,7 @@ materials:
   my-textbook:
     title: "Introduction to X"
     author: "Author Name"
-    source: "knos/reader/sources/my-textbook/source.pdf"
+    source: "knos/reader/books/my-textbook/source.pdf"
     structure:
       type: "chapters"
       chapters:

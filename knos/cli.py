@@ -28,7 +28,7 @@ read_app = typer.Typer(
 
 Setup:
   1. Run: knos init (creates config files)
-  2. Place PDF in knos/reader/sources/<material-id>/source.pdf
+  2. Place PDF in knos/reader/books/<material-id>/source.pdf
   3. Register in config/content.yaml with chapter page ranges
   4. Run: knos read → select material → select chapter
 
@@ -40,7 +40,7 @@ Example registry entry:
     my-book:
       title: "Book Title"
       author: "Author Name"
-      source: "knos/reader/sources/my-book/source.pdf"
+      source: "knos/reader/books/my-book/source.pdf"
       structure:
         chapters:
           - { num: 1, title: "Introduction", pages: [1, 20] }

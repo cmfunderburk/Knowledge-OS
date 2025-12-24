@@ -17,7 +17,7 @@ plan/*
 PROGRESS.md
 
 # ===== Reader User Data =====
-knos/reader/sources/
+knos/reader/books/
 knos/reader/sessions/
 knos/reader/drafts/
 knos/reader/docs/

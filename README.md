@@ -34,7 +34,7 @@ The `init` command creates three config files in `config/`:
 - `reader.yaml` — LLM API key and voice/TTS settings
 - `content.yaml` — registered reading materials
 
-The example content registry includes free [OpenStax](https://openstax.org/) textbooks, bundled classics from Project Gutenberg, and foundational articles (the Transformer paper, Einstein 1905). Download a PDF, place it in `knos/reader/sources/<material-id>/source.pdf`, and start a session. The classics and articles work out of the box.
+The example content registry includes free [OpenStax](https://openstax.org/) textbooks, bundled classics from Project Gutenberg, and foundational articles (the Transformer paper, Einstein 1905). Download a PDF, place it in `knos/reader/books/<material-id>/source.pdf`, and start a session. The classics and articles work out of the box.
 
 ## The Reader
 

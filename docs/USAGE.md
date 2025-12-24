@@ -36,7 +36,7 @@ knos read            # Reading companion
 
 **Setup:**
 1. Run `knos init` to create config files
-2. Place PDF in `knos/reader/sources/<material-id>/source.pdf`
+2. Place PDF in `knos/reader/books/<material-id>/source.pdf`
 3. Register in `config/content.yaml` with chapter page ranges
 4. Run: `knos read` → select material → select chapter
 
