@@ -21,13 +21,14 @@ The dialogue is the core. Card generation is there when you identify concepts wo
 ## Quick Start
 
 ```bash
-uv sync                  # Install core dependencies
-uv sync --extra voice    # Optional: include voice input/TTS (requires PyTorch)
-uv run knos init         # Create config files (prompts for API key)
-uv run knos read         # Start the Reader
+uv sync                     # Install core dependencies
+uv sync --extra voice       # Optional: voice input + Kokoro TTS (~1GB VRAM)
+uv sync --extra chatterbox  # Optional: voice + Chatterbox TTS (~3-4GB VRAM)
+uv run knos init            # Create config files (prompts for API key)
+uv run knos read            # Start the Reader
 ```
 
-Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and Windows.
+Note: Voice features require PyTorch (Linux, macOS ARM64, Windows only).
 
 The `init` command creates three config files in `config/`:
 - `study.yaml` — study schedule and phases
@@ -90,6 +91,22 @@ The tutor doesn't lecture—it asks questions, probes your understanding, and po
 
 Press `Ctrl+G` during a session to generate drill cards from the conversation. The LLM identifies concepts worth retaining based on the dialogue—what you struggled with, what required clarification, what you explored deeply.
 
+### Voice Features
+
+With the `voice` or `chatterbox` extra installed, the Reader supports:
+
+- **Voice input** (`Ctrl+R`) — Speak instead of type using Whisper
+- **Text-to-speech** (`Ctrl+T`) — Have the tutor read responses aloud
+
+Two TTS backends are available:
+
+| Backend | Install | VRAM | Speed | Quality |
+|---------|---------|------|-------|---------|
+| **Kokoro** | `--extra voice` | ~1GB | Fast | Good |
+| **Chatterbox** | `--extra chatterbox` | ~3-4GB | Slower | Higher fidelity |
+
+Chatterbox also supports voice cloning from a WAV sample. Configure in `config/reader.yaml`.
+
 ## The Reviewer
 
 For concepts that benefit from long-term retention, Knowledge OS includes a spaced repetition system.
@@ -131,7 +148,7 @@ cp config/study.yaml.example config/study.yaml      # Study schedule (optional)
 
 | File | Purpose |
 |------|---------|
-| `config/reader.yaml` | Gemini API key, voice input, TTS settings |
+| `config/reader.yaml` | Gemini API key, voice input, TTS backend and settings |
 | `config/content.yaml` | PDF/EPUB registration with chapter page ranges |
 | `config/study.yaml` | Domain rotation, curriculum phases (optional) |
 
