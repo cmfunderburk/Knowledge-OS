@@ -1071,11 +1071,22 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+chatterbox = [
+    { name = "chatterbox-tts" },
+    { name = "en-core-web-sm" },
+    { name = "faster-whisper" },
+    { name = "kokoro" },
+    { name = "phonemizer-fork" },
+    { name = "pysbd" },
+    { name = "sounddevice" },
+    { name = "soundfile" },
+    { name = "spacy-lookups-data" },
+    { name = "torch" },
+]
 cuda = [
     { name = "nvidia-nccl-cu12" },
 ]
 voice = [
-    { name = "chatterbox-tts" },
     { name = "en-core-web-sm" },
     { name = "faster-whisper" },
     { name = "kokoro" },
@@ -1091,13 +1102,14 @@ voice = [
 requires-dist = [
     { name = "anthropic", specifier = ">=0.18.0" },
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
-    { name = "chatterbox-tts", marker = "extra == 'voice'", specifier = ">=0.1.6" },
+    { name = "chatterbox-tts", marker = "extra == 'chatterbox'", specifier = ">=0.1.6" },
     { name = "ebooklib", specifier = ">=0.20" },
     { name = "en-core-web-sm", marker = "extra == 'voice'", url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" },
     { name = "faster-whisper", marker = "extra == 'voice'", specifier = ">=1.0.0" },
     { name = "google-genai", specifier = ">=1.0.0" },
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "jinja2", specifier = ">=3.0" },
+    { name = "knos", extras = ["voice"], marker = "extra == 'chatterbox'" },
     { name = "kokoro", marker = "extra == 'voice'", specifier = ">=0.9.4" },
     { name = "lxml", specifier = ">=6.0.2" },
     { name = "numpy", specifier = ">=1.24.0" },
@@ -1115,7 +1127,7 @@ requires-dist = [
     { name = "torch", marker = "extra == 'voice'", specifier = ">=2.1" },
     { name = "typer", specifier = ">=0.9.0" },
 ]
-provides-extras = ["voice", "cuda"]
+provides-extras = ["voice", "chatterbox", "cuda"]
 
 [[package]]
 name = "kokoro"

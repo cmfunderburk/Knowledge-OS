@@ -334,13 +334,15 @@ Box intervals: 0=1hr, 1=4hr, 2=1d, 3=3d, 4=7d, 5=14d, 6=30d, 7=90d
 
 Uses `uv` for package management:
 ```bash
-uv sync              # Install core dependencies
-uv sync --extra voice  # Include voice input/TTS (requires PyTorch)
-uv run knos          # Run with dependencies
+uv sync                    # Install core dependencies
+uv sync --extra voice      # Voice input + Kokoro TTS (~1GB VRAM)
+uv sync --extra chatterbox # Voice + Chatterbox TTS (~3-4GB VRAM)
+uv run knos                # Run with dependencies
 ```
 
 Core: `textual`, `rich`, `typer`, `google-genai`, `pymupdf`, `ebooklib`
 Voice (optional): `faster-whisper`, `kokoro`, `sounddevice`, `torch`
+Chatterbox (optional): `chatterbox-tts` (turbo model requires `huggingface-cli login`)
 
 Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and Windows.
 

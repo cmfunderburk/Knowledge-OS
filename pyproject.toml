@@ -23,17 +23,22 @@ dependencies = [
 
 [project.optional-dependencies]
 voice = [
-    # Voice input (faster-whisper) and TTS (kokoro, chatterbox)
+    # Voice input (faster-whisper) and TTS (kokoro)
     "sounddevice>=0.5.0",
     "faster-whisper>=1.0.0",
     "kokoro>=0.9.4",
-    "chatterbox-tts>=0.1.6",
     "soundfile>=0.12.1",
     "torch>=2.1",
     "spacy-lookups-data>=1.0.5",
     "en-core-web-sm",
     "pysbd>=0.3.4",
     "phonemizer-fork>=3.2.0",  # Required by kokoro's misaki; fork has set_data_path patch
+]
+chatterbox = [
+    # High-quality TTS (requires voice extra, ~3-4GB VRAM)
+    # Turbo model requires: huggingface-cli login
+    "knos[voice]",
+    "chatterbox-tts>=0.1.6",
 ]
 cuda = [
     "nvidia-nccl-cu12>=2.27.5",
@@ -47,13 +52,13 @@ include = ["knos*"]
 
 [tool.uv]
 package = true
-# Override chatterbox-tts's strict torch/torchaudio pins to allow newer versions
+# Override chatterbox-tts's strict torch/torchaudio pins (only applies with chatterbox extra)
 override-dependencies = [
     "torch>=2.1",
-    "torchaudio>=2.9",  # Must match torch version
+    "torchaudio>=2.9",
 ]
 
-# pkuseg (chatterbox dependency) needs numpy at build time but doesn't declare it
+# pkuseg (chatterbox dependency) needs numpy at build time
 [tool.uv.extra-build-dependencies]
 pkuseg = ["numpy"]
 

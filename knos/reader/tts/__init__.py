@@ -1,8 +1,8 @@
 """Text-to-speech module with pluggable backends.
 
-Currently supports:
-- kokoro: Fast, lightweight local TTS (default)
-- chatterbox: High-quality zero-shot TTS from ResembleAI
+Backends:
+- kokoro: Fast, lightweight (~1GB VRAM) - uv sync --extra voice
+- chatterbox: High-quality zero-shot (~3-4GB VRAM) - uv sync --extra chatterbox
 
 Configure in config/reader.yaml:
 
@@ -11,10 +11,8 @@ Configure in config/reader.yaml:
       kokoro:
         voice: "af_heart"
       chatterbox:
-        exaggeration: 0.5
-        cfg_weight: 0.5
-
-Requires optional voice dependencies: uv sync --extra voice
+        model: "standard"  # or "turbo" (requires huggingface-cli login)
+        voice_sample: "path/to/voice.wav"  # optional voice cloning
 """
 
 from typing import Callable

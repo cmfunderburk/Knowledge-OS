@@ -39,7 +39,7 @@ def _ensure_deps():
         except ImportError:
             raise ImportError(
                 "Chatterbox TTS requires optional dependencies. "
-                "Install with: uv sync --extra voice"
+                "Install with: uv sync --extra chatterbox"
             )
 
 

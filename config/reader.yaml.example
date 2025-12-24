@@ -49,7 +49,7 @@ tts:
     voice: "af_heart"
 
   # Chatterbox: high-quality zero-shot TTS (~3-4GB VRAM)
-  # https://github.com/resemble-ai/chatterbox
+  # Requires: uv sync --extra chatterbox
   chatterbox:
     # "standard" (500M, more control) or "turbo" (350M, 2x faster)
     # Turbo requires: huggingface-cli login
