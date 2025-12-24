@@ -2,36 +2,41 @@
 name = "knos"
 version = "0.0.1"
 description = "Spaced-repetition drilling + LLM-powered reading companion for self-study"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.12"
 dependencies = [
-    "typer>=0.9.0",
-    "rich>=13.0.0",
-    "textual>=0.47.0",
-    # Reader module (Phase 1)
-    "anthropic>=0.18.0",
+    "typer>=0.15.0",
+    "rich>=13.7.0",
+    "textual>=1.0.0",
+    # Reader module
     "google-genai>=1.0.0",
-    "httpx>=0.25.0",
     "pyyaml>=6.0",
-    "jinja2>=3.0",
-    "pymupdf>=1.23.0",
+    "jinja2>=3.1.0",
+    "pymupdf>=1.24.0",
     "pymupdf4llm>=0.2.0",
-    "numpy>=1.24.0",
     "ebooklib>=0.20",
-    "beautifulsoup4>=4.14.3",
-    "lxml>=6.0.2",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
 ]
 
 [project.optional-dependencies]
 voice = [
     # Voice input (faster-whisper) and TTS (kokoro)
+    "numpy>=1.24.0",
     "sounddevice>=0.5.0",
     "faster-whisper>=1.0.0",
     "kokoro>=0.9.4",
-    "soundfile>=0.13.1",
+    "soundfile>=0.12.1",
     "torch>=2.1",
     "spacy-lookups-data>=1.0.5",
     "en-core-web-sm",
     "pysbd>=0.3.4",
+    "phonemizer-fork>=3.2.0",  # Required by kokoro's misaki; fork has set_data_path patch
+]
+chatterbox = [
+    # High-quality TTS (requires voice extra, ~3-4GB VRAM)
+    # Turbo model requires: huggingface-cli login
+    "knos[voice]",
+    "chatterbox-tts>=0.1.6",
 ]
 cuda = [
     "nvidia-nccl-cu12>=2.27.5",
@@ -45,6 +50,15 @@ include = ["knos*"]
 
 [tool.uv]
 package = true
+# Override chatterbox-tts's strict torch/torchaudio pins (only applies with chatterbox extra)
+override-dependencies = [
+    "torch>=2.1",
+    "torchaudio>=2.9",
+]
+
+# pkuseg (chatterbox dependency) needs numpy at build time
+[tool.uv.extra-build-dependencies]
+pkuseg = ["numpy"]
 
 [tool.uv.sources]
 en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }

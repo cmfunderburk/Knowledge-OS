@@ -153,6 +153,7 @@ class DialogueScreen(Screen):
         self.cache_size = 0  # Size of cached content (constant per session)
         self.using_cache = False
         self._system_prompt: str | None = None  # For non-cached article mode
+        self._setup_error: str | None = None  # Error message from setup failure
 
         # Voice input state
         self._recording = False
@@ -292,6 +293,7 @@ class DialogueScreen(Screen):
                 _setup_article_fallback()
                 return True
             self.using_cache = False
+            self._setup_error = str(e)
             return False
 
     def _inject_mode_context(self, messages: list[dict]) -> list[dict]:
@@ -384,12 +386,17 @@ class DialogueScreen(Screen):
             return
 
         # Create context cache (blocking operation - runs in thread pool)
-        chat_log.write("[dim]Preparing session...[/dim]")
-
         cache_success = await asyncio.to_thread(self._create_cache)
 
         if not cache_success:
-            chat_log.write("[red]Session setup failed. Cannot proceed.[/red]")
+            if self._setup_error and "API key" in self._setup_error:
+                chat_log.write("[red]API key invalid or expired.[/red]")
+                chat_log.write("[dim]Update key in config/reader.yaml or set GOOGLE_API_KEY env var.[/dim]")
+                chat_log.write("[dim]Run 'knos read test' to verify configuration.[/dim]")
+            elif self._setup_error:
+                chat_log.write(f"[red]Session setup failed: {self._setup_error}[/red]")
+            else:
+                chat_log.write("[red]Session setup failed. Cannot proceed.[/red]")
             return
 
         # Start cache expiration timer (only if using actual cache, not system prompt fallback)
@@ -994,13 +1001,19 @@ class DialogueScreen(Screen):
 
     def action_back(self) -> None:
         """Go back to chapter selection."""
-        # Stop any TTS playback
+        # Stop any TTS playback and unload model to free VRAM
         if self._speaking:
             try:
                 from knos.reader.tts import stop_speaking
                 stop_speaking()
             except ImportError:
                 pass
+
+        try:
+            from knos.reader.tts import unload_backend
+            unload_backend()
+        except ImportError:
+            pass
 
         # Stop cache timer
         if self._cache_timer_interval:

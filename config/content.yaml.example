@@ -10,7 +10,7 @@ materials:
   psychology-2e:
     title: "Psychology 2e"
     author: "OpenStax"
-    source: "knos/reader/sources/psychology-2e/source.pdf"
+    source: "knos/reader/books/psychology-2e/source.pdf"
     structure:
       type: "chapters"
       chapters:
@@ -36,7 +36,7 @@ materials:
   economics-3e:
     title: "Principles of Economics 3e"
     author: "OpenStax"
-    source: "knos/reader/sources/economics-3e/source.pdf"
+    source: "knos/reader/books/economics-3e/source.pdf"
     structure:
       type: "chapters"
       chapters:
@@ -78,7 +78,7 @@ materials:
 
 # === Articles ===
 # Articles are single-unit content (no chapters). Use type: article.
-# Bundled articles go in knos/reader/articles/, user articles in knos/reader/sources/.
+# Bundled articles go in knos/reader/articles/, user articles in knos/reader/books/.
 
   # Attention Is All You Need (Transformer paper)
   # https://arxiv.org/abs/1706.03762
@@ -130,16 +130,16 @@ materials:
 # To add your own materials:
 #
 # For PDFs (books with chapters):
-# 1. Place PDF at knos/reader/sources/<material-id>/source.pdf
+# 1. Place PDF at knos/reader/books/<material-id>/source.pdf
 # 2. Add entry with chapter page ranges (1-indexed PDF pages)
 # 3. Verify with: uv run knos read list
 #
 # For EPUBs:
-# 1. Place EPUB at knos/reader/sources/<material-id>/source.epub
+# 1. Place EPUB at knos/reader/books/<material-id>/source.epub
 # 2. Add entry with title/author only (structure extracted automatically)
 # 3. Verify with: uv run knos read list
 #
 # For Articles (PDFs without chapters):
-# 1. Place PDF at knos/reader/articles/<name>.pdf (bundled) or knos/reader/sources/<name>.pdf
+# 1. Place PDF at knos/reader/articles/<name>.pdf (bundled) or knos/reader/books/<name>.pdf
 # 2. Add entry with structure.type: article
 # 3. Verify with: uv run knos read list

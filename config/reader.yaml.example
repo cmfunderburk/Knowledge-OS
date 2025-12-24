@@ -33,14 +33,33 @@ session:
 # Set enabled: false on machines without GPU (CPU TTS may stutter)
 tts:
   enabled: true
-  # Kokoro voices: af_heart (default), af_bella, am_michael, bf_emma, etc.
-  # Full list: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
-  voice: "af_heart"
-  # Speed multiplier: 0.5 = half speed, 1.0 = normal, 1.5 = 50% faster, 2.0 = double
+  # Backend: "kokoro" (fast, ~1GB VRAM) or "chatterbox" (high quality, ~3-4GB VRAM)
+  backend: "kokoro"
+  # Speed multiplier (kokoro only): 0.5 = half, 1.0 = normal, 1.5 = 50% faster
   speed: 1.0
-  # Chunking settings for longer text (improves prosody quality)
-  # Short text (<short_text_threshold chars) uses simple pass-through
-  # Longer text is split into sentence chunks for better quality
-  short_text_threshold: 200  # chars; below this, skip chunking
-  target_chunk_size: 350     # chars; target size for sentence grouping
-  max_chunk_size: 500        # chars; hard limit before forcing chunk break
+  # Chunking settings (chars) - smaller chunks = better prosody, more pauses
+  short_text_threshold: 200
+  target_chunk_size: 350
+  max_chunk_size: 500
+
+  # Kokoro: fast, lightweight (~1GB VRAM)
+  # Voices: af_heart, af_bella, am_michael, bf_emma, etc.
+  # Full list: https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
+  kokoro:
+    voice: "af_heart"
+
+  # Chatterbox: high-quality zero-shot TTS (~3-4GB VRAM)
+  # Requires: uv sync --extra chatterbox
+  chatterbox:
+    # "standard" (500M, more control) or "turbo" (350M, 2x faster)
+    # Turbo requires: huggingface-cli login
+    model: "standard"
+    # Voice cloning: path to WAV file (10+ seconds recommended)
+    # voice_sample: "config/voices/my-voice.wav"
+    # Standard model only (ignored by turbo):
+    exaggeration: 0.3  # 0.0-1.0, higher = more dramatic
+    cfg_weight: 0.5    # 0.0-1.0, lower = smoother pacing
+    # Both models:
+    temperature: 0.8   # 0.0-1.0, lower = more consistent
+    # Device: "cuda", "cpu", or omit for auto-detect
+    # device: "cuda"
