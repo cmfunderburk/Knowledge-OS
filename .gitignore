@@ -6,7 +6,7 @@ solutions/*
 !solutions/examples/
 Textbooks/
 extra/
-docs/knowledge-os-manifesto.md
+docs/prompts.md
 
 # ===== Config directory (user config, keep examples) =====
 config/*
@@ -20,7 +20,6 @@ PROGRESS.md
 knos/reader/books/
 knos/reader/sessions/
 knos/reader/drafts/
-knos/reader/docs/
 
 # Bundled content directories (ignore all, then allowlist specific files)
 knos/reader/classics/*

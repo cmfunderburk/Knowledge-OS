@@ -14,11 +14,9 @@ knos read            # Reading companion
 
 | Resource | Purpose |
 |----------|---------|
-| **[plan/syllabus.md](../plan/syllabus.md)** | **Content**: Master study plan |
-| **[docs/manual/workflow.md](manual/workflow.md)** | **Process**: Reading prompts & Study workflow |
-| **[docs/specs/roadmap.md](specs/roadmap.md)** | **Future**: Enhancement plans |
-| **[AGENTS.md](../AGENTS.md)** | **AI**: Context for coding assistants |
+| **[PEDAGOGY.md](PEDAGOGY.md)** | **Design**: Pedagogical principles for LLM tutoring |
 | **[knos/reader/OVERVIEW.md](../knos/reader/OVERVIEW.md)** | **Reader**: Seminar-style LLM dialogue companion |
+| **[CLAUDE.md](../CLAUDE.md)** | **Development**: Architecture and coding guidance |
 
 ## Commands Reference
 
@@ -54,11 +52,9 @@ Registration can be done manually or with AI tools (e.g. Claude Code to extract 
 ### Reviewer CLI (Direct)
 
 ```bash
-uv run python3 -m reviewer.reviewer              # Interactive select
-uv run python3 -m reviewer.reviewer --focus      # All cards, random order
-uv run python3 -m reviewer.reviewer --summary    # Mastery status
-uv run python3 -m reviewer.reviewer --due        # Show due cards
-uv run python3 -m reviewer.reviewer --drill-due  # Drill due only
+uv run python3 -m knos.reviewer.reviewer --summary    # Mastery status
+uv run python3 -m knos.reviewer.reviewer --due        # Show due cards
+uv run python3 -m knos.reviewer.reviewer --due-json   # Due cards as JSON
 ```
 
 ## Creating Solutions (Cheat Sheet)

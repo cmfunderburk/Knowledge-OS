@@ -30,6 +30,10 @@ uv run knos read            # Start the Reader
 
 Note: Voice features require PyTorch (Linux, macOS ARM64, Windows only).
 
+**Further reading:**
+- [docs/PEDAGOGY.md](docs/PEDAGOGY.md) — The learning science and prompt design principles behind the Reader
+- [docs/USAGE.md](docs/USAGE.md) — Command reference and quick usage guide
+
 The `init` command creates three config files in `config/`:
 - `study.yaml` — study schedule and phases
 - `reader.yaml` — LLM API key and voice/TTS settings
@@ -88,6 +92,8 @@ The tutor doesn't lecture—it asks questions, probes your understanding, and po
 | **Challenge** | Devil's advocate, stress-tests your claims |
 | **Teach** | You explain to a "confused student" |
 | **Quiz** | Rapid-fire recall check |
+| **Technical** | Step-by-step guidance through formulas and procedures |
+| **Review** | Cross-chapter synthesis (via Study Tools menu) |
 
 Press `Ctrl+G` during a session to generate drill cards from the conversation. The LLM identifies concepts worth retaining based on the dialogue—what you struggled with, what required clarification, what you explored deeply.
 
@@ -158,10 +164,10 @@ Create markdown files in `solutions/focus/`. Every fenced code block becomes a d
 
 ## Documentation
 
-- [knos/reader/OVERVIEW.md](knos/reader/OVERVIEW.md) — Reader module design and pedagogy
-- [docs/USAGE.md](docs/USAGE.md) — Command reference
-- [solutions/examples/README.md](solutions/examples/README.md) — Card format guide
-- [AGENTS.md](AGENTS.md) — Technical documentation for AI assistants
+- [docs/PEDAGOGY.md](docs/PEDAGOGY.md) — Learning science principles and LLM tutoring design
+- [docs/USAGE.md](docs/USAGE.md) — Command reference and quick guide
+- [knos/reader/OVERVIEW.md](knos/reader/OVERVIEW.md) — Reader module overview
+- [solutions/examples/README.md](solutions/examples/README.md) — Drill card format guide
 
 ## License
 
