@@ -1,0 +1,131 @@
+# Content Registry — External Materials
+#
+# Examples of materials requiring external download.
+# Copy entries to your content.yaml after downloading the source files.
+#
+# For bundled materials that work immediately, see content.yaml.example
+
+materials:
+  # ==========================================================================
+  # EPUB BOOKS (Easiest — No Chapter Definitions Needed)
+  # ==========================================================================
+  #
+  # EPUBs extract chapter structure automatically from the table of contents.
+  # Just place the file and add a 3-line entry.
+  #
+  # Example:
+  #   1. Download EPUB from Project Gutenberg, Internet Archive, etc.
+  #   2. mkdir -p knos/reader/books/my-book
+  #   3. cp ~/Downloads/book.epub knos/reader/books/my-book/source.epub
+  #   4. Add entry below
+  #   5. Verify: uv run knos read list
+
+  # my-epub-book:
+  #   title: "Book Title"
+  #   author: "Author Name"
+  #   source: "knos/reader/books/my-epub-book/source.epub"
+
+  # ==========================================================================
+  # PDF TEXTBOOKS (Require Chapter Page Ranges)
+  # ==========================================================================
+  #
+  # PDFs require manual chapter definitions with page ranges.
+  # Page numbers are 1-indexed PDF pages (as shown in your viewer), not
+  # printed book page numbers.
+  #
+  # To find page ranges:
+  #   1. Open PDF in any viewer
+  #   2. Navigate to each chapter start using the TOC or bookmarks
+  #   3. Note the PDF page number (usually shown at bottom of viewer)
+  #   4. Chapter end = next chapter start - 1
+
+  # OpenStax Psychology 2e (CC BY 4.0)
+  # Download: https://openstax.org/details/books/psychology-2e
+  # Click "Download a PDF" and save to knos/reader/books/psychology-2e/source.pdf
+  psychology-2e:
+    title: "Psychology 2e"
+    author: "OpenStax"
+    source: "knos/reader/books/psychology-2e/source.pdf"
+    structure:
+      type: chapters
+      chapters:
+        - { num: 1, title: "Introduction to Psychology", pages: [19, 46] }
+        - { num: 2, title: "Psychological Research", pages: [47, 82] }
+        - { num: 3, title: "Biopsychology", pages: [83, 122] }
+        - { num: 4, title: "States of Consciousness", pages: [123, 160] }
+        - { num: 5, title: "Sensation and Perception", pages: [161, 206] }
+        - { num: 6, title: "Learning", pages: [207, 244] }
+        - { num: 7, title: "Thinking and Intelligence", pages: [245, 290] }
+        - { num: 8, title: "Memory", pages: [291, 326] }
+        - { num: 9, title: "Lifespan Development", pages: [327, 380] }
+        - { num: 10, title: "Motivation and Emotion", pages: [381, 414] }
+        - { num: 11, title: "Personality", pages: [415, 454] }
+        - { num: 12, title: "Social Psychology", pages: [455, 498] }
+        - { num: 13, title: "Industrial-Organizational Psychology", pages: [499, 530] }
+        - { num: 14, title: "Stress, Lifestyle, and Health", pages: [531, 566] }
+        - { num: 15, title: "Psychological Disorders", pages: [567, 624] }
+        - { num: 16, title: "Therapy and Treatment", pages: [625, 664] }
+
+  # OpenStax Principles of Economics 3e (CC BY 4.0)
+  # Download: https://openstax.org/details/books/principles-economics-3e
+  # Click "Download a PDF" and save to knos/reader/books/economics-3e/source.pdf
+  economics-3e:
+    title: "Principles of Economics 3e"
+    author: "OpenStax"
+    source: "knos/reader/books/economics-3e/source.pdf"
+    structure:
+      type: chapters
+      chapters:
+        - { num: 1, title: "Welcome to Economics!", pages: [25, 42] }
+        - { num: 2, title: "Choice in a World of Scarcity", pages: [43, 68] }
+        - { num: 3, title: "Demand and Supply", pages: [69, 104] }
+        - { num: 4, title: "Labor and Financial Markets", pages: [105, 132] }
+        - { num: 5, title: "Elasticity", pages: [133, 158] }
+        - { num: 6, title: "Consumer Choices", pages: [159, 182] }
+        - { num: 7, title: "Production, Costs, and Industry Structure", pages: [183, 216] }
+        - { num: 8, title: "Perfect Competition", pages: [217, 244] }
+        - { num: 9, title: "Monopoly", pages: [245, 274] }
+        - { num: 10, title: "Monopolistic Competition and Oligopoly", pages: [275, 300] }
+
+  # ==========================================================================
+  # ARTICLES (Single-Unit PDFs)
+  # ==========================================================================
+  #
+  # For papers, essays, or other single-unit content.
+  # Use type: article to skip chapter selection.
+
+  # my-paper:
+  #   title: "Paper Title"
+  #   author: "Author et al."
+  #   source: "knos/reader/articles/my-paper.pdf"
+  #   structure:
+  #     type: article
+
+# =============================================================================
+# STEP-BY-STEP GUIDES
+# =============================================================================
+#
+# ADDING AN EPUB:
+#   1. mkdir -p knos/reader/books/<id>
+#   2. cp /path/to/book.epub knos/reader/books/<id>/source.epub
+#   3. Add entry to config/content.yaml:
+#        <id>:
+#          title: "Title"
+#          author: "Author"
+#          source: "knos/reader/books/<id>/source.epub"
+#   4. Verify: uv run knos read list
+#
+# ADDING A PDF WITH CHAPTERS:
+#   1. mkdir -p knos/reader/books/<id>
+#   2. cp /path/to/book.pdf knos/reader/books/<id>/source.pdf
+#   3. Open PDF, find each chapter's start page (1-indexed PDF page)
+#   4. Add entry to config/content.yaml with chapter list (see examples above)
+#   5. Verify: uv run knos read list
+#
+#   Tip: PDF viewers typically show page numbers at the bottom. Use those,
+#   not the printed page numbers in the book content.
+#
+# ADDING AN ARTICLE:
+#   1. cp /path/to/paper.pdf knos/reader/articles/<name>.pdf
+#   2. Add entry to config/content.yaml with structure.type: article
+#   3. Verify: uv run knos read list

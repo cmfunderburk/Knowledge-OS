@@ -92,4 +92,4 @@ def get_mode_instruction(mode: str) -> str:
 
 
 # Available dialogue modes
-MODES = ["socratic", "clarify", "challenge", "teach", "quiz", "technical"]
+MODES = ["socratic", "clarify", "challenge", "teach", "quiz", "technical", "review"]

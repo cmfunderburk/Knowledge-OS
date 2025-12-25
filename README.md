@@ -6,7 +6,7 @@ A study system built on dialogue.
 
 At [St. John's College](https://www.sjc.edu/), students spend four years reading primary sources—Homer to Einstein—not through lectures, but through seminar discussion. Understanding emerges through articulation: defending interpretations, responding to challenges, returning to the text when claims don't hold up.
 
-Knowledge OS attempts to emulate this approach in the context of self-study. The Reader module pairs you with an LLM tutor who engages with the same material you're reading. It asks questions rather than lectures. It treats the text as the authority. When you claim to understand something, it probes.
+Knowledge OS brings this approach to self-study. The Reader module pairs you with an LLM tutor who engages with the same material you're reading. It asks questions rather than lectures. It treats the text as the authority. When you claim to understand something, it probes.
 
 ## The Loop
 
@@ -21,147 +21,68 @@ The dialogue is the core. Card generation is there when you identify concepts wo
 ## Quick Start
 
 ```bash
-uv sync                     # Install core dependencies
-uv sync --extra voice       # Optional: voice input + Kokoro TTS (~1GB VRAM)
-uv sync --extra chatterbox  # Optional: voice + Chatterbox TTS (~3-4GB VRAM)
-uv run knos init            # Create config files (prompts for API key)
+uv sync                     # Install dependencies
+uv sync --extra voice       # Optionally install Kokoro TTS + Voice Input
+uv run knos init            # Create config (prompts for API key)
 uv run knos read            # Start the Reader
 ```
 
-Note: Voice features require PyTorch (Linux, macOS ARM64, Windows only).
-
-The `init` command creates three config files in `config/`:
-- `study.yaml` — study schedule and phases
-- `reader.yaml` — LLM API key and voice/TTS settings
-- `content.yaml` — registered reading materials
-
-The example content registry includes free [OpenStax](https://openstax.org/) textbooks, bundled classics from Project Gutenberg, and foundational articles (the Transformer paper, Einstein 1905). Download a PDF, place it in `knos/reader/books/<material-id>/source.pdf`, and start a session. The classics and articles work out of the box.
+Three classics and five foundational articles work immediately. See [Getting Started](docs/GETTING_STARTED.md) for prerequisites, adding your own content, and the full workflow.
 
 ## The Reader
 
-A dialogue interface for working through texts with an LLM tutor—textbooks, philosophy, literature.
+A dialogue interface for working through texts with an LLM tutor.
 
-Three classics from Project Gutenberg are bundled and work out of the box:
+| Mode | Behavior |
+|------|----------|
+| **Socratic** | Probing questions, rarely gives answers (default) |
+| **Clarify** | Direct explanations when stuck |
+| **Challenge** | Devil's advocate, stress-tests claims |
+| **Teach** | You explain to a "confused student" |
+| **Quiz** | Rapid-fire recall check |
+| **Technical** | Step-by-step guidance for formulas and procedures |
 
-- **Nicomachean Ethics** — Aristotle (F.H. Peters translation)
-- **Don Quixote** — Cervantes (John Ormsby translation)
-- **The Brothers Karamazov** — Dostoevsky (Constance Garnett translation)
-
-Five foundational articles are also bundled:
-
-- **Attention Is All You Need** — Vaswani et al. (the Transformer paper)
-- **On a Heuristic Point of View Concerning the Production and Transformation of Light** — Einstein (1905 photoelectric effect paper)
-- **Experiments on Plant Hybridization** — Mendel (1866, the foundation of genetics)
-- **What is an Emotion?** — William James (1884, the James-Lange theory)
-- **Some Remarks on Logical Form** — Wittgenstein (1929, his only academic paper)
-
-The bundled articles are included in `config/content.yaml` after running `knos init`. Articles skip chapter selection and open directly into dialogue.
+Press `Ctrl+G` during a session to generate drill cards from the conversation.
 
 <details>
-<summary><strong>Example: Discussing Aristotle's Nicomachean Ethics</strong></summary>
+<summary><strong>Demo: Discussing Aristotle's Nicomachean Ethics</strong></summary>
 
 <video src="https://github.com/user-attachments/assets/af95aa25-b736-4930-b359-58511d21f574" controls width="600"></video>
-
 
 </details>
 
 <details>
-<summary><strong>Example: Opening question for Don Quixote</strong></summary>
+<summary><strong>Demo: Opening question for Don Quixote</strong></summary>
 
 <video src="https://github.com/user-attachments/assets/e16ac913-b0a3-41b5-85b4-beb6520e5c4e" controls width="600"></video>
 
 </details>
 
 <details>
-<summary><strong>Example: Discussing Einstein's Photoelectric Effect paper</strong></summary>
+<summary><strong>Demo: Discussing Einstein's Photoelectric Effect paper</strong></summary>
 
 <video src="https://github.com/user-attachments/assets/1bb29977-dcf3-4375-a962-3f9cc40df5d1" controls width="600"></video>
 
 </details>
 
-The tutor doesn't lecture—it asks questions, probes your understanding, and points you back to the text. When you begin a new chapter, it opens with a genuine question about the reading. Dialogue modes include:
-
-| Mode | Behavior |
-|------|----------|
-| **Socratic** | Probing questions, rarely gives answers (default) |
-| **Clarify** | Direct explanations when you're genuinely stuck |
-| **Challenge** | Devil's advocate, stress-tests your claims |
-| **Teach** | You explain to a "confused student" |
-| **Quiz** | Rapid-fire recall check |
-
-Press `Ctrl+G` during a session to generate drill cards from the conversation. The LLM identifies concepts worth retaining based on the dialogue—what you struggled with, what required clarification, what you explored deeply.
-
-### Voice Features
-
-With the `voice` or `chatterbox` extra installed, the Reader supports:
-
-- **Voice input** (`Ctrl+R`) — Speak instead of type using Whisper
-- **Text-to-speech** (`Ctrl+T`) — Have the tutor read responses aloud
-
-Two TTS backends are available:
-
-| Backend | Install | VRAM | Speed | Quality |
-|---------|---------|------|-------|---------|
-| **Kokoro** | `--extra voice` | ~1GB | Fast | Good |
-| **Chatterbox** | `--extra chatterbox` | ~3-4GB | Slower | Higher fidelity |
-
-Chatterbox also supports voice cloning from a WAV sample. Configure in `config/reader.yaml`.
-
 ## The Reviewer
 
-For concepts that benefit from long-term retention, Knowledge OS includes a spaced repetition system.
-
-Cards are markdown files containing fenced code blocks. During drill, content is revealed line-by-line—you reconstruct it, then self-assess. The system uses Leitner-box scheduling: 100% accuracy advances the card; any mistake resets it. This enforces mastery at the edge of recall.
+For concepts that benefit from long-term retention, Knowledge OS includes a spaced repetition system. Cards are markdown files revealed line-by-line during drill. The Leitner-box scheduler enforces mastery at the edge of recall.
 
 ```bash
 uv run knos drill    # Drill due cards
-uv run knos          # TUI dashboard (shows what's due)
+uv run knos          # TUI dashboard
 ```
-
-Cards generated from Reader sessions go to `knos/reader/drafts/` for review before entering the drill system.
-
-## CLI Reference
-
-```
-knos              TUI dashboard (default)
-knos init         Initialize config files
-knos read         Reader TUI
-knos drill        Drill TUI
-knos today        Today's study plan (CLI)
-knos progress     Generate PROGRESS.md
-
-knos read list              List registered materials
-knos read clear <id> [ch]   Clear session data
-knos read export <id> [ch]  Export session to markdown (-o file.md)
-knos read test              Test LLM configuration
-```
-
-## Configuration
-
-Run `uv run knos init` to create config files interactively, or copy the `.example` files manually:
-
-```bash
-cp config/reader.yaml.example config/reader.yaml    # LLM API key, voice/TTS
-cp config/content.yaml.example config/content.yaml  # Reading materials
-cp config/study.yaml.example config/study.yaml      # Study schedule (optional)
-```
-
-| File | Purpose |
-|------|---------|
-| `config/reader.yaml` | Gemini API key, voice input, TTS backend and settings |
-| `config/content.yaml` | PDF/EPUB registration with chapter page ranges |
-| `config/study.yaml` | Domain rotation, curriculum phases (optional) |
-
-### Drill Cards
-
-Create markdown files in `solutions/focus/`. Every fenced code block becomes a drill target. See [solutions/examples/](solutions/examples/) for the card format.
 
 ## Documentation
 
-- [knos/reader/OVERVIEW.md](knos/reader/OVERVIEW.md) — Reader module design and pedagogy
-- [docs/USAGE.md](docs/USAGE.md) — Command reference
-- [solutions/examples/README.md](solutions/examples/README.md) — Card format guide
-- [AGENTS.md](AGENTS.md) — Technical documentation for AI assistants
+| Document | Purpose |
+|----------|---------|
+| [Getting Started](docs/GETTING_STARTED.md) | Prerequisites, installation, first session |
+| [Usage Guide](docs/USAGE.md) | Commands, workflows, keybindings |
+| [Pedagogy](docs/PEDAGOGY.md) | Learning science behind the Reader |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | Common issues and fixes |
+| [Card Format](solutions/examples/README.md) | Creating drill cards |
 
 ## License
 

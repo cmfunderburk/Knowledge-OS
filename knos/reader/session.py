@@ -5,6 +5,10 @@ Sessions are stored as:
   reader/sessions/<material-id>/appA.jsonl      # Append-only transcript (appendices)
   reader/sessions/<material-id>/article.jsonl   # Append-only transcript (articles)
   reader/sessions/<material-id>/ch<N>.meta.json # Session metadata
+
+Special session types:
+  reader/sessions/<material-id>/review.jsonl                   # Review session
+  reader/sessions/<material-id>/quiz_ch01_20251224T143022.jsonl # Quiz sessions (timestamped)
 """
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -54,6 +58,9 @@ class Session:
     total_input_tokens: int = 0
     total_output_tokens: int = 0
     cache_tokens: int = 0
+    # New fields for special session types
+    session_type: str = "regular"  # "regular", "review", or "quiz"
+    session_prefix: str | None = None  # For quiz sessions: "quiz_ch01_20251224T143022"
 
     def to_dict(self) -> dict:
         """Convert to JSON-serializable dict."""
@@ -69,6 +76,8 @@ class Session:
             "total_input_tokens": self.total_input_tokens,
             "total_output_tokens": self.total_output_tokens,
             "cache_tokens": self.cache_tokens,
+            "session_type": self.session_type,
+            "session_prefix": self.session_prefix,
         }
 
     @classmethod
@@ -86,6 +95,8 @@ class Session:
             total_input_tokens=data.get("total_input_tokens", 0),
             total_output_tokens=data.get("total_output_tokens", 0),
             cache_tokens=data.get("cache_tokens", 0),
+            session_type=data.get("session_type", "regular"),
+            session_prefix=data.get("session_prefix"),
         )
 
 
@@ -201,7 +212,10 @@ def append_message(
 
 
 def list_sessions(material_id: str) -> dict[ContentId, Session]:
-    """List all sessions for a material, keyed by content ID."""
+    """List all regular sessions for a material, keyed by content ID.
+
+    Excludes quiz and review sessions.
+    """
     session_dir = _get_session_dir(material_id)
     if not session_dir.exists():
         return {}
@@ -210,6 +224,11 @@ def list_sessions(material_id: str) -> dict[ContentId, Session]:
     for meta_file in session_dir.glob("*.meta.json"):
         # Extract content ID from filename (ch01.meta.json -> 1, appA.meta.json -> "A")
         stem = meta_file.stem.replace(".meta", "")
+
+        # Skip quiz and review sessions
+        if _is_quiz_prefix(stem) or stem == "review":
+            continue
+
         try:
             content_id = _prefix_to_content_id(stem)
         except ValueError:
@@ -220,3 +239,281 @@ def list_sessions(material_id: str) -> dict[ContentId, Session]:
             sessions[content_id] = session
 
     return sessions
+
+
+# =============================================================================
+# Quiz Session Support
+# =============================================================================
+
+def _is_quiz_prefix(prefix: str) -> bool:
+    """Check if prefix is a quiz session (quiz_ch01_timestamp)."""
+    return prefix.startswith("quiz_")
+
+
+def _parse_quiz_prefix(prefix: str) -> tuple[str, str]:
+    """Parse quiz prefix into (content_prefix, timestamp).
+
+    Example: "quiz_ch01_20251224T143022" -> ("ch01", "20251224T143022")
+    """
+    if not _is_quiz_prefix(prefix):
+        raise ValueError(f"Not a quiz prefix: {prefix}")
+
+    # Remove "quiz_" prefix
+    rest = prefix[5:]
+
+    # Find the timestamp (after last underscore that precedes digits)
+    # Format: ch01_20251224T143022 or appA_20251224T143022 or article_20251224T143022
+    parts = rest.rsplit("_", 1)
+    if len(parts) != 2:
+        raise ValueError(f"Invalid quiz prefix format: {prefix}")
+
+    content_prefix, timestamp = parts
+    return content_prefix, timestamp
+
+
+def _get_transcript_path_by_prefix(material_id: str, prefix: str) -> Path:
+    """Get transcript path using explicit prefix (for quiz sessions)."""
+    return _get_session_dir(material_id) / f"{prefix}.jsonl"
+
+
+def _get_meta_path_by_prefix(material_id: str, prefix: str) -> Path:
+    """Get metadata path using explicit prefix (for quiz sessions)."""
+    return _get_session_dir(material_id) / f"{prefix}.meta.json"
+
+
+def load_session_by_prefix(material_id: str, prefix: str) -> Session | None:
+    """Load session metadata by prefix, or None if no session exists."""
+    meta_path = _get_meta_path_by_prefix(material_id, prefix)
+    if not meta_path.exists():
+        return None
+
+    with open(meta_path) as f:
+        data = json.load(f)
+    return Session.from_dict(data)
+
+
+def save_metadata_by_prefix(session: Session, prefix: str) -> None:
+    """Save session metadata to JSON file using explicit prefix."""
+    meta_path = _get_meta_path_by_prefix(session.material_id, prefix)
+    meta_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(meta_path, "w") as f:
+        json.dump(session.to_dict(), f, indent=2)
+
+
+def append_message_by_prefix(
+    material_id: str,
+    prefix: str,
+    role: str,
+    content: str,
+    mode: str,
+    tokens: dict | None = None,
+) -> None:
+    """Append a message to the transcript using explicit prefix (for quiz sessions)."""
+    transcript_path = _get_transcript_path_by_prefix(material_id, prefix)
+    transcript_path.parent.mkdir(parents=True, exist_ok=True)
+
+    message = {
+        "role": role,
+        "content": content,
+        "mode": mode,
+        "timestamp": datetime.now().isoformat(),
+    }
+    if tokens:
+        message["tokens"] = tokens
+
+    with open(transcript_path, "a") as f:
+        f.write(json.dumps(message) + "\n")
+
+
+def create_quiz_session(
+    material_id: str,
+    content_id: ContentId,
+    chapter_title: str,
+) -> tuple[Session, str]:
+    """Create a new quiz session with unique timestamped ID.
+
+    Quiz sessions are always new (never resumed).
+
+    Returns:
+        (session, session_prefix) - e.g., ("quiz_ch01_20251224T143022")
+    """
+    content_prefix = _content_id_to_prefix(content_id)
+    timestamp = datetime.now().strftime("%Y%m%dT%H%M%S")
+    session_prefix = f"quiz_{content_prefix}_{timestamp}"
+
+    now = datetime.now()
+    session = Session(
+        material_id=material_id,
+        chapter_num=content_id,
+        chapter_title=chapter_title,
+        started=now,
+        last_updated=now,
+        session_type="quiz",
+        session_prefix=session_prefix,
+    )
+
+    # Ensure directory exists
+    session_dir = _get_session_dir(material_id)
+    session_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write initial metadata
+    save_metadata_by_prefix(session, session_prefix)
+
+    return session, session_prefix
+
+
+def list_quiz_sessions(material_id: str) -> dict[str, list[Session]]:
+    """List all quiz sessions grouped by content prefix.
+
+    Returns:
+        {"ch01": [Session, ...], "ch02": [...], "appA": [...]}
+        Sessions within each group are sorted by date (newest first).
+    """
+    session_dir = _get_session_dir(material_id)
+    if not session_dir.exists():
+        return {}
+
+    quiz_sessions: dict[str, list[Session]] = {}
+
+    for meta_file in session_dir.glob("quiz_*.meta.json"):
+        stem = meta_file.stem.replace(".meta", "")
+
+        try:
+            content_prefix, _ = _parse_quiz_prefix(stem)
+        except ValueError:
+            continue
+
+        session = load_session_by_prefix(material_id, stem)
+        if session:
+            if content_prefix not in quiz_sessions:
+                quiz_sessions[content_prefix] = []
+            quiz_sessions[content_prefix].append(session)
+
+    # Sort each group by date (newest first)
+    for prefix in quiz_sessions:
+        quiz_sessions[prefix].sort(key=lambda s: s.started, reverse=True)
+
+    return quiz_sessions
+
+
+def load_transcript_by_prefix(material_id: str, prefix: str) -> list[dict]:
+    """Load transcript messages from JSONL file using explicit prefix."""
+    transcript_path = _get_transcript_path_by_prefix(material_id, prefix)
+    if not transcript_path.exists():
+        return []
+
+    messages = []
+    with open(transcript_path) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                messages.append(json.loads(line))
+    return messages
+
+
+# =============================================================================
+# Review Session Support
+# =============================================================================
+
+def load_all_transcripts(material_id: str) -> str:
+    """Load all regular session transcripts for review context.
+
+    Concatenates all transcripts (excluding quiz and review sessions) into a
+    single formatted string for LLM context.
+
+    Returns:
+        Formatted string with all transcripts, organized by chapter.
+    """
+    sessions = list_sessions(material_id)
+
+    if not sessions:
+        return ""
+
+    # Sort sessions: chapters first (by number), then appendices (by letter)
+    def sort_key(item: tuple[ContentId, Session]) -> tuple[int, int | str]:
+        content_id, _ = item
+        if content_id is None:
+            return (0, 0)  # Articles first
+        elif isinstance(content_id, int):
+            return (1, content_id)  # Chapters by number
+        else:
+            return (2, content_id)  # Appendices by letter
+
+    sorted_sessions = sorted(sessions.items(), key=sort_key)
+
+    parts = []
+    for content_id, session in sorted_sessions:
+        transcript = load_transcript(material_id, content_id)
+        if not transcript:
+            continue
+
+        # Format section header
+        if content_id is None:
+            header = f"## Article: {session.chapter_title}"
+        elif isinstance(content_id, int):
+            header = f"## Chapter {content_id}: {session.chapter_title}"
+        else:
+            header = f"## Appendix {content_id}: {session.chapter_title}"
+
+        parts.append(header)
+        parts.append(f"({session.exchange_count} exchanges)")
+        parts.append("")
+
+        # Format messages (skip system-generated opening prompts)
+        for msg in transcript:
+            role = msg["role"]
+            content = msg["content"]
+
+            # Skip opening prompts
+            if role == "user" and _is_opening_prompt(content):
+                continue
+
+            if role == "user":
+                parts.append(f"**User:** {content}")
+            else:
+                parts.append(f"**Tutor:** {content}")
+            parts.append("")
+
+        parts.append("---")
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+def _is_opening_prompt(content: str) -> bool:
+    """Check if a message is a system-generated opening prompt."""
+    opening_patterns = [
+        "Hello! I'm beginning to read",
+        "I'm returning to continue our discussion",
+        "I'm returning to",
+    ]
+    return any(content.startswith(pattern) for pattern in opening_patterns)
+
+
+def create_review_session(material_id: str, material_title: str) -> Session:
+    """Create or return existing review session for a material."""
+    # Check for existing review session
+    existing = load_session_by_prefix(material_id, "review")
+    if existing:
+        return existing
+
+    now = datetime.now()
+    session = Session(
+        material_id=material_id,
+        chapter_num=None,  # Review covers all chapters
+        chapter_title=f"Review: {material_title}",
+        started=now,
+        last_updated=now,
+        session_type="review",
+        session_prefix="review",
+    )
+
+    # Ensure directory exists
+    session_dir = _get_session_dir(material_id)
+    session_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write initial metadata
+    save_metadata_by_prefix(session, "review")
+
+    return session

@@ -36,8 +36,21 @@ When you begin a new chapter, the tutor opens with a question about the reading.
 | **Teach** | You explain to a "confused student" |
 | **Quiz** | Rapid-fire recall check |
 | **Technical** | Step-by-step guidance through formulas and procedures |
+| **Review** | Cross-chapter synthesis (only available via Study Tools menu) |
 
 Switch modes with `Ctrl+M` during a session.
+
+### Study Tools
+
+The chapter selection screen includes a Study Tools section with special modes:
+
+| Tool | Access | Behavior |
+|------|--------|----------|
+| **Review All Discussions** | Appears when sessions exist | Opens dialogue with all chapter transcripts as context. Helps synthesize learning, identify gaps, and create summaries across the entire book. |
+| **Quiz Mode** | Always available | Select any chapter for rapid-fire recall testing. Each quiz is a fresh session (never resumes)—take as many quizzes as you like. |
+| **Browse Quiz History** | Appears when quizzes exist | View past quiz sessions with full transcript viewer. |
+
+**Quiz sessions** are timestamped uniquely (e.g., `quiz_ch01_20251224T143022`) so you can quiz the same chapter multiple times and compare performance across attempts.
 
 ### Card Generation
 
@@ -49,38 +62,31 @@ Cards go to `reader/drafts/` for review before entering the drill system.
 
 ## Setup
 
-Run `uv run knos init` to create config files interactively, or copy them manually.
+For complete setup instructions, see [docs/GETTING_STARTED.md](../../docs/GETTING_STARTED.md).
 
-### LLM Configuration (`config/reader.yaml`)
-
-```bash
-cp config/reader.yaml.example config/reader.yaml
-```
-
-Edit with your Gemini API key.
-
-### Registering Materials (`config/content.yaml`)
+**Quick start:**
 
 ```bash
-cp config/content.yaml.example config/content.yaml
+uv run knos init            # Create config files (prompts for API key)
+uv run knos read test       # Verify LLM configuration
+uv run knos read            # Start the Reader
 ```
 
-Add entries for your PDFs with chapter page ranges:
+Three bundled classics and five foundational articles work immediately after setup.
+
+### Adding Your Own Materials
+
+**EPUBs** are easiest—chapter structure is extracted automatically:
 
 ```yaml
 materials:
-  my-textbook:
-    title: "Introduction to Subject"
+  my-book:
+    title: "Book Title"
     author: "Author Name"
-    source: "knos/reader/books/my-textbook/source.pdf"
-    structure:
-      type: chapters
-      chapters:
-        - { num: 1, title: "Chapter One", pages: [10, 45] }
-        - { num: 2, title: "Chapter Two", pages: [46, 89] }
+    source: "knos/reader/books/my-book/source.epub"
 ```
 
-Place the PDF at `knos/reader/books/<material-id>/source.pdf`.
+**PDFs** require chapter page ranges. See [docs/USAGE.md](../../docs/USAGE.md#adding-a-pdf-with-chapters) for the full workflow.
 
 ---
 
@@ -104,9 +110,13 @@ config/
   content.yaml             # Registered materials (gitignored)
 
 knos/reader/
-  sessions/                # Dialogue transcripts (gitignored)
+  sessions/<material-id>/  # Dialogue transcripts (gitignored)
+    ch01.jsonl             #   Regular chapter sessions (append-only)
+    ch01.meta.json         #   Session metadata (exchange count, tokens, etc.)
+    review.jsonl           #   Review session for the material
+    quiz_ch01_*.jsonl      #   Quiz sessions (timestamped, never overwritten)
   drafts/                  # Generated cards awaiting review
-  prompts/                 # Dialogue mode prompts
+  prompts/                 # Dialogue mode prompts (socratic.md, quiz.md, review.md, etc.)
   classics/                # Bundled classics (Aristotle, Cervantes, Dostoevsky)
-  sources/                 # User-provided PDFs/EPUBs (gitignored)
+  books/                   # User-provided PDFs/EPUBs (gitignored)
 ```

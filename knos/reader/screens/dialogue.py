@@ -16,10 +16,16 @@ from knos.reader.prompts import build_cache_prompt, get_mode_instruction, MODES
 from knos.reader.session import (
     Session,
     create_session,
+    create_quiz_session,
+    create_review_session,
     load_session,
+    load_session_by_prefix,
     load_transcript,
+    load_transcript_by_prefix,
     save_metadata,
+    save_metadata_by_prefix,
     append_message,
+    append_message_by_prefix,
 )
 from knos.reader.config import load_config
 
@@ -31,6 +37,7 @@ MODE_COLORS = {
     "teach": "magenta",
     "quiz": "blue",
     "technical": "yellow",
+    "review": "bright_cyan",
 }
 
 # Mode descriptions for selection UI
@@ -41,6 +48,7 @@ MODE_INFO = {
     "teach": "Explain concepts to a confused student",
     "quiz": "Rapid-fire recall testing",
     "technical": "Step-by-step guidance through formulas and procedures",
+    "review": "Synthesize across all chapter discussions",
 }
 
 
@@ -129,6 +137,10 @@ class DialogueScreen(Screen):
         material_info: dict,
         chapter_num: ContentId | None,  # int for chapters, str for appendices, None for articles
         chapter_title: str,
+        # New parameters for special session types
+        mode_override: str | None = None,      # Force specific mode (e.g., "review", "quiz")
+        is_quiz_session: bool = False,         # Force fresh session with unique ID
+        context_override: str | None = None,   # Alternative context (transcripts for review)
     ) -> None:
         super().__init__()
         self.material_id = material_id
@@ -137,9 +149,15 @@ class DialogueScreen(Screen):
         self.chapter_title = chapter_title
         self.is_article = get_material_type(material_id) == "article"
 
+        # Special session type configuration
+        self.mode_override = mode_override
+        self.is_quiz_session = is_quiz_session
+        self.context_override = context_override
+        self._session_prefix: str | None = None  # For quiz/review sessions
+
         # Session state
         self.messages: list[dict] = []
-        self.mode = "socratic"
+        self.mode = mode_override if mode_override else "socratic"
         self.mode_index = 0
         self.source_format: str = "epub"  # 'pdf' or 'epub'
         self.chapter_content: str | None = None  # For EPUBs
@@ -229,7 +247,15 @@ class DialogueScreen(Screen):
     def _build_cache_prompt(self) -> str:
         """Build system prompt for cache (mode-agnostic)."""
         book_title = self.material_info.get("title", self.material_id)
-        if self.is_article:
+
+        if self.context_override:
+            # Review mode: use a different base prompt for transcripts
+            from knos.reader.prompts import render_prompt
+            return render_prompt(
+                "base_review",
+                book_title=book_title,
+            )
+        elif self.is_article:
             # For articles, use title directly (no chapter prefix)
             return build_cache_prompt(
                 book_title=book_title,
@@ -254,25 +280,38 @@ class DialogueScreen(Screen):
 
         system_prompt = self._build_cache_prompt()
 
-        # Fallback only works for text content (EPUB articles), not PDFs
-        can_fallback = self.is_article and self.chapter_content is not None
+        # Fallback only works for text content (EPUB articles or review mode), not PDFs
+        can_fallback = (self.is_article or self.context_override) and self.chapter_content is not None
 
-        def _setup_article_fallback():
-            """Set up non-cached article mode (EPUB only)."""
+        def _setup_fallback():
+            """Set up non-cached mode for text content."""
             self.using_cache = False
-            self._system_prompt = (
-                f"{system_prompt}\n\n"
-                f"<article>\n{self.chapter_content}\n</article>"
-            )
+            if self.context_override:
+                # Review mode: wrap transcripts
+                self._system_prompt = (
+                    f"{system_prompt}\n\n"
+                    f"<transcripts>\n{self.chapter_content}\n</transcripts>"
+                )
+            else:
+                # Article mode
+                self._system_prompt = (
+                    f"{system_prompt}\n\n"
+                    f"<article>\n{self.chapter_content}\n</article>"
+                )
 
         try:
             # Get configured duration (default 30 minutes)
             duration_minutes = self._session_config.get("duration_minutes", 30)
             ttl_seconds = duration_minutes * 60
 
+            # For review mode, wrap transcripts in <transcripts> tags
+            content_to_cache = self.chapter_content
+            if self.context_override and content_to_cache:
+                content_to_cache = f"<transcripts>\n{content_to_cache}\n</transcripts>"
+
             cache_name = self.provider.create_cache(
                 system_prompt=system_prompt,
-                chapter_content=self.chapter_content,
+                chapter_content=content_to_cache,
                 chapter_pdf=self.chapter_pdf,
                 ttl_seconds=ttl_seconds,
             )
@@ -282,14 +321,14 @@ class DialogueScreen(Screen):
             else:
                 # Cache not created (content too small)
                 if can_fallback:
-                    _setup_article_fallback()
+                    _setup_fallback()
                     return True
                 self.using_cache = False
                 return False
         except Exception as e:
-            # Cache creation failed - EPUB articles can still proceed without cache
+            # Cache creation failed - text content can still proceed without cache
             if can_fallback:
-                _setup_article_fallback()
+                _setup_fallback()
                 return True
             self.using_cache = False
             self._setup_error = str(e)
@@ -347,35 +386,64 @@ class DialogueScreen(Screen):
         input_widget = self.query_one("#chat-input", Input)
 
         # Load content based on material type and source format
-        self.source_format = get_source_format(self.material_id)
+        # For review mode, we use context_override (transcripts) instead of chapter content
+        if self.context_override:
+            # Review mode: transcripts provided as context
+            self.chapter_content = self.context_override
+            self.chapter_pdf = None
+            self.source_format = "epub"  # Treat transcripts as text content
+        else:
+            self.source_format = get_source_format(self.material_id)
 
-        if self.is_article:
-            # Articles: use PDF bytes for PDFs, text for EPUBs
-            if self.source_format == "pdf":
-                self.chapter_pdf = get_article_pdf(self.material_id)
+            if self.is_article:
+                # Articles: use PDF bytes for PDFs, text for EPUBs
+                if self.source_format == "pdf":
+                    self.chapter_pdf = get_article_pdf(self.material_id)
+                    self.chapter_content = None
+                else:
+                    self.chapter_content = get_article_text(self.material_id)
+                    self.chapter_pdf = None
+            elif self.source_format == "pdf":
+                self.chapter_pdf = get_chapter_pdf(self.material_id, self.chapter_num)
                 self.chapter_content = None
             else:
-                self.chapter_content = get_article_text(self.material_id)
+                self.chapter_content = load_chapter(self.material_id, self.chapter_num)
                 self.chapter_pdf = None
-        elif self.source_format == "pdf":
-            self.chapter_pdf = get_chapter_pdf(self.material_id, self.chapter_num)
-            self.chapter_content = None
-        else:
-            self.chapter_content = load_chapter(self.material_id, self.chapter_num)
-            self.chapter_pdf = None
 
-        # Load or create session (don't restore yet - we'll do that after cache is ready)
-        existing_session = load_session(self.material_id, self.chapter_num)
-        if existing_session:
-            self.session = existing_session
-            # Load messages into memory but don't display yet
-            self._load_session_messages()
-        else:
-            self.session = create_session(
+        # Handle session creation based on session type
+        existing_session = None
+
+        if self.is_quiz_session:
+            # Quiz sessions: always create fresh with unique timestamped ID
+            self.session, self._session_prefix = create_quiz_session(
                 self.material_id,
                 self.chapter_num,
                 self.chapter_title,
             )
+            # Quiz sessions never have existing messages
+            self.messages = []
+        elif self.context_override:
+            # Review mode: use review session
+            material_title = self.material_info.get("title", self.material_id)
+            self.session = create_review_session(self.material_id, material_title)
+            self._session_prefix = "review"
+            # Load existing review session messages if any
+            existing_session = self.session
+            if self.session.exchange_count > 0:
+                self._load_session_messages()
+        else:
+            # Regular session: load or create
+            existing_session = load_session(self.material_id, self.chapter_num)
+            if existing_session:
+                self.session = existing_session
+                # Load messages into memory but don't display yet
+                self._load_session_messages()
+            else:
+                self.session = create_session(
+                    self.material_id,
+                    self.chapter_num,
+                    self.chapter_title,
+                )
 
         # Initialize LLM provider
         try:
@@ -498,12 +566,10 @@ class DialogueScreen(Screen):
             self.messages.append({"role": "user", "content": opening_prompt})
             self.messages.append({"role": "assistant", "content": chat_response.text})
 
-            append_message(
-                self.material_id, self.chapter_num,
+            self._append_message(
                 role="user", content=opening_prompt, mode=self.mode,
             )
-            append_message(
-                self.material_id, self.chapter_num,
+            self._append_message(
                 role="assistant", content=chat_response.text, mode=self.mode,
                 tokens={
                     "input": chat_response.input_tokens,
@@ -524,7 +590,7 @@ class DialogueScreen(Screen):
                 if chat_response.cached_tokens > 0:
                     self.session.cache_tokens = chat_response.cached_tokens
                 self.session.last_updated = datetime.now()
-                save_metadata(self.session)
+                self._save_session_metadata()
 
             # Update token display (context window = total input for this request)
             self.context_window_size = chat_response.input_tokens
@@ -549,7 +615,11 @@ class DialogueScreen(Screen):
 
     def _load_session_messages(self) -> None:
         """Load session transcript into memory (without displaying)."""
-        transcript = load_transcript(self.material_id, self.chapter_num)
+        # Use prefix-based loading for quiz/review sessions
+        if self._session_prefix:
+            transcript = load_transcript_by_prefix(self.material_id, self._session_prefix)
+        else:
+            transcript = load_transcript(self.material_id, self.chapter_num)
 
         for msg in transcript:
             role = msg["role"]
@@ -560,6 +630,43 @@ class DialogueScreen(Screen):
         # (context_window_size will be set on next API call)
         if self.session:
             self.cache_size = self.session.cache_tokens
+
+    def _append_message(
+        self,
+        role: str,
+        content: str,
+        mode: str,
+        tokens: dict | None = None,
+    ) -> None:
+        """Append a message to the transcript, using prefix-based storage if needed."""
+        if self._session_prefix:
+            append_message_by_prefix(
+                self.material_id,
+                self._session_prefix,
+                role=role,
+                content=content,
+                mode=mode,
+                tokens=tokens,
+            )
+        else:
+            append_message(
+                self.material_id,
+                self.chapter_num,
+                role=role,
+                content=content,
+                mode=mode,
+                tokens=tokens,
+            )
+
+    def _save_session_metadata(self) -> None:
+        """Save session metadata, using prefix-based storage if needed."""
+        if not self.session:
+            return
+
+        if self._session_prefix:
+            save_metadata_by_prefix(self.session, self._session_prefix)
+        else:
+            save_metadata(self.session)
 
     def _was_last_session_empty(self) -> bool:
         """
@@ -649,9 +756,7 @@ class DialogueScreen(Screen):
 
         # Add to messages and persist
         self.messages.append({"role": "user", "content": user_input})
-        append_message(
-            self.material_id,
-            self.chapter_num,
+        self._append_message(
             role="user",
             content=user_input,
             mode=self.mode,
@@ -716,9 +821,7 @@ class DialogueScreen(Screen):
 
         # Add to messages and persist
         self.messages.append({"role": "assistant", "content": chat_response.text})
-        append_message(
-            self.material_id,
-            self.chapter_num,
+        self._append_message(
             role="assistant",
             content=chat_response.text,
             mode=self.mode,
@@ -740,7 +843,7 @@ class DialogueScreen(Screen):
             self.session.total_output_tokens += chat_response.output_tokens
             self.session.cache_tokens = self.cache_size
             self.session.last_updated = datetime.now()
-            save_metadata(self.session)
+            self._save_session_metadata()
 
         # Re-enable input
         input_widget = self.query_one("#chat-input", Input)
