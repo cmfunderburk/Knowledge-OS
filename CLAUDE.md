@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A Knowledge Operating System: spaced-repetition drilling + LLM-powered reading companion for self-study. Two core systems:
 
 - **Reviewer**: Leitner-box spaced repetition. Cards are markdown files with fenced code blocks revealed line-by-line. 100% accuracy advances the box; any failure resets to box 0.
-- **Reader**: LLM-powered reading companion modeled on St. John's College (Annapolis/Santa Fe) seminars—the LLM acts as a tutor and fellow inquirer, not a lecturer.
+- **Reader**: LLM-powered reading companion modeled on St. John's College (Annapolis/Santa Fe) seminars—the LLM acts as a tutor and fellow inquirer, not a lecturer. Includes dialogue modes (Socratic, Clarify, Challenge, Teach, Technical), plus study tools (Quiz for recall testing, Review for cross-chapter synthesis).
 
 ## Commands
 
@@ -60,13 +60,14 @@ knos/                     # Unified package
     ├── llm.py            # LLM provider (Gemini)
     ├── content.py        # PDF/EPUB extraction, chapter/article loading
     ├── prompts.py        # Jinja2 prompt template loader
-    ├── session.py        # Dialogue session state
+    ├── session.py        # Dialogue session state (regular, quiz, review)
     ├── types.py          # Shared type definitions (ContentId)
     ├── cuda_utils.py     # CUDA detection and library preloading
     ├── voice.py          # Voice input (faster-whisper)
     ├── tts.py            # Text-to-speech (Kokoro)
     ├── screens/          # Reader TUI screens
-    ├── prompts/          # Dialogue mode prompts (base.md, socratic.md, etc.)
+    ├── prompts/          # Dialogue mode prompts (base.md, socratic.md, quiz.md, review.md, etc.)
+    ├── sessions/         # Dialogue transcripts (gitignored, per-material subdirs)
     ├── classics/         # Bundled classics (Aristotle, Cervantes, Dostoevsky)
     └── articles/         # Bundled articles (single-unit PDFs, no chapters)
 

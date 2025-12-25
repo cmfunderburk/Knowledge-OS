@@ -36,8 +36,21 @@ When you begin a new chapter, the tutor opens with a question about the reading.
 | **Teach** | You explain to a "confused student" |
 | **Quiz** | Rapid-fire recall check |
 | **Technical** | Step-by-step guidance through formulas and procedures |
+| **Review** | Cross-chapter synthesis (only available via Study Tools menu) |
 
 Switch modes with `Ctrl+M` during a session.
+
+### Study Tools
+
+The chapter selection screen includes a Study Tools section with special modes:
+
+| Tool | Access | Behavior |
+|------|--------|----------|
+| **Review All Discussions** | Appears when sessions exist | Opens dialogue with all chapter transcripts as context. Helps synthesize learning, identify gaps, and create summaries across the entire book. |
+| **Quiz Mode** | Always available | Select any chapter for rapid-fire recall testing. Each quiz is a fresh session (never resumes)—take as many quizzes as you like. |
+| **Browse Quiz History** | Appears when quizzes exist | View past quiz sessions with full transcript viewer. |
+
+**Quiz sessions** are timestamped uniquely (e.g., `quiz_ch01_20251224T143022`) so you can quiz the same chapter multiple times and compare performance across attempts.
 
 ### Card Generation
 
@@ -104,9 +117,13 @@ config/
   content.yaml             # Registered materials (gitignored)
 
 knos/reader/
-  sessions/                # Dialogue transcripts (gitignored)
+  sessions/<material-id>/  # Dialogue transcripts (gitignored)
+    ch01.jsonl             #   Regular chapter sessions (append-only)
+    ch01.meta.json         #   Session metadata (exchange count, tokens, etc.)
+    review.jsonl           #   Review session for the material
+    quiz_ch01_*.jsonl      #   Quiz sessions (timestamped, never overwritten)
   drafts/                  # Generated cards awaiting review
-  prompts/                 # Dialogue mode prompts
+  prompts/                 # Dialogue mode prompts (socratic.md, quiz.md, review.md, etc.)
   classics/                # Bundled classics (Aristotle, Cervantes, Dostoevsky)
-  sources/                 # User-provided PDFs/EPUBs (gitignored)
+  books/                   # User-provided PDFs/EPUBs (gitignored)
 ```
