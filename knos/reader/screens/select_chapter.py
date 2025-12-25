@@ -6,7 +6,12 @@ from textual.containers import Container
 from textual.binding import Binding
 
 from knos.reader.content import ContentId, list_all_content
-from knos.reader.session import list_sessions, Session
+from knos.reader.session import (
+    list_sessions,
+    list_quiz_sessions,
+    load_all_transcripts,
+    Session,
+)
 
 
 class ContentItem(ListItem):
@@ -58,6 +63,27 @@ class SectionLabel(ListItem):
         yield Label(f"[bold dim]{self.text}[/bold dim]")
 
 
+class SpecialMenuItem(ListItem):
+    """A special action item (Review, Quiz, etc.) in the chapter list."""
+
+    def __init__(
+        self,
+        action: str,
+        title: str,
+        description: str,
+        indicator: str = "",
+    ) -> None:
+        super().__init__()
+        self.action = action  # "review", "quiz", "quiz_history"
+        self.menu_title = title
+        self.description = description
+        self.indicator = indicator  # e.g., session count indicator
+
+    def compose(self) -> ComposeResult:
+        yield Label(f"[bold cyan]{self.menu_title}[/bold cyan]{self.indicator}")
+        yield Label(f"  [dim]{self.description}[/dim]")
+
+
 class SelectChapterScreen(Screen):
     """Screen for selecting a chapter or appendix to read."""
 
@@ -96,13 +122,49 @@ class SelectChapterScreen(Screen):
 
         # Get existing sessions for this material
         sessions = list_sessions(self.material_id)
+        quiz_sessions = list_quiz_sessions(self.material_id)
 
-        # Add chapters
-        for chapter in chapters:
-            num = chapter["num"]
-            title = chapter["title"]
-            session = sessions.get(num)
-            list_view.append(ContentItem(num, title, session))
+        # Add Study Tools section
+        list_view.append(SectionLabel("─── Study Tools ───"))
+
+        # Review option (only show if there are regular sessions)
+        if sessions:
+            session_count = len(sessions)
+            indicator = f" [dim]({session_count} sessions)[/dim]"
+            list_view.append(SpecialMenuItem(
+                action="review",
+                title="Review All Discussions",
+                description="Synthesize across all chapter discussions",
+                indicator=indicator,
+            ))
+
+        # Quiz option (always show if there are chapters)
+        if chapters or appendices:
+            list_view.append(SpecialMenuItem(
+                action="quiz",
+                title="Quiz Mode",
+                description="Test your recall on a specific chapter",
+            ))
+
+        # Quiz history (only show if there are quiz sessions)
+        if quiz_sessions:
+            total_quizzes = sum(len(s) for s in quiz_sessions.values())
+            indicator = f" [dim]({total_quizzes} quizzes)[/dim]"
+            list_view.append(SpecialMenuItem(
+                action="quiz_history",
+                title="Browse Quiz History",
+                description="View past quiz sessions",
+                indicator=indicator,
+            ))
+
+        # Add chapters section
+        if chapters:
+            list_view.append(SectionLabel("─── Chapters ───"))
+            for chapter in chapters:
+                num = chapter["num"]
+                title = chapter["title"]
+                session = sessions.get(num)
+                list_view.append(ContentItem(num, title, session))
 
         # Add appendices section if any exist
         if appendices:
@@ -114,11 +176,18 @@ class SelectChapterScreen(Screen):
                 list_view.append(ContentItem(app_id, title, session))
 
     def action_select(self) -> None:
-        """Select the highlighted content."""
+        """Select the highlighted content or special action."""
         list_view = self.query_one("#chapter-list", ListView)
         item = list_view.highlighted_child
 
-        if item and isinstance(item, ContentItem):
+        if item and isinstance(item, SpecialMenuItem):
+            if item.action == "review":
+                self._open_review_dialogue()
+            elif item.action == "quiz":
+                self._open_quiz_picker()
+            elif item.action == "quiz_history":
+                self._open_quiz_history()
+        elif item and isinstance(item, ContentItem):
             content_id = item.content_id
             content_title = item.content_title
 
@@ -129,6 +198,42 @@ class SelectChapterScreen(Screen):
                 chapter_num=content_id,
                 chapter_title=content_title,
             ))
+
+    def _open_review_dialogue(self) -> None:
+        """Open the review dialogue with all transcripts as context."""
+        # Load all transcripts for this material
+        transcripts = load_all_transcripts(self.material_id)
+
+        if not transcripts:
+            self.notify("No discussions to review yet.", severity="warning")
+            return
+
+        from .dialogue import DialogueScreen
+        material_title = self.material_info.get("title", self.material_id)
+        self.app.push_screen(DialogueScreen(
+            material_id=self.material_id,
+            material_info=self.material_info,
+            chapter_num=None,
+            chapter_title=f"Review: {material_title}",
+            mode_override="review",
+            context_override=transcripts,
+        ))
+
+    def _open_quiz_picker(self) -> None:
+        """Open the quiz chapter picker screen."""
+        from .quiz_chapter_picker import QuizChapterPickerScreen
+        self.app.push_screen(QuizChapterPickerScreen(
+            material_id=self.material_id,
+            material_info=self.material_info,
+        ))
+
+    def _open_quiz_history(self) -> None:
+        """Open the quiz history browser."""
+        from .quiz_history import QuizHistoryScreen
+        self.app.push_screen(QuizHistoryScreen(
+            material_id=self.material_id,
+            material_info=self.material_info,
+        ))
 
     def action_back(self) -> None:
         """Go back to material selection."""
