@@ -87,6 +87,7 @@ Select a material (e.g., "Nicomachean Ethics"), then a chapter. The tutor opens 
 - Mendel's Plant Hybridization (1866)
 - William James, "What is an Emotion?" (1884)
 - Wittgenstein, "Some Remarks on Logical Form" (1929)
+- Stringfellow Barr, "Notes on Dialogue" (1968)
 
 ### Adding Your Own EPUB (Easiest)
 

@@ -34,6 +34,7 @@ knos/reader/articles/*
 !knos/reader/articles/mendel-plant-hybridization.pdf
 !knos/reader/articles/james-emotion.pdf
 !knos/reader/articles/wittgenstein-logical-form.pdf
+!knos/reader/articles/notes-on-dialogue.pdf
 
 # ===== Reviewer State =====
 knos/reviewer/history.jsonl

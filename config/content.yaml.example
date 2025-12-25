@@ -82,6 +82,15 @@ materials:
     structure:
       type: article
 
+  # Notes on Dialogue (1968)
+  # Stringfellow Barr on Socratic dialogue; foundational to St. John's College seminars
+  notes-on-dialogue:
+    title: "Notes on Dialogue"
+    author: "Stringfellow Barr"
+    source: "knos/reader/articles/notes-on-dialogue.pdf"
+    structure:
+      type: article
+
 # =============================================================================
 # ADDING YOUR OWN CONTENT
 # =============================================================================
