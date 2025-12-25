@@ -1,59 +1,16 @@
-# Content Registry
+# Content Registry — Bundled Materials
+#
 # Run `uv run knos init` to create your config, or copy this to content.yaml.
 #
-# Page numbers are PDF page numbers (1-indexed), not book page numbers.
-# Source paths are relative to the repository root.
+# This file contains materials bundled with Knowledge OS that work immediately.
+# For adding your own PDFs/EPUBs, see content.yaml.example.external
 
 materials:
-  # OpenStax Psychology 2e (CC BY 4.0)
-  # https://openstax.org/details/books/psychology-2e
-  psychology-2e:
-    title: "Psychology 2e"
-    author: "OpenStax"
-    source: "knos/reader/books/psychology-2e/source.pdf"
-    structure:
-      type: "chapters"
-      chapters:
-        - { num: 1, title: "Introduction to Psychology", pages: [19, 46] }
-        - { num: 2, title: "Psychological Research", pages: [47, 82] }
-        - { num: 3, title: "Biopsychology", pages: [83, 122] }
-        - { num: 4, title: "States of Consciousness", pages: [123, 160] }
-        - { num: 5, title: "Sensation and Perception", pages: [161, 206] }
-        - { num: 6, title: "Learning", pages: [207, 244] }
-        - { num: 7, title: "Thinking and Intelligence", pages: [245, 290] }
-        - { num: 8, title: "Memory", pages: [291, 326] }
-        - { num: 9, title: "Lifespan Development", pages: [327, 380] }
-        - { num: 10, title: "Motivation and Emotion", pages: [381, 414] }
-        - { num: 11, title: "Personality", pages: [415, 454] }
-        - { num: 12, title: "Social Psychology", pages: [455, 498] }
-        - { num: 13, title: "Industrial-Organizational Psychology", pages: [499, 530] }
-        - { num: 14, title: "Stress, Lifestyle, and Health", pages: [531, 566] }
-        - { num: 15, title: "Psychological Disorders", pages: [567, 624] }
-        - { num: 16, title: "Therapy and Treatment", pages: [625, 664] }
-
-  # OpenStax Principles of Economics 3e (CC BY 4.0)
-  # https://openstax.org/details/books/principles-economics-3e
-  economics-3e:
-    title: "Principles of Economics 3e"
-    author: "OpenStax"
-    source: "knos/reader/books/economics-3e/source.pdf"
-    structure:
-      type: "chapters"
-      chapters:
-        - { num: 1, title: "Welcome to Economics!", pages: [25, 42] }
-        - { num: 2, title: "Choice in a World of Scarcity", pages: [43, 68] }
-        - { num: 3, title: "Demand and Supply", pages: [69, 104] }
-        - { num: 4, title: "Labor and Financial Markets", pages: [105, 132] }
-        - { num: 5, title: "Elasticity", pages: [133, 158] }
-        - { num: 6, title: "Consumer Choices", pages: [159, 182] }
-        - { num: 7, title: "Production, Costs, and Industry Structure", pages: [183, 216] }
-        - { num: 8, title: "Perfect Competition", pages: [217, 244] }
-        - { num: 9, title: "Monopoly", pages: [245, 274] }
-        - { num: 10, title: "Monopolistic Competition and Oligopoly", pages: [275, 300] }
-
-# === Bundled Classics (EPUB) ===
-# These are included with the repo in knos/reader/classics/.
-# EPUBs don't need chapter definitions - structure is extracted automatically.
+  # ==========================================================================
+  # BUNDLED CLASSICS (EPUB)
+  # ==========================================================================
+  # From Project Gutenberg, included in knos/reader/classics/.
+  # EPUBs don't need chapter definitions—structure is extracted automatically.
 
   # Aristotle's Nicomachean Ethics (F.H. Peters translation)
   # https://www.gutenberg.org/ebooks/8438
@@ -76,9 +33,11 @@ materials:
     author: "Fyodor Dostoevsky"
     source: "knos/reader/classics/brothers-karamazov.epub"
 
-# === Articles ===
-# Articles are single-unit content (no chapters). Use type: article.
-# Bundled articles go in knos/reader/articles/, user articles in knos/reader/books/.
+  # ==========================================================================
+  # BUNDLED ARTICLES
+  # ==========================================================================
+  # Foundational papers included in knos/reader/articles/.
+  # Articles are single-unit content (no chapters).
 
   # Attention Is All You Need (Transformer paper)
   # https://arxiv.org/abs/1706.03762
@@ -123,23 +82,38 @@ materials:
     structure:
       type: article
 
-# Setup:
+# =============================================================================
+# ADDING YOUR OWN CONTENT
+# =============================================================================
 #
-# Bundled classics (knos/reader/classics/) work out of the box - just copy entries above.
+# For detailed examples with external textbooks, see:
+#   config/content.yaml.example.external
 #
-# To add your own materials:
+# Quick reference:
 #
-# For PDFs (books with chapters):
-# 1. Place PDF at knos/reader/books/<material-id>/source.pdf
-# 2. Add entry with chapter page ranges (1-indexed PDF pages)
-# 3. Verify with: uv run knos read list
+# EPUB (easiest—no chapter definitions needed):
+#   my-book:
+#     title: "Book Title"
+#     author: "Author Name"
+#     source: "knos/reader/books/my-book/source.epub"
 #
-# For EPUBs:
-# 1. Place EPUB at knos/reader/books/<material-id>/source.epub
-# 2. Add entry with title/author only (structure extracted automatically)
-# 3. Verify with: uv run knos read list
+# PDF with chapters (requires page ranges):
+#   my-textbook:
+#     title: "Textbook Title"
+#     author: "Author Name"
+#     source: "knos/reader/books/my-textbook/source.pdf"
+#     structure:
+#       type: chapters
+#       chapters:
+#         - { num: 1, title: "Introduction", pages: [1, 20] }
+#         - { num: 2, title: "Chapter Two", pages: [21, 45] }
 #
-# For Articles (PDFs without chapters):
-# 1. Place PDF at knos/reader/articles/<name>.pdf (bundled) or knos/reader/books/<name>.pdf
-# 2. Add entry with structure.type: article
-# 3. Verify with: uv run knos read list
+# Article (single-unit PDF):
+#   my-paper:
+#     title: "Paper Title"
+#     author: "Author et al."
+#     source: "knos/reader/articles/my-paper.pdf"
+#     structure:
+#       type: article
+#
+# Verify with: uv run knos read list

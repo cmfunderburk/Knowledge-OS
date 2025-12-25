@@ -11,6 +11,7 @@ docs/prompts.md
 # ===== Config directory (user config, keep examples) =====
 config/*
 !config/*.example
+!config/*.example.*
 
 # Plan directory (state files only, no config)
 plan/*

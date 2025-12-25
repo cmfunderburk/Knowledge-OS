@@ -311,6 +311,8 @@ Box intervals: 0=1hr, 1=4hr, 2=1d, 3=3d, 4=7d, 5=14d, 6=30d, 7=90d
 
 ## Troubleshooting
 
+> **Note:** For user-facing troubleshooting, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md). This section covers developer-focused debugging.
+
 ### Card not appearing in drill queue
 - **Check location**: Must be in `solutions/focus/`, not `solutions/` root or `solutions/examples/`
 - **Check format**: Must have at least one fenced code block (triple backticks)
@@ -346,6 +348,18 @@ Voice (optional): `faster-whisper`, `kokoro`, `sounddevice`, `torch`
 Chatterbox (optional): `chatterbox-tts` (turbo model requires `huggingface-cli login`)
 
 Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and Windows.
+
+## Documentation
+
+| Document | Audience | Purpose |
+|----------|----------|---------|
+| [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | Users | Prerequisites, installation, first session |
+| [docs/USAGE.md](docs/USAGE.md) | Users | Commands, workflows, keybindings |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Users | Common issues and fixes |
+| [docs/PEDAGOGY.md](docs/PEDAGOGY.md) | Users | Learning science behind the Reader |
+| [docs/EDUCATORS.md](docs/EDUCATORS.md) | Educators | Classroom adoption guide |
+| [knos/reader/OVERVIEW.md](knos/reader/OVERVIEW.md) | Users | Reader module details |
+| [solutions/examples/README.md](solutions/examples/README.md) | Users | Drill card format guide |
 
 ## Development Notes
 

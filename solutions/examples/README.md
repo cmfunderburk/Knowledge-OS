@@ -16,6 +16,8 @@ examples/
 │   └── supply_demand.md
 ├── logic/               # Formal logic and proofs
 │   └── modus_ponens.md
+├── philosophy/          # Interpretive and conceptual knowledge
+│   └── aristotle_four_causes.md  # Uses slots format
 └── psychology/          # Conceptual knowledge
     ├── classical_conditioning.md
     ├── operant_conditioning.md   # Uses slots format
@@ -105,7 +107,20 @@ Cards can encode many types of knowledge:
 | Formulas | Equations, relationships | `text` with symbols |
 | Procedures | Step-by-step processes | `slots` (Step N :: action) |
 | Distinctions | Comparing similar concepts | `slots` (A :: trait, B :: trait) |
+| Interpretive concepts | Philosophical frameworks | `slots` |
 | Models | Diagrams in text form | `text` with ASCII art |
+
+## Humanities vs. STEM Cards
+
+Knowledge OS works for both procedural knowledge (algorithms, formulas) and interpretive knowledge (philosophical concepts, literary analysis, historical frameworks).
+
+**Procedural cards** typically use code or text blocks with exact content to reproduce. The goal is precise recall—you need to reproduce the algorithm or formula correctly.
+
+**Interpretive cards** typically use slots blocks with key concepts and their meanings. The goal is not exact reproduction but recalling the essential distinctions, relationships, and frameworks. The 80% threshold for slots blocks reflects this: you're demonstrating understanding of the conceptual landscape, not rote memorization.
+
+**Examples:**
+- `algorithms/binary_search.md` — Procedural (code block, 100% accuracy)
+- `philosophy/aristotle_four_causes.md` — Interpretive (slots block, 80% accuracy)
 
 ## Getting Started
 

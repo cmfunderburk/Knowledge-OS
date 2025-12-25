@@ -62,38 +62,31 @@ Cards go to `reader/drafts/` for review before entering the drill system.
 
 ## Setup
 
-Run `uv run knos init` to create config files interactively, or copy them manually.
+For complete setup instructions, see [docs/GETTING_STARTED.md](../../docs/GETTING_STARTED.md).
 
-### LLM Configuration (`config/reader.yaml`)
-
-```bash
-cp config/reader.yaml.example config/reader.yaml
-```
-
-Edit with your Gemini API key.
-
-### Registering Materials (`config/content.yaml`)
+**Quick start:**
 
 ```bash
-cp config/content.yaml.example config/content.yaml
+uv run knos init            # Create config files (prompts for API key)
+uv run knos read test       # Verify LLM configuration
+uv run knos read            # Start the Reader
 ```
 
-Add entries for your PDFs with chapter page ranges:
+Three bundled classics and five foundational articles work immediately after setup.
+
+### Adding Your Own Materials
+
+**EPUBs** are easiest—chapter structure is extracted automatically:
 
 ```yaml
 materials:
-  my-textbook:
-    title: "Introduction to Subject"
+  my-book:
+    title: "Book Title"
     author: "Author Name"
-    source: "knos/reader/books/my-textbook/source.pdf"
-    structure:
-      type: chapters
-      chapters:
-        - { num: 1, title: "Chapter One", pages: [10, 45] }
-        - { num: 2, title: "Chapter Two", pages: [46, 89] }
+    source: "knos/reader/books/my-book/source.epub"
 ```
 
-Place the PDF at `knos/reader/books/<material-id>/source.pdf`.
+**PDFs** require chapter page ranges. See [docs/USAGE.md](../../docs/USAGE.md#adding-a-pdf-with-chapters) for the full workflow.
 
 ---
 

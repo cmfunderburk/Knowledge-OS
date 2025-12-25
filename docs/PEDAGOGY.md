@@ -2,8 +2,6 @@
 
 This document explores how to design prompts that guide LLMs toward being effective learning companions. It draws on learning science research, documents what's been implemented in the Reader module, and brainstorms approaches not yet built.
 
-The goal isn't a chatbot that answers questions—it's a tutor that develops understanding.
-
 ---
 
 ## Pedagogical Foundations
@@ -23,7 +21,7 @@ Conditions that make learning harder in the moment but improve long-term retenti
 The space between what a learner can do alone and what they can do with guidance. Effective tutoring operates in this zone—not so easy it's boring, not so hard it's frustrating. Implication: LLM should calibrate to the learner's current understanding.
 
 **Retrieval Practice** (Roediger & Karpicke)
-Testing isn't just assessment—it's a powerful learning event. The act of retrieving information strengthens memory more than re-reading. Implication: asking questions is more valuable than giving explanations.
+Testing isn't just assessment—it's a learning event. The act of retrieving information strengthens memory more than re-reading. Implication: asking questions is more valuable than giving explanations.
 
 **Elaborative Interrogation** (Pressley et al.)
 Asking "why" and "how" questions forces learners to connect new information to existing knowledge, improving comprehension and retention. Implication: probe for explanations, not just facts.
@@ -115,6 +113,8 @@ Ask learners to articulate their reasoning, not just their conclusions. "How did
 ---
 
 ## Implemented Modes
+
+> **Status:** All modes in this section are fully implemented and available via `Ctrl+M` during Reader sessions (except Review, which is accessed via the Study Tools menu).
 
 The Reader uses a two-layer prompt architecture: a **base prompt** establishing identity and context, plus **mode prompts** that modify behavior. This allows mid-session switching without losing conversation state.
 
@@ -218,6 +218,8 @@ Mode prompts add behavioral instructions without repeating the base.
 ---
 
 ## Speculative Modes (Not Yet Implemented)
+
+> **Status:** These modes are design concepts only. They are not implemented in the current version but represent directions for future development.
 
 Ideas worth exploring:
 
@@ -348,6 +350,70 @@ Things I'm still thinking about:
 7. **Transfer and application**: How to prompt for transfer to new contexts rather than rote memorization of the original material?
 
 8. **The expertise reversal effect**: Scaffolding that helps novices can hurt experts. How to recognize and avoid?
+
+---
+
+## Applying These Principles
+
+Practical guidance for getting the most from the Reader's pedagogical design.
+
+### Choosing the Right Mode
+
+| If you're... | Use... | Why |
+|--------------|--------|-----|
+| Starting a new chapter | Socratic (default) | Builds understanding through questioning |
+| Genuinely stuck | Clarify | Get unstuck, then return to Socratic |
+| Confident in your understanding | Challenge | Tests whether understanding is robust |
+| Preparing for an exam | Quiz | Retrieval practice strengthens memory |
+| Explaining to someone else | Teach | Reveals gaps in your understanding |
+| Working through math/code | Technical | Step-by-step guidance reduces cognitive load |
+| Connecting ideas across chapters | Review (Study Tools) | Synthesizes learning across the material |
+
+### Session Patterns That Work
+
+**Initial exploration:** Start in Socratic. Let the opening question guide you into the text. Resist switching to Clarify at the first difficulty—mild struggle is productive.
+
+**Deep dive on a passage:** Stay in Socratic but focus questions on a specific section. Ask the tutor to probe your interpretation of particular lines.
+
+**Consolidation:** After reading, use Quiz to test recall. Use Teach to verify you can explain key concepts without the text in front of you.
+
+**Synthesis:** After completing multiple chapters, use Review (from the Study Tools menu) to identify themes, connections, and gaps across the material.
+
+### When to Switch Away from Socratic
+
+Socratic mode is the default for good reason—it develops understanding through questioning. But it's not always appropriate:
+
+- **You've tried 2-3 times and aren't making progress** — Switch to Clarify
+- **You lack prerequisite knowledge the tutor assumes** — Switch to Clarify
+- **You're frustrated rather than productively challenged** — Switch to Clarify
+- **The question requires factual lookup, not reasoning** — Consider the text directly
+- **You want to test understanding you think is solid** — Switch to Challenge or Teach
+
+The key discipline: return to Socratic once you're unstuck.
+
+### Safety Checklist for Self-Study
+
+When using the Reader for serious learning, keep these practices in mind:
+
+- [ ] **Verify against the source text** — The tutor can make mistakes. When it claims something about the text, check the passage yourself.
+- [ ] **Cross-reference key facts** — For factual claims outside the text, verify with authoritative sources.
+- [ ] **Recognize dialogue as practice** — Conversation builds understanding but isn't the final word. Your own reading and reflection remain essential.
+- [ ] **Review generated cards carefully** — Cards generated via `Ctrl+G` are drafts. Edit for accuracy before adding to your drill queue.
+- [ ] **Note what surprised you** — Unexpected tutor responses often signal either your misunderstanding or the tutor's error. Investigate which.
+
+### Productive vs. Unproductive Struggle
+
+Not all difficulty is desirable. Productive struggle involves:
+- Working at the edge of your current ability
+- Making incremental progress, even if slow
+- Engaging with the actual content
+
+Unproductive struggle involves:
+- Lacking prerequisite knowledge entirely
+- Going in circles without progress
+- Fighting the interface rather than the ideas
+
+When struggle becomes unproductive, switch modes or take a break.
 
 ---
 
