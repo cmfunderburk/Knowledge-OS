@@ -8,7 +8,7 @@ At [St. John's College](https://www.sjc.edu/), students spend four years reading
 
 Knowledge OS brings this approach to self-study. The Reader module pairs you with an LLM tutor who engages with the same material you're reading. It asks questions rather than lectures. It treats the text as the authority. When you claim to understand something, it probes.
 
-Stringfellow Barr's ["Notes on Dialogue"](knos/reader/articles/notes-on-dialogue.pdf) (1968) articulates the philosophy behind this approach. The [Pedagogy](docs/PEDAGOGY.md) document explores the learning science that supports this philosophy.
+Stringfellow Barr's ["Notes on Dialogue"](knos/reader/articles/notes-on-dialogue.pdf) (1968) articulates the philosophy behind this approach. The [Pedagogy](docs/PEDAGOGY.md) document contains additional background information and thoughts on implementation details.
 
 ## The Loop
 
