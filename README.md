@@ -8,6 +8,8 @@ At [St. John's College](https://www.sjc.edu/), students spend four years reading
 
 Knowledge OS brings this approach to self-study. The Reader module pairs you with an LLM tutor who engages with the same material you're reading. It asks questions rather than lectures. It treats the text as the authority. When you claim to understand something, it probes.
 
+**Start here:** Stringfellow Barr's ["Notes on Dialogue"](knos/reader/articles/notes-on-dialogue.pdf) (1968) articulates the philosophy behind this approach. Barr introduced the seminar program as president of St. John's (1937–1946). The essay is bundled with Knowledge OS—a five-page meditation on Socratic conversation and why it matters. The [Pedagogy](docs/PEDAGOGY.md) document explores the learning science that supports this philosophy.
+
 ## The Loop
 
 ```
@@ -27,7 +29,7 @@ uv run knos init            # Create config (prompts for API key)
 uv run knos read            # Start the Reader
 ```
 
-Three classics and five foundational articles work immediately. See [Getting Started](docs/GETTING_STARTED.md) for prerequisites, adding your own content, and the full workflow.
+Three classics and six foundational articles work immediately. See [Getting Started](docs/GETTING_STARTED.md) for prerequisites, adding your own content, and the full workflow.
 
 ## The Reader
 
