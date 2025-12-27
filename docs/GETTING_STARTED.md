@@ -25,8 +25,8 @@ Voice input and text-to-speech require additional dependencies:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/knos.git
-cd knos
+git clone https://github.com/cmfunderburk/Knowledge-OS
+cd Knowledge-OS
 
 # Install core dependencies
 uv sync
