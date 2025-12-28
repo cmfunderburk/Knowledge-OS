@@ -8,7 +8,7 @@ At St. John's College, students spend four years reading primary sources—Homer
 
 The Reader module pairs you with an LLM tutor who engages with the same material you're reading. It asks questions rather than lectures. It treats the text as the authority. When you claim to understand something, it probes. Whether this actually works—whether the dynamics that make St. John's seminars effective transfer to human-LLM dialogue—is something I'm still figuring out. But I've found it more productive than reading alone.
 
-Stringfellow Barr's ["Notes on Dialogue"](knos/reader/articles/notes-on-dialogue.pdf) (1968) articulates the philosophy behind this approach better than I can. The [Pedagogy](docs/PEDAGOGY.md) document records my exploration of how to prompt LLMs for learning—part design journal, part hypothesis log.
+Stringfellow Barr's ["Notes on Dialogue"](knos/reader/articles/notes-on-dialogue.pdf) (1968) articulates the philosophy behind this approach better than I can. The [Introduction](docs/Introduction-to-this-Project.md) orients newcomers to the system and its documentation, while the [Pedagogy](docs/PEDAGOGY.md) document records my exploration of how to prompt LLMs for learning—part design journal, part hypothesis log.
 
 ## The Loop
 
@@ -73,6 +73,7 @@ uv run knos          # TUI dashboard
 
 | Document | Purpose |
 |----------|---------|
+| [Introduction](docs/Introduction-to-this-Project.md) | What this is, who it's for, documentation map |
 | [Getting Started](docs/GETTING_STARTED.md) | Prerequisites, installation, first session |
 | [Usage Guide](docs/USAGE.md) | Commands, workflows, keybindings |
 | [Pedagogy](docs/PEDAGOGY.md) | Design journal on LLM-assisted learning |
