@@ -47,6 +47,7 @@ schedules-llm/
 *-Chat.md
 *_chat*.md
 scripts/
+LLM_WRITING_PROMPT.md
 
 # ===== Python =====
 __pycache__/
