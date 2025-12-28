@@ -179,6 +179,6 @@ When using the Reader, your messages and the text content you're reading are sen
 ## Next Steps
 
 - [Usage Guide](USAGE.md) — Command reference, workflows, keybindings
-- [Pedagogy](PEDAGOGY.md) — The learning science behind the Reader
+- [Pedagogy](PEDAGOGY.md) — Design notes on LLM-assisted learning
 - [Card Format](../solutions/examples/README.md) — Creating drill cards
 - [Troubleshooting](TROUBLESHOOTING.md) — Common issues and fixes

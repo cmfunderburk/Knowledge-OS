@@ -255,7 +255,7 @@ Switch modes with `Ctrl+M` during a Reader session.
 
 **Review mode** is available via the Study Tools menu (not `Ctrl+M`) for cross-chapter synthesis.
 
-See [PEDAGOGY.md](PEDAGOGY.md) for the learning science behind each mode.
+See [PEDAGOGY.md](PEDAGOGY.md) for background on the design thinking behind each mode.
 
 ---
 
@@ -351,7 +351,7 @@ The drill system uses Leitner spaced repetition:
 ## Further Reading
 
 - [Getting Started](GETTING_STARTED.md) — Installation and first session
-- [Pedagogy](PEDAGOGY.md) — Learning science behind the Reader
+- [Pedagogy](PEDAGOGY.md) — Design notes on LLM-assisted learning
 - [Troubleshooting](TROUBLESHOOTING.md) — Common issues and fixes
 - [Card Format](../solutions/examples/README.md) — Complete drill card specification
 - [Reader Overview](../knos/reader/OVERVIEW.md) — Reader module details

@@ -3,6 +3,7 @@ from datetime import datetime
 from rich.markdown import Markdown
 
 from textual.app import ComposeResult
+from knos.reader.tts.utils import latex_to_unicode
 from textual.screen import Screen, ModalScreen
 from textual.widgets import Header, Footer, Static, Input, Label, RichLog, OptionList
 from textual.widgets.option_list import Option
@@ -559,7 +560,7 @@ class DialogueScreen(Screen):
             # Display LLM response as opening message
             mode_color = MODE_COLORS.get(self.mode, "cyan")
             chat_log.write(f"[bold {mode_color}]Reader[/bold {mode_color}] [{mode_color}][{self.mode}][/{mode_color}]")
-            chat_log.write(Markdown(chat_response.text.strip()))
+            chat_log.write(Markdown(latex_to_unicode(chat_response.text.strip())))
             chat_log.write("")
 
             # Persist opening exchange to transcript (both new and resumed sessions)
@@ -731,7 +732,7 @@ class DialogueScreen(Screen):
 
                 mode_color = MODE_COLORS.get(mode, "cyan")
                 chat_log.write(f"[bold {mode_color}]Reader[/bold {mode_color}] [{mode_color}][{mode}][/{mode_color}]")
-                chat_log.write(Markdown(content.strip()))
+                chat_log.write(Markdown(latex_to_unicode(content.strip())))
 
             chat_log.write("")
 
@@ -814,8 +815,8 @@ class DialogueScreen(Screen):
         mode_color = MODE_COLORS.get(self.mode, "cyan")
         chat_log.write(f"[bold {mode_color}]Reader[/bold {mode_color}] [{mode_color}][{self.mode}][/{mode_color}]")
 
-        # Render response as markdown
-        chat_log.write(Markdown(chat_response.text.strip()))
+        # Render response as markdown (convert LaTeX to Unicode)
+        chat_log.write(Markdown(latex_to_unicode(chat_response.text.strip())))
 
         chat_log.write("")  # Blank line after response
 

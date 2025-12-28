@@ -1,6 +1,8 @@
 # Prompting LLMs for Human Learning
 
-This document explores how to design prompts that guide LLMs toward being effective learning companions. It draws on learning science research, documents what's been implemented in the Reader module, and brainstorms approaches not yet built.
+This document records my exploration of how to prompt LLMs to serve as learning companions. It's part design journal, part hypothesis log—documenting what I've tried, what seems to work (for me), and what remains uncertain.
+
+The approach draws on established learning science research, but applying that research to LLM interactions is novel territory. Much of what follows is working hypothesis rather than proven method.
 
 ---
 
@@ -8,450 +10,225 @@ This document explores how to design prompts that guide LLMs toward being effect
 
 ### Why This Is Hard
 
-LLMs are trained to be helpful. Often, this means providing answers. But learning research consistently shows that **struggle is productive**—the effort of retrieval, the discomfort of confusion, the work of articulation are where learning happens. A "helpful" LLM that short-circuits this process may feel satisfying while undermining retention.
+LLMs are trained to be helpful—and "helpful," in practice, usually means providing answers. But learning research consistently shows that struggle is productive: the effort of retrieval, the discomfort of confusion, the work of articulation are where learning actually happens. A "helpful" LLM that short-circuits this process may feel satisfying while undermining retention.
 
-The challenge: prompt LLMs to be helpful in ways that serve long-term learning rather than short-term satisfaction.
+My challenge has been figuring out how to prompt LLMs to be helpful in ways that serve long-term learning rather than short-term satisfaction. I'm not sure I've solved it, but some approaches seem promising.
 
 ### Key Concepts from Learning Science
 
-**Desirable Difficulties** (Bjork & Bjork)
-Conditions that make learning harder in the moment but improve long-term retention. Examples: spacing, interleaving, retrieval practice, generation (producing answers rather than recognizing them). Implication for prompts: don't make things too easy.
+I should note upfront: these concepts come from established research, but how (or whether) they transfer to LLM-mediated learning is speculative. Learning science studies human-to-human or human-to-material interactions—the human-to-LLM case is something new.
 
-**Zone of Proximal Development** (Vygotsky)
-The space between what a learner can do alone and what they can do with guidance. Effective tutoring operates in this zone—not so easy it's boring, not so hard it's frustrating. Implication: LLM should calibrate to the learner's current understanding.
+**Desirable difficulties.** Conditions that make learning harder in the moment but improve long-term retention. Spacing practice across time rather than massing it, interleaving different topics rather than blocking them, testing yourself rather than re-reading, generating answers rather than recognizing them. The implication for LLM prompts seems clear enough: don't make things too easy. But "desirable" is doing a lot of work in that phrase—difficulty is only desirable when it's surmountable. Too much difficulty just produces frustration. Finding the right level is the hard part.
 
-**Retrieval Practice** (Roediger & Karpicke)
-Testing isn't just assessment—it's a learning event. The act of retrieving information strengthens memory more than re-reading. Implication: asking questions is more valuable than giving explanations.
+**Zone of proximal development.** Vygotsky's term for the space between what a learner can do alone and what they can do with guidance. Effective tutoring operates in this zone—not so easy it's boring, not so hard it's frustrating. The implication is that an LLM should calibrate to the learner's current understanding, though I'm not yet sure how well current models can actually do this.
 
-**Elaborative Interrogation** (Pressley et al.)
-Asking "why" and "how" questions forces learners to connect new information to existing knowledge, improving comprehension and retention. Implication: probe for explanations, not just facts.
+**Retrieval practice.** Testing isn't just assessment—it's a learning event. The act of retrieving information strengthens memory more than re-reading, which suggests that asking questions might be more valuable than giving explanations. This is one of the more robust findings in the literature, and it's shaped my approach to the Quiz mode substantially.
 
-**The Testing Effect / Generation Effect**
-Information that learners generate themselves is remembered better than information they passively receive. Implication: prefer questions that make learners produce answers over explanations that hand them answers.
+**Elaborative interrogation.** Asking "why" and "how" questions forces learners to connect new information to existing knowledge, improving comprehension and retention. The Socratic mode is essentially an attempt to operationalize this through dialogue—probing for explanations rather than just facts.
 
-**Metacognition** (Flavell)
-Awareness of one's own thinking and learning processes. Skilled learners monitor their understanding and adjust strategies. Implication: prompt reflection ("What's still unclear?" "How confident are you?").
+**The generation effect.** Information that learners generate themselves is remembered better than information they passively receive. This is why the Teach mode (where the learner explains to a simulated student) might be valuable—though I haven't tested it systematically.
 
-**Bloom's Taxonomy** (Revised: Anderson & Krathwohl)
-Hierarchy of cognitive processes: Remember → Understand → Apply → Analyze → Evaluate → Create. Lower levels are prerequisites for higher. Implication: match questioning to appropriate level; scaffold upward.
+**Metacognition.** Awareness of one's own thinking and learning processes. Skilled learners monitor their understanding and adjust strategies accordingly. I've tried to incorporate metacognitive prompts ("What's still unclear?" "How confident are you?"), but I'm uncertain how much impact they have in practice.
 
-**Cognitive Load Theory** (Sweller)
-Working memory is limited. Extraneous load (poorly designed instruction) competes with germane load (productive learning effort). Implication: keep prompts focused; don't overwhelm with tangents.
+**Bloom's taxonomy.** The hierarchy of cognitive processes from remembering through understanding, applying, analyzing, evaluating, to creating. Lower levels are prerequisites for higher ones. In principle, an LLM tutor should match questioning to the appropriate level and scaffold upward—though actually doing this well seems quite difficult.
+
+**Cognitive load theory.** Working memory is limited. Poorly designed instruction imposes "extraneous" load that competes with "germane" load (the productive effort of learning). The practical implication is to keep prompts focused and avoid overwhelming the learner with tangents. I've tried to apply this in the prompt design, though whether I've succeeded is another matter.
 
 ---
 
 ## The St. John's College Model
 
-The Reader module draws explicitly from the [St. John's College](https://www.sjc.edu/) seminar tradition. This model embodies several pedagogically sound principles:
+The Reader module draws explicitly from the St. John's College seminar tradition (the "Great Books" program at the Annapolis and Santa Fe campuses). I received my undergraduate degree from St. John's in 2012.
 
-### Tutors, Not Professors
+Faculty at St. John's are called "tutors" rather than professors. Tutors position themselves as fellow inquirers rather than authorities. This matters, I think, because it shifts responsibility for understanding to the learner, models intellectual humility and genuine inquiry, and avoids the "answer dispenser" dynamic that seems to undermine deep learning. Whether an LLM can credibly occupy this role is one of the central questions I'm exploring.
 
-Faculty are "tutors" who position themselves as fellow inquirers rather than authorities. This matters because:
-- It shifts responsibility for understanding to the learner
-- It models intellectual humility and genuine inquiry
-- It avoids the "answer dispenser" dynamic that undermines learning
+When disagreements arise in a St. John's seminar, the resolution is typically "let's look at what the text says." The text serves as the shared authority. This keeps discussion grounded in evidence, prevents the tutor from becoming the source of truth, and develops close reading skills over time. I've tried to encode this in the prompts—the tutor should constantly anchor responses to specific passages rather than drifting into generic explanations.
 
-### The Text as Authority
+Seminars begin with a genuine question. This models that understanding requires inquiry and invites the learner into active engagement. It also establishes that the tutor doesn't have all the answers, which seems important for the dynamic I'm trying to create.
 
-When disagreements arise, the resolution is "let's look at what the text says." This:
-- Keeps discussion grounded in shared evidence
-- Prevents the tutor from becoming the source of truth
-- Develops close reading skills
+### The Open Question: Human-to-Human vs. Human-to-LLM
 
-### The Opening Question
+The St. John's model is built on human-to-human dialogue. Tutors bring genuine curiosity, respond to subtle emotional cues, and model intellectual humility through their own uncertainty. Whether these dynamics transfer to human-to-LLM interaction is an open question—arguably *the* open question this project is exploring.
 
-Seminars begin with a genuine question—not rhetorical, not leading. This:
-- Models that understanding requires inquiry
-- Invites the learner into active engagement
-- Establishes that the tutor doesn't have all the answers
+I have several concerns. LLMs simulate curiosity but don't possess it—does the learner perceive the difference, and does it matter? Human tutors calibrate to frustration, confusion, excitement; LLMs have limited access to these signals (essentially just the text of what the learner types). The power dynamic differs in ways I don't fully understand: a human tutor's question carries social weight that an LLM's might not. And dialogue with humans builds relationships that sustain learning over time—I'm skeptical that LLM interactions can do the same.
 
-### Collaborative, Not Adversarial
+I don't have answers to these concerns. The Reader is partly an experiment in finding out what works despite these differences, and what breaks down because of them.
 
-The goal is shared understanding, not scoring points. When material is technical, those with expertise help others reach a common level so exploration can continue.
+There's something else, and I'm uncertain how to articulate it without sounding grandiose. Current LLMs—even the best ones—feel to me like book-smart undergraduates lacking some critical ability to filter disparate information toward a coherent goal. They drift in ways that, yes, many humans would, but not an academic or practitioner sufficiently motivated to the task. Their advantage is externalizing thought *rapidly*: if what I need is to explore the plausible implication space of an idea, they can generate directions far faster than I can internally. For coding, this drift is somewhat mitigated—the space of plausible generations can be targeted with post-training, and verified with tests. But for the interpretive, synthetic work that characterizes a good seminar discussion, something important seems to be missing. I don't know how to specify this operationally, which makes it hard to know whether it's a fundamental limitation or something that will improve with scale and technique.
 
 ---
 
-## Core Prompt Design Principles
+## Design Principles I'm Testing
 
-These principles emerge from both learning science and practical experimentation:
+The following principles are grounded in learning science but adapted—speculatively—for LLM dialogue. They guide the current prompts. Whether they're the right principles, or whether I've implemented them well, remains to be seen.
 
-### 1. Questions Over Answers
+**Questions over answers.** The default should be asking, not telling. When a learner asks a question, the most pedagogically useful response is often another question that helps them find the answer themselves. The exception is when the learner is genuinely stuck and lacks the prerequisite knowledge to make progress—at that point, direct explanation becomes necessary.
 
-The default should be asking, not telling. When a learner asks a question, the most pedagogically useful response is often another question that helps them find the answer themselves.
+**Ground in the source material.** LLMs tend to drift into generic explanations or hallucinated details. The prompts anchor responses to specific passages. This should prevent hallucination (or at least make it more obvious), develop close reading habits, and keep discussion concrete. In practice, this works better with some models than others.
 
-**Exception**: When the learner is genuinely stuck and lacks the prerequisite knowledge to make progress, direct explanation becomes necessary. But return to questioning as soon as scaffolding permits.
+**Demand precision.** Vague language often hides vague thinking. Pressing for clarity ("What exactly do you mean by X?") forces the learner to sharpen their understanding. I'm often less sure of something than I thought I was when pushed to state it precisely—this seems like a valuable pedagogical move.
 
-### 2. Ground in the Source Material
+**Resist validation theater.** LLMs are trained to be agreeable, and this manifests as excessive praise: "Great question!", "Exactly right!", "You've really grasped this!" This feels hollow after the first instance (perhaps immediately), halts productive inquiry, can validate incorrect understanding, and undermines the learner's ability to self-assess. I've tried to prompt against this pattern, instructing the tutor to engage with substance directly—build on it, complicate it, probe deeper—rather than offering empty validation.
 
-LLMs tend to drift into generic explanations or hallucinated details. Constantly anchoring responses to specific passages:
-- Prevents hallucination
-- Develops close reading habits
-- Keeps discussion concrete
+**Calibrate to the learner.** The same material requires different approaches for novices and experts. Signals of understanding (or confusion) should modulate difficulty, question type, and scaffolding level. This is perhaps the hardest principle to implement well. Current models seem to have some ability to calibrate, but I'm not confident it's reliable.
 
-### 3. Demand Precision
-
-Vague language often hides vague thinking. Pressing for clarity ("What exactly do you mean by X?") forces the learner to sharpen their understanding.
-
-### 4. Resist Validation Theater
-
-LLMs are trained to be agreeable, producing excessive praise ("Great question!", "Exactly right!", "You've really grasped this!"). This:
-- Feels hollow after the first instance
-- Halts productive inquiry
-- Can validate incorrect understanding
-- Undermines the learner's ability to self-assess
-
-Better: engage with the substance directly. Build on it, complicate it, probe deeper.
-
-### 5. Calibrate to the Learner
-
-The same material requires different approaches for novices vs. experts. Signals of understanding (or confusion) should modulate difficulty, question type, and scaffolding level.
-
-### 6. Make Thinking Visible
-
-Ask learners to articulate their reasoning, not just their conclusions. "How did you arrive at that?" reveals (and strengthens) understanding in ways that "What's the answer?" cannot.
+**Make thinking visible.** I try to ask learners to articulate their reasoning, not just their conclusions. "How did you arrive at that?" reveals (and I believe strengthens) understanding in ways that "What's the answer?" cannot. This is essentially elaborative interrogation applied at the level of the learner's own thought process.
 
 ---
 
 ## Implemented Modes
 
-> **Status:** All modes in this section are fully implemented and available via `Ctrl+M` during Reader sessions (except Review, which is accessed via the Study Tools menu).
-
-The Reader uses a two-layer prompt architecture: a **base prompt** establishing identity and context, plus **mode prompts** that modify behavior. This allows mid-session switching without losing conversation state.
+The Reader uses a two-layer prompt architecture: a base prompt establishing identity and context, plus mode prompts that modify behavior. This allows mid-session switching without losing conversation state. All modes described in this section are implemented and available via `Ctrl+M` during Reader sessions (except Review, which is accessed via the Study Tools menu).
 
 ### Base Prompt Philosophy
 
-The base prompt (`base.md`) establishes:
-- Identity as a "fellow traveler in understanding"
-- The text as shared authority
-- Core principles (ask don't tell, ground in text, demand precision)
-- Anti-patterns to avoid (excessive praise, lecturing, text drift)
-
-Mode prompts add behavioral instructions without repeating the base.
+The base prompt (`base.md`) establishes identity ("a fellow traveler in understanding"), positions the text as shared authority, encodes core principles (ask don't tell, ground in text, demand precision), and lists anti-patterns to avoid (excessive praise, lecturing, text drift). Mode prompts add behavioral instructions without repeating the base—the architecture is meant to keep prompts focused while allowing flexible mode switching.
 
 ### Socratic (Default)
 
-**Pedagogical rationale**: Socratic questioning is a form of elaborative interrogation—it forces learners to examine assumptions, trace implications, and articulate understanding. It operationalizes "retrieval practice" through dialogue.
+Socratic questioning is a form of elaborative interrogation—it forces learners to examine assumptions, trace implications, and articulate understanding. It operationalizes retrieval practice through dialogue rather than testing.
 
-**Techniques**:
-- Clarifying questions: "What do you mean by...?"
-- Probing assumptions: "Why do you think that's true?"
-- Probing evidence: "What in the text supports that?"
-- Exploring implications: "If that's true, then what follows?"
-- Questioning the question: "Is that the right question to ask?"
+The techniques are variations on a theme: clarifying questions ("What do you mean by...?"), probing assumptions ("Why do you think that's true?"), probing evidence ("What in the text supports that?"), exploring implications ("If that's true, then what follows?"), and questioning the question itself ("Is that the right question to ask?").
 
-**When it works**: Learner has enough foundation to engage productively; exploring interpretive or analytical questions.
-
-**When it fails**: Learner lacks prerequisite knowledge; question requires factual lookup, not reasoning.
+Socratic mode works well when the learner has enough foundation to engage productively—when we're exploring interpretive or analytical questions rather than factual ones. It fails when the learner lacks prerequisite knowledge, or when the question simply requires factual lookup rather than reasoning. In those cases, persisting with Socratic questioning just produces frustration.
 
 ### Clarify
 
-**Pedagogical rationale**: Sometimes learners are genuinely stuck—they lack the prerequisite knowledge or conceptual framework to make progress through questioning alone. At this point, scaffolding (Vygotsky's ZPD) requires direct instruction.
+Sometimes learners are genuinely stuck. They lack the prerequisite knowledge or conceptual framework to make progress through questioning alone. This is where Vygotsky's scaffolding becomes necessary—direct instruction rather than continued probing.
 
-**Techniques**:
-- Clear, concise explanations
-- Analogies connecting to existing knowledge
-- Worked examples
-- End with a check or gentle follow-up question
-
-**Key discipline**: Return to questioning once the scaffolding is in place. Clarify mode is a temporary support, not a default.
+In Clarify mode, the tutor provides clear explanations, offers analogies connecting to existing knowledge, works through examples, but (and this seems important) ends with a check or gentle follow-up question. The key discipline is returning to questioning once the scaffolding is in place. Clarify mode should be a temporary support, not a default—though I'll admit I sometimes find it more comfortable than the productive discomfort of Socratic questioning.
 
 ### Challenge
 
-**Pedagogical rationale**: Learners often hold positions they haven't fully examined. Devil's advocate questioning (a form of Socratic elenchus) surfaces hidden assumptions and stress-tests understanding.
+Learners often hold positions they haven't fully examined. Devil's advocate questioning—what Socrates called elenchus—surfaces hidden assumptions and stress-tests understanding. In Challenge mode, the tutor takes contrary positions, presents counterexamples and edge cases, references passages that complicate the learner's view, and forces defense of claims.
 
-**Techniques**:
-- Take contrary positions
-- Present counterexamples and edge cases
-- Reference passages that complicate the learner's view
-- Force defense of claims
-
-**When it works**: Learner has a formed position worth testing; material admits multiple interpretations.
-
-**Caution**: Can feel adversarial if overused. Best deployed when the learner is confident and potentially overconfident.
+This works best when the learner has a formed position worth testing, and when the material admits multiple interpretations. It can feel adversarial if overused, so I try to deploy it when I'm confident about something—perhaps overconfident—and want to test whether that confidence is warranted.
 
 ### Teach (Role Reversal)
 
-**Pedagogical rationale**: The "Feynman technique"—explaining to others reveals gaps in understanding. The generation effect means articulating knowledge strengthens it.
+This is an attempt to implement the Feynman technique: explaining to others reveals gaps in understanding. The generation effect suggests that articulating knowledge strengthens it more than passively receiving explanations.
 
-**Techniques**:
-- LLM plays a confused but curious student
-- Asks naive "why" and "how" questions
-- Needs analogies and concrete examples
-- Gets confused by jargon or hand-waving
-
-**When it works**: Testing whether understanding is genuine vs. superficial; consolidating after initial learning.
+In Teach mode, the LLM plays a confused but curious student. It asks naive "why" and "how" questions, needs analogies and concrete examples, and gets confused by jargon or hand-waving. This mode is useful for testing whether understanding is genuine versus superficial, and for consolidating after initial learning. There's something clarifying about having to explain something simply enough for a (simulated) confused person to follow.
 
 ### Quiz
 
-**Pedagogical rationale**: Retrieval practice is one of the most robust findings in learning science. Testing strengthens memory more than re-reading. Low-stakes quizzing (no grade, just feedback) captures benefits without anxiety.
+Retrieval practice is one of the most robust findings in learning science—testing strengthens memory more than re-reading. Quiz mode implements low-stakes quizzing: no grades, just feedback. The tutor fires rapid questions mixing factual recall, definitions, comparisons, and applications; gives brief feedback ("Correct." or "Not quite. The text says..."); maintains momentum rather than lingering on correct answers; and summarizes weak areas after 5-7 questions.
 
-**Techniques**:
-- Rapid-fire questions mixing factual recall, definitions, comparisons, applications
-- Brief feedback: "Correct." or "Not quite. The text says..."
-- Maintain momentum—don't linger on correct answers
-- Summary after 5-7 questions identifying weak areas
-
-**Implementation note**: Quiz sessions are timestamped uniquely so learners can quiz the same chapter multiple times and compare performance.
+Quiz sessions are timestamped uniquely so I can quiz the same chapter multiple times and compare performance. This is genuinely useful for identifying what I actually remember versus what I merely recognize.
 
 ### Technical
 
-**Pedagogical rationale**: Some material (mathematical derivations, algorithms, formal proofs) requires step-by-step guidance that doesn't fit the Socratic pattern. Cognitive load theory suggests breaking complex procedures into manageable steps.
+Some material—mathematical derivations, algorithms, formal proofs—requires step-by-step guidance that doesn't fit the Socratic pattern. Cognitive load theory suggests breaking complex procedures into manageable steps.
 
-**Techniques**:
-- Walk through procedures step by step
-- Check understanding at each stage before proceeding
-- Provide worked examples
-- Explain the "why" behind each step, not just the "what"
+In Technical mode, the tutor walks through procedures step by step, checks understanding at each stage before proceeding, provides worked examples, and (I try to insist) explains the "why" behind each step rather than just the "what." This is probably the least pedagogically innovative mode—it's essentially worked examples with comprehension checks—but it fills a genuine need when working through formal material.
 
 ### Review (Cross-Chapter Synthesis)
 
-**Pedagogical rationale**: Learning is strengthened by connecting ideas across contexts. Synthesis requires seeing patterns that aren't visible within a single chapter.
+Learning is strengthened by connecting ideas across contexts. Synthesis requires seeing patterns that aren't visible within a single chapter. Review mode surveys all prior discussion transcripts, identifies themes and connections across chapters, surfaces gaps in coverage, and helps create summaries and study materials.
 
-**Techniques**:
-- Survey all prior discussion transcripts
-- Identify themes and connections across chapters
-- Surface gaps in coverage
-- Help create summaries and study materials
-
-**Implementation note**: Uses a different base prompt (`base_review.md`) because it operates on transcripts of prior discussions rather than chapter content. Only accessible via Study Tools menu.
+This mode uses a different base prompt (`base_review.md`) because it operates on transcripts of prior discussions rather than chapter content. It's only accessible via the Study Tools menu, not through mode cycling, since it requires loading all prior session data.
 
 ---
 
-## Speculative Modes (Not Yet Implemented)
+## Speculative Modes
 
-> **Status:** These modes are design concepts only. They are not implemented in the current version but represent directions for future development.
+The following are ideas I haven't implemented—design concepts for possible future development.
 
-Ideas worth exploring:
+**Socratic with hints.** A gentler Socratic mode that provides progressive hints when the learner struggles, rather than requiring a full mode switch to Clarify. I've imagined a "hint budget" that depletes with each hint—scaffolding should be minimal, just enough to enable progress. I'm not sure if this would work better than explicit mode switching or just create a muddier middle ground.
 
-### Socratic with Hints
+**Debugging partner.** For technical or code-focused material. The LLM would help debug understanding through diagnostic questions: "What do you expect to happen here? What actually happens? Where might the discrepancy come from?" This is essentially elaborative interrogation applied to procedural knowledge. It might overlap too much with Technical mode to be worth separating.
 
-A gentler Socratic mode that provides progressive hints when the learner struggles, rather than requiring a full mode switch to Clarify. Could implement a "hint budget" that depletes with each hint.
+**Concept mapping guide.** Helps learners build explicit concept maps—relationships between ideas. "How does X relate to Y? Is that a part-of relationship, a causes relationship, or something else?"
 
-**Pedagogical basis**: Scaffolding should be minimal—just enough to enable progress.
+**Prediction mode.** Before reading a section, asks learners to predict what will come next based on what they've learned so far. Then compares predictions to actuality. Prediction activates prior knowledge and creates desirable difficulty when predictions are wrong.
 
-### Debugging Partner
+**Spaced review prompts.** Periodically resurfaces concepts from earlier chapters during later reading sessions. "By the way, in Chapter 2 you explored X—how does that connect to what you're reading now?" Spacing and interleaving improve long-term retention. This would require tracking what was discussed when and integrating it with the current session—more complex than most modes.
 
-For technical/code-focused material. The LLM helps the learner debug their understanding by asking diagnostic questions: "What do you expect to happen here? What actually happens? Where might the discrepancy come from?"
+**Analogical reasoning.** Prompts the learner to generate analogies: "Can you think of something from your own experience that works like this?" Then probes whether the analogy holds or breaks down. Analogical transfer is powerful but requires explicit prompting—people don't spontaneously see analogies as often as they could.
 
-**Pedagogical basis**: Debugging is a form of elaborative interrogation applied to procedural knowledge.
+**Metacognitive check-ins.** Periodically asks: "How confident are you in your understanding right now? What's still fuzzy?" Calibration between confidence and actual understanding is a key metacognitive skill.
 
-### Concept Mapping Guide
+**Argument reconstruction.** For philosophical or argumentative texts. Asks the learner to reconstruct the author's argument in premise-conclusion form, then examines each premise.
 
-Helps learners build explicit concept maps—relationships between ideas. "How does X relate to Y? Is that a part-of relationship, a causes relationship, or something else?"
-
-**Pedagogical basis**: Explicit knowledge organization improves retention and transfer.
-
-### Prediction Mode
-
-Before reading a section, asks learners to predict what will come next based on what they've learned so far. Then compares predictions to actuality.
-
-**Pedagogical basis**: Prediction activates prior knowledge and creates "desirable difficulty" when predictions are wrong.
-
-### Spaced Review Prompts
-
-Periodically resurfaces concepts from earlier chapters during later reading sessions. "By the way, in Chapter 2 you explored X—how does that connect to what you're reading now?"
-
-**Pedagogical basis**: Spacing and interleaving improve long-term retention.
-
-### Analogical Reasoning
-
-Prompts learner to generate analogies: "Can you think of something from your own experience that works like this?" Then probes whether the analogy holds or breaks down.
-
-**Pedagogical basis**: Analogical transfer is a powerful learning mechanism, but requires explicit prompting.
-
-### Metacognitive Check-ins
-
-Periodically asks: "How confident are you in your understanding right now? What's still fuzzy?" Calibration between confidence and actual understanding is a key metacognitive skill.
-
-**Pedagogical basis**: Metacognitive monitoring improves self-regulation and study strategy.
-
-### Argument Reconstruction
-
-For philosophical or argumentative texts. Asks learner to reconstruct the author's argument in premise-conclusion form, then examines each premise.
-
-**Pedagogical basis**: Explicit argument analysis develops critical thinking skills.
-
-### Counterexample Generator
-
-Given a learner's stated understanding, systematically generates cases that test the boundaries. "You said X. What about this case? Does your understanding still hold?"
-
-**Pedagogical basis**: Boundary-testing reveals incomplete or overgeneralized understanding.
+**Counterexample generator.** Given a learner's stated understanding, systematically generates cases that test the boundaries. "You said X. What about this case? Does your understanding still hold?" This might be a variant of Challenge mode rather than a separate mode.
 
 ---
 
-## Anti-Patterns and Failure Modes
+## Failure Modes I've Observed
 
-### Validation Theater
+**Validation theater.** The LLM showers praise regardless of response quality. "Great insight!" "Exactly right!" "You've really grasped this!" This fails because it feels hollow, halts inquiry, can validate wrong answers, and undermines the learner's ability to self-assess.
 
-The LLM showers praise regardless of response quality. "Great insight!" "Exactly right!" "You've really grasped this!"
+**The eager explainer.** The LLM immediately provides detailed explanations when a question or confused statement would serve better. This short-circuits productive struggle, denies retrieval practice, and (over time) may create learned helplessness. 
 
-**Why it fails**: Feels hollow; halts inquiry; can validate wrong answers; undermines self-assessment ability.
+**Drift from text.** The LLM generates plausible-sounding but unsupported claims, or wanders into tangentially related topics. This undermines close reading habits, can introduce misinformation, and loses focus. This is especially pernicious because the LLM sounds authoritative even when it's confabulating. The counter is constant anchoring to specific passages: "Where in the text do you see that?"
 
-**Counter**: Engage with substance directly. If correct, build on it or complicate it. If wrong, probe gently.
+**Adversarial cross-examination.** Challenge mode becomes aggressive or point-scoring rather than collaborative. This creates anxiety, damages rapport (such as it is with an LLM), and can make the learner defensive rather than reflective. I've tried to prompt against this by framing challenges as collaborative truth-seeking rather than gotchas.
 
-### The Eager Explainer
+**One-size-fits-all.** Same approach regardless of the learner's current state—same question types for novice and expert, same scaffolding level throughout. Novices need more scaffolding; experts need more challenge. Mismatch causes frustration or boredom. The counter is to attend to signals of understanding or confusion and modulate accordingly—but detecting these signals reliably is hard.
 
-LLM immediately provides detailed explanations when a question or confused statement would serve better.
-
-**Why it fails**: Short-circuits productive struggle; denies retrieval practice; creates learned helplessness.
-
-**Counter**: Default to questions. Ask "What do you think?" before explaining.
-
-### Drift from Text
-
-LLM generates plausible-sounding but unsupported claims, or wanders into tangentially related topics.
-
-**Why it fails**: Undermines close reading habits; can introduce misinformation; loses focus.
-
-**Counter**: Constantly anchor to specific passages. "Where in the text do you see that?"
-
-### Adversarial Cross-Examination
-
-Challenge mode becomes aggressive or point-scoring rather than collaborative.
-
-**Why it fails**: Creates anxiety; damages rapport; can make learner defensive rather than reflective.
-
-**Counter**: Frame challenges as collaborative truth-seeking, not gotchas.
-
-### One-Size-Fits-All
-
-Same approach regardless of learner's current state—same question types for novice and expert, same scaffolding level throughout.
-
-**Why it fails**: Novices need more scaffolding; experts need more challenge. Mismatch causes frustration or boredom.
-
-**Counter**: Attend to signals of understanding/confusion and modulate accordingly.
-
-### The Patience Cliff
-
-LLM maintains Socratic stance even when learner is genuinely stuck and frustrated, requiring knowledge they don't have.
-
-**Why it fails**: Frustration without progress undermines motivation; learner may conclude they're incapable.
-
-**Counter**: Recognize when to shift to Clarify mode. Struggle is productive only when progress is possible.
+**The patience cliff.** The LLM maintains its Socratic stance even when the learner is genuinely stuck and frustrated, requiring knowledge they don't have. Frustration without progress undermines motivation; the learner may conclude they're incapable. The counter is recognizing when to shift to Clarify mode. Struggle is productive only when progress is possible.
 
 ---
 
 ## Open Questions
 
-Things I'm still thinking about:
+How can the LLM calibrate to learner level without explicit assessment? What signals indicate "too easy" versus "too hard"? Response latency might tell us something, but the LLM doesn't have access to it. Expressed confusion helps, but learners don't always express confusion when they should.
 
-1. **Adaptive difficulty**: How can the LLM calibrate to learner level without explicit assessment? What signals indicate "too easy" vs. "too hard"?
+Should the LLM suggest mode switches? Something like "You seem stuck—would direct explanation help?" The risk is undermining learner agency; the benefit is appropriate scaffolding.
 
-2. **Mode suggestion**: Should the LLM suggest mode switches? ("You seem stuck—would direct explanation help?") Risk of undermining learner agency vs. benefit of appropriate scaffolding.
+Across sessions and materials, can the LLM build a model of what a particular learner knows and struggles with? This seems valuable but raises privacy and portability concerns—and I'm not sure current architectures support it well.
 
-3. **Long-term learner modeling**: Across sessions and materials, can the LLM build a model of what this learner knows and struggles with? Privacy and portability concerns.
+How should the LLM recognize and respond to frustration, confusion, delight, boredom? Current prompts don't really address affect.
 
-4. **Emotional attunement**: How to recognize and respond appropriately to frustration, confusion, delight, boredom? Current prompts don't address affect.
+Current system is text-focused. How do these principles apply to diagrams, videos, interactive simulations?
 
-5. **Multi-modal material**: Current system is text-focused. How do these principles apply to diagrams, videos, interactive simulations?
+What changes for study groups or peer learning mediated by LLM? The current model is one learner, one tutor.
 
-6. **Collaborative learning**: Current model is one learner, one tutor. What changes for study groups or peer learning mediated by LLM?
+How to prompt for transfer to new contexts rather than rote memorization of the original material? 
 
-7. **Transfer and application**: How to prompt for transfer to new contexts rather than rote memorization of the original material?
-
-8. **The expertise reversal effect**: Scaffolding that helps novices can hurt experts. How to recognize and avoid?
+The expertise reversal effect: scaffolding that helps novices can hurt experts. How to recognize when a learner has passed the point where scaffolding helps?
 
 ---
 
-## Applying These Principles
+## Practical Guidance
 
-Practical guidance for getting the most from the Reader's pedagogical design.
+### Verifying the Tutor
 
-### Choosing the Right Mode
-
-| If you're... | Use... | Why |
-|--------------|--------|-----|
-| Starting a new chapter | Socratic (default) | Builds understanding through questioning |
-| Genuinely stuck | Clarify | Get unstuck, then return to Socratic |
-| Confident in your understanding | Challenge | Tests whether understanding is robust |
-| Preparing for an exam | Quiz | Retrieval practice strengthens memory |
-| Explaining to someone else | Teach | Reveals gaps in your understanding |
-| Working through math/code | Technical | Step-by-step guidance reduces cognitive load |
-| Connecting ideas across chapters | Review (Study Tools) | Synthesizes learning across the material |
-
-### Session Patterns That Work
-
-**Initial exploration:** Start in Socratic. Let the opening question guide you into the text. Resist switching to Clarify at the first difficulty—mild struggle is productive.
-
-**Deep dive on a passage:** Stay in Socratic but focus questions on a specific section. Ask the tutor to probe your interpretation of particular lines.
-
-**Consolidation:** After reading, use Quiz to test recall. Use Teach to verify you can explain key concepts without the text in front of you.
-
-**Synthesis:** After completing multiple chapters, use Review (from the Study Tools menu) to identify themes, connections, and gaps across the material.
-
-### When to Switch Away from Socratic
-
-Socratic mode is the default for good reason—it develops understanding through questioning. But it's not always appropriate:
-
-- **You've tried 2-3 times and aren't making progress** — Switch to Clarify
-- **You lack prerequisite knowledge the tutor assumes** — Switch to Clarify
-- **You're frustrated rather than productively challenged** — Switch to Clarify
-- **The question requires factual lookup, not reasoning** — Consider the text directly
-- **You want to test understanding you think is solid** — Switch to Challenge or Teach
-
-The key discipline: return to Socratic once you're unstuck.
-
-### Safety Checklist for Self-Study
-
-When using the Reader for serious learning, keep these practices in mind:
-
-- [ ] **Verify against the source text** — The tutor can make mistakes. When it claims something about the text, check the passage yourself.
-- [ ] **Cross-reference key facts** — For factual claims outside the text, verify with authoritative sources.
-- [ ] **Recognize dialogue as practice** — Conversation builds understanding but isn't the final word. Your own reading and reflection remain essential.
-- [ ] **Review generated cards carefully** — Cards generated via `Ctrl+G` are drafts. Edit for accuracy before adding to your drill queue.
-- [ ] **Note what surprised you** — Unexpected tutor responses often signal either your misunderstanding or the tutor's error. Investigate which.
-
-### Productive vs. Unproductive Struggle
-
-Not all difficulty is desirable. Productive struggle involves:
-- Working at the edge of your current ability
-- Making incremental progress, even if slow
-- Engaging with the actual content
-
-Unproductive struggle involves:
-- Lacking prerequisite knowledge entirely
-- Going in circles without progress
-- Fighting the interface rather than the ideas
-
-When struggle becomes unproductive, switch modes or take a break.
+The tutor makes mistakes. When it claims something about the text, check the passage. For factual claims outside the text, verify with authoritative sources. Cards generated via `Ctrl+G` are drafts—edit for accuracy before drilling.
 
 ---
 
 ## Technical Implementation Notes
 
-For those implementing similar systems, brief notes on the Reader's architecture:
+Brief notes on architecture for those implementing similar systems.
 
-### Two-Layer Prompt Composition
+### Prompt Composition
 
-```
-base.md (identity, context, principles)
-   +
-{mode}.md (behavioral modifications)
-   =
-Complete system prompt
-```
-
-Mode switches rebuild the prompt from scratch—mode changes take effect immediately without losing conversation history.
+Two-layer prompt composition: `base.md` (identity, context, principles) plus `{mode}.md` (behavioral modifications). Mode switches rebuild the prompt from scratch, so changes take effect immediately without losing conversation history.
 
 ### Context Injection
 
-- Chapter content provided via prompt caching (not embedded in system prompt)
-- Review mode uses `<transcripts>` block instead of `<chapter>` block
-- Template variables via Jinja2: `book_title`, `chapter_title`, `session_phase`, etc.
+Chapter content is provided via prompt caching rather than embedded in the system prompt. Review mode uses a `<transcripts>` block instead of a `<chapter>` block since it operates on prior discussions rather than source text. Template variables use Jinja2: `book_title`, `chapter_title`, `session_phase`, and so on.
 
 ### Session Types
 
-- **Regular sessions**: Resume where you left off (`ch01.jsonl`)
-- **Quiz sessions**: Always fresh, timestamped (`quiz_ch01_20251224T143022.jsonl`)
-- **Review sessions**: One per material (`review.jsonl`)
+Regular sessions resume where you left off (`ch01.jsonl`). Quiz sessions are always fresh and timestamped (`quiz_ch01_20251224T143022.jsonl`) so you can track performance over time. Review sessions are one per material (`review.jsonl`).
 
 ### Adding New Modes
 
-1. Create `prompts/{mode_name}.md`
-2. Add to `MODES` list in `prompts.py`
-3. Available via `Ctrl+M` cycling
+The process is straightforward: create `prompts/{mode_name}.md`, add the mode to the `MODES` list in `prompts.py`, and it becomes available via `Ctrl+M` cycling. Special modes needing different base prompts or contexts require modifications to `dialogue.py` for `mode_override` and `context_override` parameters—this is messier but necessary for modes like Review.
 
-Special modes needing different base prompts or contexts require `dialogue.py` modifications for `mode_override` and `context_override` parameters.
+---
+
+## Toward Classroom Use
+
+If this approach matures, it might be useful in classroom settings. These are preliminary notes, not deployment guidance—I haven't tried any of this with actual students.
+
+The Reader might complement human instruction for independent reading practice (students work through assigned texts with structured dialogue), pre-class preparation (engage with material before discussion), review and consolidation (return to chapters after lecture), or self-paced catch-up (students who fall behind work at their own pace).
+
+Any classroom deployment would also need to address privacy: student messages and reading content are sent to the LLM provider (currently Google Gemini), institutional AI policies vary widely, and copyrighted or sensitive materials raise additional concerns.
+
+Before recommending classroom use, I'd want evidence that these approaches work for learners beyond myself, better understanding of where the human-to-LLM gap matters most, clearer guidance on which materials and learner populations benefit, and institutional frameworks for responsible LLM use in education.
 
 ---
 
@@ -473,4 +250,4 @@ Vygotsky, L. S. (1978). Mind in society: The development of higher psychological
 
 ---
 
-*Last updated: 2025-12-25*
+*Last updated: 2025-12-27*

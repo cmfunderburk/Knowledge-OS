@@ -356,8 +356,7 @@ Note: Voice features require PyTorch which only supports Linux, macOS ARM64, and
 | [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | Users | Prerequisites, installation, first session |
 | [docs/USAGE.md](docs/USAGE.md) | Users | Commands, workflows, keybindings |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Users | Common issues and fixes |
-| [docs/PEDAGOGY.md](docs/PEDAGOGY.md) | Users | Learning science behind the Reader |
-| [docs/EDUCATORS.md](docs/EDUCATORS.md) | Educators | Classroom adoption guide |
+| [docs/PEDAGOGY.md](docs/PEDAGOGY.md) | Users | Design journal: learning science and LLM exploration |
 | [knos/reader/OVERVIEW.md](knos/reader/OVERVIEW.md) | Users | Reader module details |
 | [solutions/examples/README.md](solutions/examples/README.md) | Users | Drill card format guide |
 
