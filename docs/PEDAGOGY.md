@@ -1,6 +1,8 @@
 # Prompting LLMs for Human Learning
 
-This document explores how to design prompts that guide LLMs toward being effective learning companions. It draws on learning science research, documents what's been implemented in the Reader module, and brainstorms approaches not yet built.
+This document records my exploration of how to prompt LLMs to serve as learning companions. It's part design journal, part hypothesis log—documenting what I've tried, what seems to work (for me), and what remains uncertain.
+
+The approach draws on established learning science research, but applying that research to LLM interactions is novel territory. Much of what follows is working hypothesis rather than proven method.
 
 ---
 
@@ -14,35 +16,43 @@ The challenge: prompt LLMs to be helpful in ways that serve long-term learning r
 
 ### Key Concepts from Learning Science
 
-**Desirable Difficulties** (Bjork & Bjork)
-Conditions that make learning harder in the moment but improve long-term retention. Examples: spacing, interleaving, retrieval practice, generation (producing answers rather than recognizing them). Implication for prompts: don't make things too easy.
+**Desirable Difficulties**
+Conditions that make learning harder in the moment but improve long-term retention.
+Examples: spacing, interleaving, retrieval practice, generation (producing answers rather than recognizing them). Implication for prompts: don't make things too easy.
 
-**Zone of Proximal Development** (Vygotsky)
-The space between what a learner can do alone and what they can do with guidance. Effective tutoring operates in this zone—not so easy it's boring, not so hard it's frustrating. Implication: LLM should calibrate to the learner's current understanding.
+**Zone of Proximal Development**
+The space between what a learner can do alone and what they can do with guidance. Effective tutoring operates in this zone—not so easy it's boring, not so hard it's frustrating.
+Implication: LLM should calibrate to the learner's current understanding.
 
-**Retrieval Practice** (Roediger & Karpicke)
-Testing isn't just assessment—it's a learning event. The act of retrieving information strengthens memory more than re-reading. Implication: asking questions is more valuable than giving explanations.
+**Retrieval Practice**
+Testing isn't just assessment—it's a learning event. The act of retrieving information strengthens memory more than re-reading.
+Implication: asking questions is more valuable than giving explanations.
 
-**Elaborative Interrogation** (Pressley et al.)
-Asking "why" and "how" questions forces learners to connect new information to existing knowledge, improving comprehension and retention. Implication: probe for explanations, not just facts.
+**Elaborative Interrogation**
+Asking "why" and "how" questions forces learners to connect new information to existing knowledge, improving comprehension and retention.
+Implication: probe for explanations, not just facts.
 
 **The Testing Effect / Generation Effect**
-Information that learners generate themselves is remembered better than information they passively receive. Implication: prefer questions that make learners produce answers over explanations that hand them answers.
+Information that learners generate themselves is remembered better than information they passively receive.
+Implication: prefer questions that make learners produce answers over explanations that hand them answers.
 
-**Metacognition** (Flavell)
-Awareness of one's own thinking and learning processes. Skilled learners monitor their understanding and adjust strategies. Implication: prompt reflection ("What's still unclear?" "How confident are you?").
+**Metacognition**
+Awareness of one's own thinking and learning processes. Skilled learners monitor their understanding and adjust strategies.
+Implication: prompt reflection ("What's still unclear?" "How confident are you?").
 
-**Bloom's Taxonomy** (Revised: Anderson & Krathwohl)
-Hierarchy of cognitive processes: Remember → Understand → Apply → Analyze → Evaluate → Create. Lower levels are prerequisites for higher. Implication: match questioning to appropriate level; scaffold upward.
+**Bloom's Taxonomy**
+Hierarchy of cognitive processes: Remember → Understand → Apply → Analyze → Evaluate → Create. Lower levels are prerequisites for higher.
+Implication: match questioning to appropriate level; scaffold upward.
 
-**Cognitive Load Theory** (Sweller)
-Working memory is limited. Extraneous load (poorly designed instruction) competes with germane load (productive learning effort). Implication: keep prompts focused; don't overwhelm with tangents.
+**Cognitive Load Theory**
+Working memory is limited. Extraneous load (poorly designed instruction) competes with germane load (productive learning effort).
+Implication: keep prompts focused; don't overwhelm with tangents.
 
 ---
 
 ## The St. John's College Model
 
-The Reader module draws explicitly from the [St. John's College](https://www.sjc.edu/) seminar tradition. This model embodies several pedagogically sound principles:
+The Reader module draws explicitly from the [St. John's College](https://www.sjc.edu/) seminar tradition. This model embodies several pedagogical principles:
 
 ### Tutors, Not Professors
 
@@ -69,11 +79,23 @@ Seminars begin with a genuine question—not rhetorical, not leading. This:
 
 The goal is shared understanding, not scoring points. When material is technical, those with expertise help others reach a common level so exploration can continue.
 
+### The Open Question: Human-to-Human vs. Human-to-LLM
+
+The St. John's model is built on human-to-human dialogue. Tutors bring genuine curiosity, respond to subtle emotional cues, and model intellectual humility through their own uncertainty. Whether these dynamics transfer to human-to-LLM interaction is an open question—arguably *the* open question this project is exploring.
+
+Some concerns:
+- LLMs simulate curiosity but don't possess it. Does the learner perceive the difference? Does it matter?
+- Human tutors calibrate to frustration, confusion, excitement. LLMs have limited access to these signals.
+- The power dynamic differs. A human tutor's question carries social weight; an LLM's might not.
+- Dialogue with humans builds relationships that sustain learning over time. Can LLM interactions do the same?
+
+I don't have answers. The Reader is partly an experiment in finding out what works despite these differences, and what breaks down because of them.
+
 ---
 
-## Core Prompt Design Principles
+## Design Principles I'm Testing
 
-These principles emerge from both learning science and practical experimentation:
+These principles are grounded in learning science but adapted—speculatively—for LLM dialogue. They guide the current prompts; whether they're the right principles remains to be seen.
 
 ### 1. Questions Over Answers
 
@@ -279,7 +301,9 @@ Given a learner's stated understanding, systematically generates cases that test
 
 ---
 
-## Anti-Patterns and Failure Modes
+## Failure Modes I've Observed
+
+These are patterns I've noticed that seem to undermine learning. They're based on my experience with current prompts and models—your mileage may vary.
 
 ### Validation Theater
 
@@ -455,6 +479,43 @@ Special modes needing different base prompts or contexts require `dialogue.py` m
 
 ---
 
+## Toward Classroom Use (Speculative)
+
+If this approach matures, it might be useful in classroom settings. These are preliminary notes, not deployment guidance.
+
+### Potential Fit
+
+The Reader might complement human instruction for:
+- **Independent reading practice** — Students work through assigned texts with structured dialogue
+- **Pre-class preparation** — Engage with material before discussion
+- **Review and consolidation** — Return to chapters after lecture
+- **Self-paced catch-up** — Students who fall behind work at their own pace
+
+### Where Human Instruction Remains Essential
+
+Some things an LLM tutor probably can't do well:
+- **Introducing new concepts** — The tutor probes understanding; it doesn't introduce ideas
+- **Emotional and motivational support** — An LLM can't provide encouragement the way a teacher can
+- **High-stakes assessment** — The system is for practice, not graded evaluation
+- **Correcting persistent misconceptions** — Sometimes direct instruction is more efficient
+
+### Privacy Considerations
+
+Any classroom deployment would need to address:
+- Student messages and reading content are sent to the LLM provider (currently Google Gemini)
+- Institutional AI policies vary widely
+- Copyrighted or sensitive materials raise additional concerns
+
+### What Would Need to Be True
+
+Before recommending classroom use, I'd want:
+- Evidence that these approaches work for learners beyond myself
+- Better understanding of where the human-to-LLM gap matters most
+- Clearer guidance on which materials and learner populations benefit
+- Institutional frameworks for responsible LLM use in education
+
+---
+
 ## References
 
 Bjork, R. A., & Bjork, E. L. (2011). Making things hard on yourself, but in a good way: Creating desirable difficulties to enhance learning.
@@ -473,4 +534,4 @@ Vygotsky, L. S. (1978). Mind in society: The development of higher psychological
 
 ---
 
-*Last updated: 2025-12-25*
+*Last updated: 2025-12-27*

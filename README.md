@@ -82,7 +82,7 @@ uv run knos          # TUI dashboard
 |----------|---------|
 | [Getting Started](docs/GETTING_STARTED.md) | Prerequisites, installation, first session |
 | [Usage Guide](docs/USAGE.md) | Commands, workflows, keybindings |
-| [Pedagogy](docs/PEDAGOGY.md) | Learning science behind the Reader |
+| [Pedagogy](docs/PEDAGOGY.md) | Design notes on LLM-assisted learning |
 | [Troubleshooting](docs/TROUBLESHOOTING.md) | Common issues and fixes |
 | [Card Format](solutions/examples/README.md) | Creating drill cards |
 
