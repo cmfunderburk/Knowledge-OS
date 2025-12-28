@@ -4,7 +4,7 @@ A study system built on dialogue.
 
 ## Why Dialogue?
 
-At St. John's College, students spend four years reading primary sources—Homer to Einstein—not through lectures, but through seminar discussion. Understanding emerges through articulation: defending interpretations, responding to challenges, returning to the text when claims don't hold up. I've been drawn to this model for years, and Knowledge OS is my attempt to bring something like it to self-study.
+At St. John's College, students spend four years reading primary sources—Homer to Einstein—not through lectures, but through seminar discussion. Understanding emerges through articulation: defending interpretations, responding to challenges, returning to the text when claims don't hold up.
 
 The Reader module pairs you with an LLM tutor who engages with the same material you're reading. It asks questions rather than lectures. It treats the text as the authority. When you claim to understand something, it probes. Whether this actually works—whether the dynamics that make St. John's seminars effective transfer to human-LLM dialogue—is something I'm still figuring out. But I've found it more productive than reading alone.
 
