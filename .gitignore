@@ -39,15 +39,12 @@ knos/reader/articles/*
 # ===== Reviewer State =====
 knos/reviewer/history.jsonl
 
-# ===== Schedule Configs (personal) =====
-schedules-llm/
 
 # ===== Discussion/Chat/Dev Notes =====
 *.txt
 *-Chat.md
 *_chat*.md
 scripts/
-LLM_WRITING_PROMPT.md
 
 # ===== Python =====
 __pycache__/
