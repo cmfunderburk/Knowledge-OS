@@ -22,17 +22,17 @@ I should note upfront: these concepts come from established research, but how (o
 
 **Zone of proximal development.** Vygotsky's term for the space between what a learner can do alone and what they can do with guidance. Effective tutoring operates in this zone—not so easy it's boring, not so hard it's frustrating. The implication is that an LLM should calibrate to the learner's current understanding, though I'm not yet sure how well current models can actually do this.
 
-**Retrieval practice.** Testing isn't just assessment—it's a learning event. The act of retrieving information strengthens memory more than re-reading, which suggests that asking questions might be more valuable than giving explanations. This is one of the more robust findings in the literature, and it's shaped my approach to the Quiz mode substantially.
+**Retrieval practice.** Testing isn't just assessment—it's a learning event. The act of retrieving information strengthens memory more than re-reading, which suggests that asking questions might be more valuable than giving explanations.
 
 **Elaborative interrogation.** Asking "why" and "how" questions forces learners to connect new information to existing knowledge, improving comprehension and retention. The Socratic mode is essentially an attempt to operationalize this through dialogue—probing for explanations rather than just facts.
 
 **The generation effect.** Information that learners generate themselves is remembered better than information they passively receive. This is why the Teach mode (where the learner explains to a simulated student) might be valuable—though I haven't tested it systematically.
 
-**Metacognition.** Awareness of one's own thinking and learning processes. Skilled learners monitor their understanding and adjust strategies accordingly. I've tried to incorporate metacognitive prompts ("What's still unclear?" "How confident are you?"), but I'm uncertain how much impact they have in practice.
+**Metacognition.** Awareness of one's own thinking and learning processes. Skilled learners monitor their understanding and adjust strategies accordingly. I've tried to incorporate metacognitive prompts ("What's still unclear?" "How confident are you?").
 
 **Bloom's taxonomy.** The hierarchy of cognitive processes from remembering through understanding, applying, analyzing, evaluating, to creating. Lower levels are prerequisites for higher ones. In principle, an LLM tutor should match questioning to the appropriate level and scaffold upward—though actually doing this well seems quite difficult.
 
-**Cognitive load theory.** Working memory is limited. Poorly designed instruction imposes "extraneous" load that competes with "germane" load (the productive effort of learning). The practical implication is to keep prompts focused and avoid overwhelming the learner with tangents. I've tried to apply this in the prompt design, though whether I've succeeded is another matter.
+**Cognitive load theory.** Working memory is limited. Poorly designed instruction imposes "extraneous" load that competes with "germane" load (the productive effort of learning). The practical implication is to keep prompts focused and avoid overwhelming the learner with tangents.
 
 ---
 
@@ -40,17 +40,17 @@ I should note upfront: these concepts come from established research, but how (o
 
 The Reader module draws explicitly from the St. John's College seminar tradition (the "Great Books" program at the Annapolis and Santa Fe campuses). I received my undergraduate degree from St. John's in 2012.
 
-Faculty at St. John's are called "tutors" rather than professors. Tutors position themselves as fellow inquirers rather than authorities. This matters, I think, because it shifts responsibility for understanding to the learner, models intellectual humility and genuine inquiry, and avoids the "answer dispenser" dynamic that seems to undermine deep learning. Whether an LLM can credibly occupy this role is one of the central questions I'm exploring.
+Faculty at St. John's are called "tutors" rather than professors. Tutors position themselves as fellow inquirers rather than authorities. This matters, I think, because it shifts responsibility for understanding to the learner, models intellectual humility and genuine inquiry, and avoids the "answer dispenser" dynamic that undermines deep learning. Whether an LLM can credibly occupy this role is one of the central questions I'm exploring.
 
 When disagreements arise in a St. John's seminar, the resolution is typically "let's look at what the text says." The text serves as the shared authority. This keeps discussion grounded in evidence, prevents the tutor from becoming the source of truth, and develops close reading skills over time. I've tried to encode this in the prompts—the tutor should constantly anchor responses to specific passages rather than drifting into generic explanations.
 
-Seminars begin with a genuine question. This models that understanding requires inquiry and invites the learner into active engagement. It also establishes that the tutor doesn't have all the answers, which seems important for the dynamic I'm trying to create.
+Seminars begin with a genuine question. This models that understanding requires inquiry and invites the learner into active engagement. It also establishes that the tutor doesn't have all the answers.
 
 ### The Open Question: Human-to-Human vs. Human-to-LLM
 
 The St. John's model is built on human-to-human dialogue. Tutors bring genuine curiosity, respond to subtle emotional cues, and model intellectual humility through their own uncertainty. Whether these dynamics transfer to human-to-LLM interaction is an open question—arguably *the* open question this project is exploring.
 
-I have several concerns. LLMs simulate curiosity but don't possess it—does the learner perceive the difference, and does it matter? Human tutors calibrate to frustration, confusion, excitement; LLMs have limited access to these signals (essentially just the text of what the learner types). The power dynamic differs in ways I don't fully understand: a human tutor's question carries social weight that an LLM's might not. And dialogue with humans builds relationships that sustain learning over time—I'm skeptical that LLM interactions can do the same.
+LLMs simulate curiosity but don't possess it—does the learner perceive the difference, and does it matter? Human tutors calibrate to frustration, confusion, excitement; LLMs have limited access to these signals. And even if provided, how to prompt them to meaningfully incorporate these signals is a difficult problem. The power dynamic differs in interesting ways: a human tutor's question carries social weight that an LLM's might not. And dialogue with humans builds relationships that sustain learning over time—LLM "relationships," if you want to call them that, are something else entirely.
 
 I don't have answers to these concerns. The Reader is partly an experiment in finding out what works despite these differences, and what breaks down because of them.
 
@@ -60,7 +60,7 @@ There's something else, and I'm uncertain how to articulate it without sounding 
 
 ## Design Principles I'm Testing
 
-The following principles are grounded in learning science but adapted—speculatively—for LLM dialogue. They guide the current prompts. Whether they're the right principles, or whether I've implemented them well, remains to be seen.
+The following principles are grounded in learning science but adapted—speculatively—for LLM dialogue. They guide the current prompts.
 
 **Questions over answers.** The default should be asking, not telling. When a learner asks a question, the most pedagogically useful response is often another question that helps them find the answer themselves. The exception is when the learner is genuinely stuck and lacks the prerequisite knowledge to make progress—at that point, direct explanation becomes necessary.
 
@@ -96,13 +96,13 @@ Socratic mode works well when the learner has enough foundation to engage produc
 
 Sometimes learners are genuinely stuck. They lack the prerequisite knowledge or conceptual framework to make progress through questioning alone. This is where Vygotsky's scaffolding becomes necessary—direct instruction rather than continued probing.
 
-In Clarify mode, the tutor provides clear explanations, offers analogies connecting to existing knowledge, works through examples, but (and this seems important) ends with a check or gentle follow-up question. The key discipline is returning to questioning once the scaffolding is in place. Clarify mode should be a temporary support, not a default—though I'll admit I sometimes find it more comfortable than the productive discomfort of Socratic questioning.
+In Clarify mode, the tutor provides clear explanations, offers analogies connecting to existing knowledge, works through examples, but (and this seems important) ends with a check or gentle follow-up question. The key discipline is returning to questioning once the scaffolding is in place. Clarify mode should be a temporary support, not a default.
 
 ### Challenge
 
-Learners often hold positions they haven't fully examined. Devil's advocate questioning—what Socrates called elenchus—surfaces hidden assumptions and stress-tests understanding. In Challenge mode, the tutor takes contrary positions, presents counterexamples and edge cases, references passages that complicate the learner's view, and forces defense of claims.
+Learners often hold positions they haven't fully examined. Devil's advocate questioning surfaces hidden assumptions and stress-tests understanding. In Challenge mode, the tutor takes contrary positions, presents counterexamples and edge cases, references passages that complicate the learner's view, and forces defense of claims.
 
-This works best when the learner has a formed position worth testing, and when the material admits multiple interpretations. It can feel adversarial if overused, so I try to deploy it when I'm confident about something—perhaps overconfident—and want to test whether that confidence is warranted.
+This works best when the learner has a formed position worth testing, and when the material admits multiple interpretations.
 
 ### Teach (Role Reversal)
 
@@ -120,7 +120,7 @@ Quiz sessions are timestamped uniquely so I can quiz the same chapter multiple t
 
 Some material—mathematical derivations, algorithms, formal proofs—requires step-by-step guidance that doesn't fit the Socratic pattern. Cognitive load theory suggests breaking complex procedures into manageable steps.
 
-In Technical mode, the tutor walks through procedures step by step, checks understanding at each stage before proceeding, provides worked examples, and (I try to insist) explains the "why" behind each step rather than just the "what." This is probably the least pedagogically innovative mode—it's essentially worked examples with comprehension checks—but it fills a genuine need when working through formal material.
+In Technical mode, the tutor walks through procedures step by step, checks understanding at each stage before proceeding, provides worked examples, and explains the "why" behind each step rather than just the "what." Essentially worked examples with comprehension checks—but it fills a genuine need when working through formal material.
 
 ### Review (Cross-Chapter Synthesis)
 
