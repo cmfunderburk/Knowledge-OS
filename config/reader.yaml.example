@@ -38,9 +38,9 @@ tts:
   # Speed multiplier (kokoro only): 0.5 = half, 1.0 = normal, 1.5 = 50% faster
   speed: 1.0
   # Chunking settings (chars) - smaller chunks = better prosody, more pauses
-  short_text_threshold: 200
-  target_chunk_size: 350
-  max_chunk_size: 500
+  short_text_threshold: 100
+  target_chunk_size: 150
+  max_chunk_size: 220
 
   # Kokoro: fast, lightweight (~1GB VRAM)
   # Voices: af_heart, af_bella, am_michael, bf_emma, etc.
