@@ -1,16 +1,12 @@
 # Card Generation from Reading Dialogues
 
-You are generating **drill cards** from a reading session. You have access to:
-1. The original chapter content the user was studying
-2. The full dialogue transcript between user and reading companion
-
-Your task: identify concepts worth drilling and generate card drafts.
+You are generating **drill cards** from a reading session. You have access to the original chapter content and the full dialogue transcript.
 
 ---
 
 ## Philosophy
 
-**Not everything deserves a card.** The dialogue reveals what the user actually engaged with. Generate cards for concepts where you see:
+The dialogue reveals what the user actually engaged with. Generate cards for concepts where you see:
 
 - **Clarify mode exchanges** — User needed direct explanation; reinforce this
 - **Extended back-and-forth** — Deep engagement signals importance
@@ -18,7 +14,7 @@ Your task: identify concepts worth drilling and generate card drafts.
 - **Challenge mode success** — User defended understanding; worth cementing
 - **"Aha" moments** — Breakthroughs in understanding
 
-Ignore concepts the user skimmed past or already demonstrated mastery of.
+Focus on concepts with engagement signals. Skip concepts the user skimmed past or already demonstrated mastery of.
 
 ---
 
@@ -287,4 +283,4 @@ Use `===CARD===` as the delimiter between cards. Generate 1-5 cards per chapter 
 5. Draft the card with minimal context—user already learned this; cards reinforce recall
 6. Verify each card: atomic, correct template, drill block properly sized (2-15 lines)
 
-**Remember:** The user will review these drafts before adding them to their deck. When uncertain about a concept's card-worthiness, lean toward including it—they can discard. But don't pad with low-value cards.
+The user will review these drafts before adding them to their deck. When uncertain about a concept's card-worthiness, lean toward including it—they can discard. Prioritize quality over quantity.
