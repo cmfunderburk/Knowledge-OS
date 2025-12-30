@@ -2,6 +2,7 @@
 # Blocklist: ignore user content and generated files
 
 # ===== User Content (personal) =====
+skilldocs/
 solutions/*
 !solutions/examples/
 Textbooks/
