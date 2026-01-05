@@ -8,9 +8,6 @@ At St. John's College, students spend four years reading primary sources—Homer
 
 Stringfellow Barr's ["Notes on Dialogue"](knos/reader/articles/notes-on-dialogue.pdf) (1968) articulates the philosophy behind this approach better than I can. The [Introduction](docs/Introduction-to-this-Project.md) orients newcomers to the system and its documentation. [Pedagogy](docs/PEDAGOGY.md) contains further exploration and reference materials related to using LLMs for learning/dialogue.
 
-The Reader module pairs you with an LLM tutor who engages with the same material you're reading. It asks questions rather than lectures. It treats the text as the authority. When you claim to understand something, it probes. Whether this actually works—whether the dynamics that make St. John's seminars effective transfer to human-LLM dialogue—is something I'm still figuring out. But I've found it more productive than reading alone.
-
-
 ## The Loop
 
 The core workflow is simple: read something, discuss it with the tutor, and (when concepts seem worth retaining long-term) generate drill cards from the conversation. The dialogue is primary. Card generation is there when you identify definitions, procedures, or distinctions you want to keep.
